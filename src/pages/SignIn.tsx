@@ -1,9 +1,12 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { secureStorage } from "@/services/native";
+import { authApi } from "@/services/api";
 import {
   Select,
   SelectContent,
@@ -33,9 +36,31 @@ const SignIn = () => {
     "Suez Canal University"
   ];
 
+  const signInMutation = useMutation({
+    mutationFn: (data: { email: string; password: string; school: string }) =>
+      authApi.signIn(data),
+    onSuccess: async (response) => {
+      await secureStorage.set('auth_token', response.token);
+      await secureStorage.set('refresh_token', response.refresh_token);
+      toast.success("Signed in successfully");
+      navigate("/wallet");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to sign in");
+    },
+  });
+
   const handleSignIn = () => {
-    // For demo purposes, navigate to wallet
-    navigate("/wallet");
+    if (!email || !password || !selectedSchool) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    signInMutation.mutate({
+      email,
+      password,
+      school: selectedSchool,
+    });
   };
 
   return (
@@ -99,9 +124,17 @@ const SignIn = () => {
 
           <Button 
             onClick={handleSignIn}
+            disabled={signInMutation.isPending}
             className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl"
           >
-            Sign In
+            {signInMutation.isPending ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Signing in...</span>
+              </div>
+            ) : (
+              "Sign In"
+            )}
           </Button>
         </div>
 

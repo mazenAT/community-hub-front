@@ -1,8 +1,10 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -10,15 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { authApi } from "@/services/api";
 
 const SignUp = () => {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const navigate = useNavigate();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [selectedSchool, setSelectedSchool] = useState("");
-  const navigate = useNavigate();
+  const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
 
   const schools = [
     "Cairo University",
@@ -35,9 +38,66 @@ const SignUp = () => {
     "Suez Canal University"
   ];
 
+  const allergies = [
+    "Nuts",
+    "Dairy",
+    "Gluten",
+    "Eggs",
+    "Shellfish",
+    "Fish",
+    "Soy",
+    "Sesame",
+    "Peanuts",
+    "Tree Nuts",
+    "None"
+  ];
+
+  const signUpMutation = useMutation({
+    mutationFn: (data: { name: string; email: string; password: string; school: string }) =>
+      authApi.signUp(data),
+    onSuccess: () => {
+      toast.success("Account created successfully");
+      navigate("/");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to create account");
+    },
+  });
+
+  const handleAllergyChange = (allergy: string, checked: boolean) => {
+    if (checked) {
+      if (allergy === "None") {
+        setSelectedAllergies(["None"]);
+      } else {
+        setSelectedAllergies(prev => prev.filter(a => a !== "None").concat(allergy));
+      }
+    } else {
+      setSelectedAllergies(prev => prev.filter(a => a !== allergy));
+    }
+  };
+
   const handleSignUp = () => {
-    // For demo purposes, navigate to wallet
-    navigate("/wallet");
+    if (!name || !email || !password || !confirmPassword || !selectedSchool) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
+
+    signUpMutation.mutate({
+      name,
+      email,
+      password,
+      school: selectedSchool,
+    });
   };
 
   return (
@@ -61,22 +121,13 @@ const SignUp = () => {
         {/* Sign Up Form */}
         <div className="space-y-4">
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                type="text"
-                placeholder="First Name"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="h-12 bg-gray-100 border-0 text-base"
-              />
-              <Input
-                type="text"
-                placeholder="Last Name"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="h-12 bg-gray-100 border-0 text-base"
-              />
-            </div>
+            <Input
+              type="text"
+              placeholder="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="h-12 bg-gray-100 border-0 text-base"
+            />
 
             <Select value={selectedSchool} onValueChange={setSelectedSchool}>
               <SelectTrigger className="h-12 bg-gray-100 border-0 text-base">
@@ -90,6 +141,28 @@ const SignUp = () => {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Allergies Selection */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-gray-700">Allergies (Select all that apply)</label>
+              <div className="bg-gray-100 rounded-xl p-4 max-h-32 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-2">
+                  {allergies.map((allergy) => (
+                    <div key={allergy} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={allergy}
+                        checked={selectedAllergies.includes(allergy)}
+                        onCheckedChange={(checked) => handleAllergyChange(allergy, checked as boolean)}
+                        className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                      />
+                      <label htmlFor={allergy} className="text-sm text-gray-700 cursor-pointer">
+                        {allergy}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
             
             <Input
               type="email"
@@ -116,9 +189,17 @@ const SignUp = () => {
 
           <Button 
             onClick={handleSignUp}
+            disabled={signUpMutation.isPending}
             className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl"
           >
-            Create Account
+            {signUpMutation.isPending ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Creating account...</span>
+              </div>
+            ) : (
+              "Sign Up"
+            )}
           </Button>
         </div>
 

@@ -1,18 +1,38 @@
-
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.3293f4f89e9543a3af1d0f4951f695a7',
-  appName: 'A Lovable project',
-  webDir: 'dist',
+  appId: 'com.smartcommunity.app',
+  appName: 'Smart Community',
+  webDir: 'build',
   server: {
-    url: 'https://3293f4f8-9e95-43a3-af1d-0f4951f695a7.lovableproject.com?forceHideBadge=true',
+    androidScheme: 'https',
+    iosScheme: 'https',
+    hostname: 'app',
     cleartext: true
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 0
+      launchShowDuration: 3000,
+      backgroundColor: "#FFFFFF",
+      androidSplashResourceName: "splash",
+      androidScaleType: "CENTER_CROP",
+      showSpinner: true,
+      spinnerColor: "#999999"
+    },
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"]
     }
+  },
+  android: {
+    buildOptions: {
+      keystorePath: undefined,
+      keystorePassword: undefined,
+      keystoreAlias: undefined,
+      keystoreAliasPassword: undefined
+    }
+  },
+  ios: {
+    contentInset: "always"
   }
 };
 

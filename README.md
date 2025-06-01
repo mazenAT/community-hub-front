@@ -1,73 +1,162 @@
-# Welcome to your Lovable project
+# Smart Community Mobile App
 
-## Project info
+A cross-platform mobile application for managing community resources and services, built with React and Capacitor.
 
-**URL**: https://lovable.dev/projects/3293f4f8-9e95-43a3-af1d-0f4951f695a7
+## Features
 
-## How can I edit this code?
+- User authentication and authorization
+- Wallet management with transaction history
+- Real-time notifications
+- Native mobile features
+- TypeScript support
+- Redux state management
+- Comprehensive testing
+- Cross-platform (iOS & Android)
 
-There are several ways of editing your application.
+## Prerequisites
 
-**Use Lovable**
+- Node.js (v14 or higher)
+- npm or yarn
+- Android Studio (for Android development)
+- Xcode (for iOS development, macOS only)
+- Capacitor CLI
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/3293f4f8-9e95-43a3-af1d-0f4951f695a7) and start prompting.
+## Installation
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+1. Clone the repository:
+```bash
+git clone https://github.com/your-username/smart-community-app.git
+cd smart-community-app
 ```
 
-**Edit a file directly in GitHub**
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+3. Create a `.env` file in the root directory:
+```env
+REACT_APP_API_URL=http://localhost:8000/api
+```
 
-**Use GitHub Codespaces**
+## Development
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Web Development
+Start the development server:
+```bash
+npm start
+# or
+yarn start
+```
 
-## What technologies are used for this project?
+The application will be available at `http://localhost:3000`.
 
-This project is built with:
+### Mobile Development
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Initialize Capacitor:
+```bash
+npm run cap:init
+```
 
-## How can I deploy this project?
+Add platforms:
+```bash
+# For Android
+npm run cap:add:android
 
-Simply open [Lovable](https://lovable.dev/projects/3293f4f8-9e95-43a3-af1d-0f4951f695a7) and click on Share -> Publish.
+# For iOS
+npm run cap:add:ios
+```
 
-## Can I connect a custom domain to my Lovable project?
+Sync web code to native projects:
+```bash
+npm run cap:sync
+```
 
-Yes, you can!
+Open native IDEs:
+```bash
+# For Android Studio
+npm run cap:open:android
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# For Xcode
+npm run cap:open:ios
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Build and run:
+```bash
+# For Android
+npm run cap:build:android
+
+# For iOS
+npm run cap:build:ios
+```
+
+## Testing
+
+Run the test suite:
+```bash
+npm test
+# or
+yarn test
+```
+
+Run tests with coverage:
+```bash
+npm test -- --coverage
+# or
+yarn test --coverage
+```
+
+## Project Structure
+
+```
+src/
+  ├── components/        # React components
+  ├── store/            # Redux store configuration
+  ├── services/         # API and other services
+  ├── utils/            # Utility functions
+  ├── types/            # TypeScript type definitions
+  ├── hooks/            # Custom React hooks
+  ├── assets/           # Images, fonts, etc.
+  └── tests/            # Test files
+```
+
+## Mobile-Specific Features
+
+- Native device features access
+- Push notifications
+- Biometric authentication
+- Offline support
+- Deep linking
+- App state persistence
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Security
+
+- All API requests are authenticated using JWT tokens
+- Secure storage for sensitive data
+- Biometric authentication support
+- Input validation and sanitization
+- Secure HTTP headers
+- Rate limiting on API endpoints
+
+## Performance
+
+- Code splitting for better load times
+- Caching strategies implemented
+- Optimized bundle size
+- Lazy loading of components
+- Memoization where appropriate
+- Native performance optimizations
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

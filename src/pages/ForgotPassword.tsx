@@ -1,111 +1,88 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { authApi } from "@/services/api";
 
 const ForgotPassword = () => {
-  const [email, setEmail] = useState("");
-  const [isEmailSent, setIsEmailSent] = useState(false);
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
 
-  const handleResetPassword = () => {
-    // For demo purposes, show success state
-    setIsEmailSent(true);
+  const forgotPasswordMutation = useMutation({
+    mutationFn: (email: string) => authApi.forgotPassword(email),
+    onSuccess: () => {
+      toast.success("Password reset instructions sent to your email");
+      navigate("/");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to send reset instructions");
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!email) {
+      toast.error("Please enter your email");
+      return;
+    }
+
+    forgotPasswordMutation.mutate(email);
   };
-
-  const handleBackToSignIn = () => {
-    navigate("/");
-  };
-
-  if (isEmailSent) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6 animate-fade-in">
-        <div className="w-full max-w-sm space-y-8">
-          {/* Success Icon */}
-          <div className="flex justify-center">
-            <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center animate-bounce-in">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          </div>
-
-          {/* Success Text */}
-          <div className="text-center space-y-2 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-            <h1 className="text-2xl font-semibold text-gray-900">Check your email</h1>
-            <p className="text-gray-500">We've sent a password reset link to {email}</p>
-          </div>
-
-          <Button 
-            onClick={handleBackToSignIn}
-            className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl hover:scale-105 transition-all duration-200 animate-scale-in"
-            style={{ animationDelay: '0.5s' }}
-          >
-            Back to Sign In
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6 animate-fade-in">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm space-y-8">
-        {/* Back Button */}
-        <div className="flex items-center animate-slide-in-right">
-          <button 
-            onClick={() => navigate("/")}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 hover:scale-110 transition-all duration-200"
-          >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-        </div>
-
         {/* App Icon */}
         <div className="flex justify-center">
-          <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center animate-bounce-in">
+          <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center">
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
           </div>
         </div>
 
-        {/* Text */}
-        <div className="text-center space-y-2 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-          <h1 className="text-2xl font-semibold text-gray-900">Forgot Password?</h1>
-          <p className="text-gray-500">Don't worry! Enter your email and we'll send you a reset link</p>
+        {/* Welcome Text */}
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-semibold text-gray-900">Forgot Password</h1>
+          <p className="text-gray-500">Enter your email to reset your password</p>
         </div>
 
         {/* Reset Form */}
-        <div className="space-y-4 animate-scale-in" style={{ animationDelay: '0.4s' }}>
-          <Input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="h-12 bg-gray-100 border-0 text-base focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-          />
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-12 bg-gray-100 border-0 text-base"
+            />
+          </div>
 
           <Button 
-            onClick={handleResetPassword}
-            disabled={!email}
-            className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed hover:scale-105 transition-all duration-200"
+            onClick={handleSubmit}
+            disabled={forgotPasswordMutation.isPending}
+            className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl"
           >
-            Send Reset Link
+            {forgotPasswordMutation.isPending ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Sending instructions...</span>
+              </div>
+            ) : (
+              "Send Reset Instructions"
+            )}
           </Button>
         </div>
 
         {/* Back to Sign In */}
-        <div className="text-center animate-fade-in" style={{ animationDelay: '0.6s' }}>
-          <span className="text-gray-500">Remember your password? </span>
+        <div className="text-center">
           <button 
             onClick={() => navigate("/")}
-            className="text-blue-500 font-medium hover:text-blue-600 hover:underline transition-all duration-200"
+            className="text-blue-500 font-medium"
           >
-            Sign In
+            Back to Sign In
           </button>
         </div>
       </div>
