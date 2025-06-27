@@ -22,9 +22,12 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+
+          {/* Protected User Routes */}
           <Route path="/wallet" element={
             <ProtectedRoute>
               <Wallet />
@@ -45,6 +48,8 @@ const App = () => (
               <Profile />
             </ProtectedRoute>
           } />
+
+          {/* 404 Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

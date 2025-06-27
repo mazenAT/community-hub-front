@@ -11,7 +11,6 @@ export const showToast = async (message: string) => {
     await Toast.show({
       text: message,
       duration: 'short',
-      position: 'bottom'
     });
   }
 };
@@ -31,7 +30,7 @@ export const setupPushNotifications = async () => {
   }
 };
 
-export const openSecureBrowser = async (url: string) => {
+export const openBrowser = async (url: string) => {
   if (isNative) {
     await Browser.open({ url });
   } else {
@@ -40,35 +39,32 @@ export const openSecureBrowser = async (url: string) => {
 };
 
 export const secureStorage = {
-  async set(key: string, value: string) {
-    if (isNative) {
-      await Preferences.set({ key, value });
-    } else {
-      localStorage.setItem(key, value);
-    }
-  },
-
-  async get(key: string) {
+  get: async (key: string) => {
     if (isNative) {
       const { value } = await Preferences.get({ key });
       return value;
     }
     return localStorage.getItem(key);
   },
-
-  async remove(key: string) {
+  set: async (key: string, value: string) => {
+    if (isNative) {
+      await Preferences.set({ key, value });
+    } else {
+      localStorage.setItem(key, value);
+    }
+  },
+  remove: async (key: string) => {
     if (isNative) {
       await Preferences.remove({ key });
     } else {
       localStorage.removeItem(key);
     }
   },
-
-  async clear() {
+  clear: async () => {
     if (isNative) {
       await Preferences.clear();
     } else {
       localStorage.clear();
     }
-  }
+  },
 }; 

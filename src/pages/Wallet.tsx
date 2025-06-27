@@ -4,9 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/BottomNavigation";
-import { walletApi } from "@/services/api";
+import { walletApi, profileApi } from "@/services/api";
 import { showToast } from "@/services/native";
 import { formatCurrency } from "@/utils/format";
+import { User } from "lucide-react";
 
 interface Transaction {
   id: number;
@@ -16,6 +17,28 @@ interface Transaction {
   type: 'income' | 'expense';
 }
 
+interface UserProfile {
+  id: number;
+  name: string;
+  email: string;
+  school_id: number | null;
+  phone: string | null;
+  profile_image: string | null;
+  is_active: boolean;
+  role: 'admin' | 'student';
+  school?: {
+    id: number;
+    name: string;
+  };
+  wallet?: {
+    id: number;
+    user_id: number;
+    balance: number;
+    currency: string;
+    is_active: boolean;
+  };
+}
+
 const Wallet = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -23,25 +46,36 @@ const Wallet = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   const fetchWalletData = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const [balanceData, transactionsData] = await Promise.all([
-        walletApi.getBalance(),
-        walletApi.getTransactions(page)
-      ]);
+      // Fetch profile first to get the user and wallet information
+      const profileResponse = await profileApi.getProfile();
+      const profile = profileResponse.data;
+      setUserProfile(profile);
 
-      setBalance(balanceData.balance);
-      setTransactions(prev => 
-        page === 1 ? transactionsData.data : [...prev, ...transactionsData.data]
-      );
-      setHasMore(transactionsData.data.length === 15); // Assuming 15 items per page
+      // Set balance from the reliable profile data
+      const newBalance = Number(profile?.wallet?.balance) || 0;
+      setBalance(newBalance);
+
+      // Fetch transactions
+      const transactionsResponse = await walletApi.getTransactions();
+      let transactionsData = [];
+      if (Array.isArray(transactionsResponse.data)) {
+        transactionsData = transactionsResponse.data;
+      } else if (Array.isArray(transactionsResponse.data?.data)) {
+        transactionsData = transactionsResponse.data.data;
+      } else {
+        console.error("Transactions API did not return an array:", transactionsResponse.data);
+      }
+      setTransactions(transactionsData);
+
     } catch (err) {
+      console.error('Wallet data fetch error:', err);
       setError('Failed to load wallet data');
       showToast('Failed to load wallet data');
     } finally {
@@ -51,14 +85,14 @@ const Wallet = () => {
 
   useEffect(() => {
     fetchWalletData();
-  }, [page]);
+  }, []);
 
   const handleRefund = async (transaction: Transaction) => {
     if (transaction.type === "expense") {
       try {
-        await walletApi.withdraw(Math.abs(transaction.amount), {
-          reason: `Refund for ${transaction.title}`,
-          transaction_id: transaction.id
+        await walletApi.withdraw({
+          amount: Math.abs(transaction.amount),
+          bank_details: null, // As per API definition
         });
         
         toast({
@@ -77,11 +111,6 @@ const Wallet = () => {
     }
   };
 
-  const loadMore = () => {
-    if (!loading && hasMore) {
-      setPage(prev => prev + 1);
-    }
-  };
 
   if (error) {
     return (
@@ -102,12 +131,17 @@ const Wallet = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Wallet</h1>
-            <p className="text-xs sm:text-sm text-gray-500">Welcome back, Alex</p>
+            <p className="text-xs sm:text-sm text-gray-500">Welcome back, {userProfile?.name || 'User'}</p>
           </div>
           <button 
             onClick={() => navigate("/profile")}
-            className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full"
+            className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden"
           >
+            {userProfile?.profile_image ? (
+              <img src={userProfile.profile_image} alt={userProfile.name || 'User Avatar'} className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+            )}
           </button>
         </div>
       </div>
@@ -186,15 +220,12 @@ const Wallet = () => {
             </div>
           )}
 
-          {hasMore && (
-            <Button
-              onClick={loadMore}
-              className="w-full mt-4 border border-gray-200 hover:bg-gray-50"
-              disabled={loading}
-            >
-              {loading ? 'Loading...' : 'Load More'}
-            </Button>
+          {!loading && transactions.length === 0 && (
+            <div className="text-center py-4">
+              <p className="text-gray-500">No transactions found.</p>
+            </div>
           )}
+
         </div>
       </div>
 

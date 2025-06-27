@@ -1,45 +1,58 @@
-
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Wallet, Calendar, User, ShoppingCart } from "lucide-react";
 
 interface BottomNavigationProps {
-  activeTab: "wallet" | "planner";
+  activeTab?: "wallet" | "planner" | "profile" | "addons";
 }
 
-const BottomNavigation = ({ activeTab }: BottomNavigationProps) => {
+const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeTab }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const tabs = [
+    {
+      name: "Wallet",
+      icon: Wallet,
+      path: "/wallet",
+      active: location.pathname === "/wallet",
+    },
+    {
+      name: "Planner",
+      icon: Calendar,
+      path: "/planner",
+      active: location.pathname === "/planner",
+    },
+    {
+      name: "Add-ons",
+      icon: ShoppingCart,
+      path: "/add-ons",
+      active: location.pathname === "/add-ons",
+    },
+    {
+      name: "Profile",
+      icon: User,
+      path: "/profile",
+      active: location.pathname === "/profile",
+    },
+  ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-around">
-        <button
-          onClick={() => navigate("/wallet")}
-          className={`flex flex-col items-center space-y-1 ${
-            activeTab === "wallet" ? "text-blue-500" : "text-gray-400"
-          }`}
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-          </svg>
-          <span className="text-xs font-medium">Wallet</span>
-          {activeTab === "wallet" && (
-            <div className="w-1 h-1 bg-blue-500 rounded-full"></div>
-          )}
-        </button>
-
-        <button
-          onClick={() => navigate("/planner")}
-          className={`flex flex-col items-center space-y-1 ${
-            activeTab === "planner" ? "text-blue-500" : "text-gray-400"
-          }`}
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <span className="text-xs font-medium">Planner</span>
-          {activeTab === "planner" && (
-            <div className="w-1 h-1 bg-blue-500 rounded-full"></div>
-          )}
-        </button>
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+      <div className="flex justify-around items-center h-16">
+        {tabs.map((tab) => (
+          <button
+            key={tab.name}
+            onClick={() => navigate(tab.path)}
+            className={`flex flex-col items-center justify-center w-full h-full ${
+              tab.active
+                ? "text-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <tab.icon className="w-6 h-6" />
+            <span className="text-xs mt-1">{tab.name}</span>
+          </button>
+        ))}
       </div>
     </div>
   );

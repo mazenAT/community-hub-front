@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { authApi } from "@/services/api";
+import { authApi, schoolApi } from "@/services/api";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -22,21 +22,8 @@ const SignUp = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [selectedSchool, setSelectedSchool] = useState("");
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
-
-  const schools = [
-    "Cairo University",
-    "American University in Cairo",
-    "Ain Shams University",
-    "Alexandria University",
-    "Al-Azhar University",
-    "Helwan University",
-    "Mansoura University",
-    "Assiut University",
-    "Tanta University",
-    "Zagazig University",
-    "Benha University",
-    "Suez Canal University"
-  ];
+  const [schools, setSchools] = useState<{ id: number; name: string }[]>([]);
+  const [loadingSchools, setLoadingSchools] = useState(true);
 
   const allergies = [
     "Nuts",
@@ -53,16 +40,41 @@ const SignUp = () => {
   ];
 
   const signUpMutation = useMutation({
-    mutationFn: (data: { name: string; email: string; password: string; school: string }) =>
-      authApi.signUp(data),
+    mutationFn: (data: {
+      name: string;
+      email: string;
+      password: string;
+      password_confirmation: string;
+      role: string;
+      school_id: number;
+      phone?: string;
+      allergies: string[];
+    }) =>
+      authApi.register(data),
     onSuccess: () => {
       toast.success("Account created successfully");
       navigate("/");
     },
     onError: (error: any) => {
+      console.log("Registration error response:", error.response);
       toast.error(error.response?.data?.message || "Failed to create account");
     },
   });
+
+  useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        setLoadingSchools(true);
+        const response = await schoolApi.getSchools();
+        setSchools(response.data.data || []);
+      } catch (error) {
+        toast.error("Failed to fetch schools");
+      } finally {
+        setLoadingSchools(false);
+      }
+    };
+    fetchSchools();
+  }, []);
 
   const handleAllergyChange = (allergy: string, checked: boolean) => {
     if (checked) {
@@ -77,8 +89,24 @@ const SignUp = () => {
   };
 
   const handleSignUp = () => {
-    if (!name || !email || !password || !confirmPassword || !selectedSchool) {
-      toast.error("Please fill in all fields");
+    if (!name) {
+      toast.error("Please fill in your full name.");
+      return;
+    }
+    if (!selectedSchool) {
+      toast.error("Please select your school.");
+      return;
+    }
+    if (!email) {
+      toast.error("Please fill in your email.");
+      return;
+    }
+    if (!password) {
+      toast.error("Please fill in your password.");
+      return;
+    }
+    if (!confirmPassword) {
+      toast.error("Please confirm your password.");
       return;
     }
 
@@ -96,7 +124,10 @@ const SignUp = () => {
       name,
       email,
       password,
-      school: selectedSchool,
+      password_confirmation: confirmPassword,
+      role: 'student',
+      school_id: Number(selectedSchool),
+      allergies: selectedAllergies,
     });
   };
 
@@ -129,14 +160,14 @@ const SignUp = () => {
               className="h-12 bg-gray-100 border-0 text-base"
             />
 
-            <Select value={selectedSchool} onValueChange={setSelectedSchool}>
+            <Select value={selectedSchool} onValueChange={setSelectedSchool} disabled={loadingSchools}>
               <SelectTrigger className="h-12 bg-gray-100 border-0 text-base">
-                <SelectValue placeholder="Select your school" />
+                <SelectValue placeholder={loadingSchools ? "Loading schools..." : "Select your school"} />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                 {schools.map((school) => (
-                  <SelectItem key={school} value={school} className="hover:bg-gray-100">
-                    {school}
+                  <SelectItem key={school.id} value={String(school.id)}>
+                    {school.name}
                   </SelectItem>
                 ))}
               </SelectContent>

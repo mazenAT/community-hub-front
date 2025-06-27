@@ -1,162 +1,73 @@
-# Smart Community Mobile App
+# Smart Community React Template
 
-A cross-platform mobile application for managing community resources and services, built with React and Capacitor.
+A modern, customizable React template for SaaS, dashboards, and community platforms.
 
-## Features
+---
 
-- User authentication and authorization
-- Wallet management with transaction history
-- Real-time notifications
-- Native mobile features
-- TypeScript support
-- Redux state management
-- Comprehensive testing
-- Cross-platform (iOS & Android)
+## 🚀 Features
+- Modern React + Vite stack
+- Modular, clean code structure
+- Responsive design (mobile & desktop)
+- Authentication-ready
+- Role-based access control
+- Reusable components: tables, forms, charts, etc.
+- API integration ready
+- Theming with Tailwind CSS
 
-## Prerequisites
+---
 
-- Node.js (v14 or higher)
-- npm or yarn
-- Android Studio (for Android development)
-- Xcode (for iOS development, macOS only)
-- Capacitor CLI
+## 🛠️ Getting Started
 
-## Installation
-
-1. Clone the repository:
+### 1. Clone the repo
 ```bash
-git clone https://github.com/your-username/smart-community-app.git
-cd smart-community-app
+git clone https://github.com/yourusername/smart-community-template.git
+cd smart-community-template
 ```
 
-2. Install dependencies:
+### 2. Install dependencies
 ```bash
 npm install
 # or
 yarn install
 ```
 
-3. Create a `.env` file in the root directory:
-```env
-REACT_APP_API_URL=http://localhost:8000/api
-```
+### 3. Configure environment variables
+Copy `.env.example` to `.env` and fill in your values.
 
-## Development
-
-### Web Development
-Start the development server:
+### 4. Run the app
 ```bash
 npm start
 # or
 yarn start
 ```
 
-The application will be available at `http://localhost:3000`.
+---
 
-### Mobile Development
+## 📝 Customization
+- Update branding in `/public` and `/src/assets`
+- Change theme/colors in `tailwind.config.js`
+- Add or remove pages/components as needed
 
-Initialize Capacitor:
-```bash
-npm run cap:init
-```
+---
 
-Add platforms:
-```bash
-# For Android
-npm run cap:add:android
-
-# For iOS
-npm run cap:add:ios
-```
-
-Sync web code to native projects:
-```bash
-npm run cap:sync
-```
-
-Open native IDEs:
-```bash
-# For Android Studio
-npm run cap:open:android
-
-# For Xcode
-npm run cap:open:ios
-```
-
-Build and run:
-```bash
-# For Android
-npm run cap:build:android
-
-# For iOS
-npm run cap:build:ios
-```
-
-## Testing
-
-Run the test suite:
-```bash
-npm test
-# or
-yarn test
-```
-
-Run tests with coverage:
-```bash
-npm test -- --coverage
-# or
-yarn test --coverage
-```
-
-## Project Structure
-
+## 📦 Folder Structure
 ```
 src/
-  ├── components/        # React components
-  ├── store/            # Redux store configuration
-  ├── services/         # API and other services
-  ├── utils/            # Utility functions
-  ├── types/            # TypeScript type definitions
-  ├── hooks/            # Custom React hooks
-  ├── assets/           # Images, fonts, etc.
-  └── tests/            # Test files
+  components/
+  pages/
+  services/
+  assets/
+public/
+.env.example
 ```
 
-## Mobile-Specific Features
+---
 
-- Native device features access
-- Push notifications
-- Biometric authentication
-- Offline support
-- Deep linking
-- App state persistence
+## 📄 License
 
-## Contributing
+See [LICENSE](./LICENSE) for details.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+---
 
-## Security
-
-- All API requests are authenticated using JWT tokens
-- Secure storage for sensitive data
-- Biometric authentication support
-- Input validation and sanitization
-- Secure HTTP headers
-- Rate limiting on API endpoints
-
-## Performance
-
-- Code splitting for better load times
-- Caching strategies implemented
-- Optimized bundle size
-- Lazy loading of components
-- Memoization where appropriate
-- Native performance optimizations
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## 🙋 Support
+For questions or support, contact [your email or support link].
