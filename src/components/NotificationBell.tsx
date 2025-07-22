@@ -1,0 +1,139 @@
+import React, { useEffect, useState, useRef } from "react";
+import { Bell, CheckCircle, Loader2 } from "lucide-react";
+import { notificationApi } from "@/services/api";
+import { formatDistanceToNow, parseISO } from "date-fns";
+import { Button } from "@/components/ui/button";
+// import echo from "@/lib/echo"; // Removed
+import { useToast } from "@/hooks/use-toast";
+import { profileApi } from "@/services/api";
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import EmptyState from '@/components/common/EmptyState';
+
+interface Notification {
+  id: number;
+  title: string;
+  body: string;
+  read_at: string | null;
+  created_at: string;
+}
+
+const NotificationBell: React.FC = () => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  // Fetch user ID on mount
+  useEffect(() => {
+    profileApi.getProfile().then(res => {
+      setUserId(res.data.id);
+    });
+  }, []);
+
+  // Removed Echo subscription useEffect
+
+  const fetchNotifications = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await notificationApi.getNotifications();
+      setNotifications(Array.isArray(res.data) ? res.data : res.data.data || []);
+    } catch (err) {
+      setError("Failed to load notifications");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    // Optionally poll every 30s
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  const unreadCount = notifications.filter(n => !n.read_at).length;
+
+  const handleMarkAsRead = async (id: number) => {
+    try {
+      await notificationApi.markAsRead(id);
+      setNotifications(notifications => notifications.map(n => n.id === id ? { ...n, read_at: new Date().toISOString() } : n));
+    } catch {}
+  };
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        className={`relative p-2 rounded-full hover:bg-gray-100 focus:outline-none ${unreadCount > 0 ? 'animate-bounce' : ''}`}
+        onClick={() => setOpen(o => !o)}
+        aria-label="Notifications"
+        aria-haspopup="true"
+        aria-expanded={open}
+        tabIndex={0}
+      >
+        <Bell className="w-6 h-6 text-gray-600" aria-hidden="true" />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center animate-pulse" aria-live="polite">
+            {unreadCount}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-2 w-80 max-w-xs bg-white border border-gray-200 rounded-xl shadow-lg z-50">
+          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+            <span className="font-semibold text-gray-900">Notifications</span>
+            <Button size="sm" variant="ghost" onClick={fetchNotifications} disabled={loading}>
+              <Loader2 className={`w-4 h-4 animate-spin ${loading ? '' : 'hidden'}`} />
+              Refresh
+            </Button>
+          </div>
+          <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
+            {loading ? (
+              <div className="p-6 flex items-center justify-center text-gray-500">
+                <LoadingSpinner size={24} />
+              </div>
+            ) : error ? (
+              <div className="p-6 text-center text-red-500">{error}</div>
+            ) : notifications.length === 0 ? (
+              <EmptyState message="No notifications" />
+            ) : (
+              notifications.map(n => (
+                <div
+                  key={n.id}
+                  className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 ${!n.read_at ? 'bg-blue-50' : ''}`}
+                  onClick={() => handleMarkAsRead(n.id)}
+                >
+                  <div className="mt-1">
+                    {!n.read_at ? <span className="inline-block w-2 h-2 bg-blue-500 rounded-full" /> : <CheckCircle className="w-4 h-4 text-gray-300" />}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900 text-sm line-clamp-1">{n.title}</div>
+                    <div className="text-xs text-gray-600 line-clamp-2">{n.body}</div>
+                    <div className="text-xs text-gray-400 mt-1">{formatDistanceToNow(parseISO(n.created_at), { addSuffix: true })}</div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default NotificationBell; 

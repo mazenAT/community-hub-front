@@ -18,6 +18,9 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import NotificationBell from "@/components/NotificationBell";
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import EmptyState from '@/components/common/EmptyState';
 
 interface Meal {
   id: number;
@@ -65,7 +68,9 @@ const findPreOrderForMeal = (mealId: number, date: Date, plans?: WeeklyPlan[]): 
 
   const dateString = format(date, 'yyyy-MM-dd');
   for (const plan of plans) {
-    for (const order of plan.pre_orders || []) {
+    if (!Array.isArray(plan.pre_orders)) continue;
+    for (const order of plan.pre_orders) {
+      if (!Array.isArray(order.items)) continue;
       const item = order.items.find(item => 
         item.meal_id === mealId && 
         format(parseISO(item.meal_date), 'yyyy-MM-dd') === dateString
@@ -101,23 +106,29 @@ const Planner = () => {
   });
 
   const preOrderMutation = useMutation({
-    mutationFn: (mealId: number) => plannerApi.preOrderMeal(mealId),
+    mutationFn: (payload: any) => plannerApi.preOrderMeal(payload),
     onSuccess: () => {
       toast.success("Meal pre-ordered successfully");
-      // TODO: Optimistically update the pre-order status in the UI
-      // In a real app, you might want to update the status of the specific meal
-      // instead of refetching all plans.
-      // refetch();
+      refetch(); // Update the UI after pre-order
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to pre-order meal");
     },
   });
 
-  const handlePreOrder = (mealId: number) => {
-    // Basic check before attempting to pre-order
-    // More detailed checks (like status) would ideally be done before calling this function
-     preOrderMutation.mutate(mealId);
+  const handlePreOrder = (meal: MealWithPivot, date: Date) => {
+    if (!activePlan) return;
+    const payload = {
+      weekly_plan_id: activePlan.id,
+      items: [
+        {
+          meal_id: meal.id,
+          meal_date: format(date, 'yyyy-MM-dd'),
+          quantity: 1,
+        },
+      ],
+    };
+    preOrderMutation.mutate(payload);
   };
 
   // Add normalization helper
@@ -251,10 +262,11 @@ const Planner = () => {
     });
   }, []);
 
+  // Replace loading spinner in loading state
   if (isLoadingProfile || isLoadingPlans) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <LoadingSpinner size={48} />
       </div>
     );
   }
@@ -290,16 +302,19 @@ const Planner = () => {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-white px-4 py-4 sm:px-6 sm:py-6 border-b border-gray-100 shadow-sm">
-        <div className="flex items-center space-x-3">
-          <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Weekly Meal Planner</h1>
-            {activePlan ? (
-                <p className="text-xs sm:text-sm text-gray-500 mt-1">Plan active from {format(parseISO(activePlan.start_date), 'MMM dd')} to {format(parseISO(activePlan.end_date), 'MMM dd')}</p>
-            ) : (
-                 <p className="text-xs sm:text-sm text-gray-500 mt-1">No active weekly plan found for your school.</p>
-            )}
+        <div className="flex items-center space-x-3 justify-between">
+          <div className="flex items-center space-x-3">
+            <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Weekly Meal Planner</h1>
+              {activePlan ? (
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">Plan active from {format(parseISO(activePlan.start_date), 'MMM dd')} to {format(parseISO(activePlan.end_date), 'MMM dd')}</p>
+              ) : (
+                   <p className="text-xs sm:text-sm text-gray-500 mt-1">No active weekly plan found for your school.</p>
+              )}
+            </div>
           </div>
+          <NotificationBell />
         </div>
         {/* View Mode Toggle & Calendar */}
         <div className="mt-4 flex flex-wrap gap-2 items-center">
@@ -474,7 +489,7 @@ const Planner = () => {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
-                                    onClick={() => handlePreOrder(meal.id)}
+                                    onClick={() => handlePreOrder(meal, date)}
                                     disabled={!canOrder || preOrderMutation.isPending}
                                     className={`w-full mt-4 ${canOrder ? "bg-blue-500 hover:bg-blue-600 text-white" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}
                                   >
@@ -503,13 +518,9 @@ const Planner = () => {
               </div>
             </ScrollArea>
           ) : ( normalizedPlans && normalizedPlans.length > 0 && !activePlan ? (
-             <div className="text-center py-12">
-              <p className="text-gray-500">No active weekly plan found for your school for the current date.</p>
-            </div>
+             <EmptyState message="No active weekly plan found for your school for the current date." />
           ) : (
-             <div className="text-center py-12">
-              <p className="text-gray-500">No weekly plans found for your school.</p>
-            </div>
+             <EmptyState message="No weekly plans found for your school." />
           ))
           }
         </div>

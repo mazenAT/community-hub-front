@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { addOnApi } from "@/services/api";
+import { addOnOrderApi } from "@/services/api";
+import BottomNavigation from "@/components/BottomNavigation";
 
 interface AddOn {
   id: number;
@@ -39,10 +41,14 @@ const AddOns = () => {
     setQuantities((prev) => ({ ...prev, [id]: qty }));
   };
 
-  const handleAddToCart = (addOn: AddOn) => {
+  const handleOrderNow = async (addOn: AddOn) => {
     const qty = quantities[addOn.id] || 1;
-    // TODO: Integrate with cart/order logic
-    toast.success(`${qty} x ${addOn.name} added to cart!`);
+    try {
+      await addOnOrderApi.createOrder(addOn.id, qty);
+      toast.success(`${qty} x ${addOn.name} ordered successfully!`);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || `Failed to order ${addOn.name}`);
+    }
   };
 
   return (
@@ -51,35 +57,36 @@ const AddOns = () => {
         <h1 className="text-xl font-bold text-gray-900">Available Add-ons</h1>
         <p className="text-gray-500 text-sm">Choose extras to add to your order at any time.</p>
       </div>
-      <div className="px-4 py-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="px-4 py-6 grid grid-cols-1 gap-4">
         {loading ? (
           <div className="col-span-full text-center text-gray-500">Loading...</div>
         ) : addOns.length === 0 ? (
           <div className="col-span-full text-center text-gray-500">No add-ons available</div>
         ) : (
           addOns.filter(a => a.is_active).map((addOn) => (
-            <Card key={addOn.id} className="p-6 flex flex-col space-y-4">
+            <Card key={addOn.id} className="p-4 flex flex-col space-y-3">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">{addOn.name}</h2>
-                {addOn.description && <p className="text-gray-600 text-sm">{addOn.description}</p>}
+                <h2 className="text-base font-semibold text-gray-900">{addOn.name}</h2>
+                {addOn.description && <p className="text-gray-600 text-sm mt-1">{addOn.description}</p>}
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 space-y-2 sm:space-y-0">
                 <span className="text-blue-600 font-bold text-lg">{addOn.price.toFixed(2)} EGP</span>
                 <Input
                   type="number"
                   min={1}
                   value={quantities[addOn.id] || 1}
                   onChange={e => handleQuantityChange(addOn.id, e.target.value)}
-                  className="w-20 text-center"
+                  className="w-full sm:w-20 text-center"
                 />
-                <Button onClick={() => handleAddToCart(addOn)} className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Add to Cart
+                <Button onClick={() => handleOrderNow(addOn)} className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto">
+                  Order Now
                 </Button>
               </div>
             </Card>
           ))
         )}
       </div>
+      <BottomNavigation activeTab="addons" />
     </div>
   );
 };

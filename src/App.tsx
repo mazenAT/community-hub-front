@@ -12,6 +12,11 @@ import Planner from "./pages/Planner";
 import Recharge from "./pages/Recharge";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import RechargeHistory from "./pages/wallet/RechargeHistory";
+import OrderDetails from "./pages/orders/OrderDetails";
+import AddOns from "./pages/AddOns";
+import MyOrders from "./pages/orders/MyOrders";
+import FawryCallback from "./pages/FawryCallback";
 
 const queryClient = new QueryClient();
 
@@ -26,11 +31,17 @@ const App = () => (
           <Route path="/" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/fawry-callback" element={<FawryCallback />} />
 
           {/* Protected User Routes */}
           <Route path="/wallet" element={
             <ProtectedRoute>
               <Wallet />
+            </ProtectedRoute>
+          } />
+          <Route path="/wallet/history" element={
+            <ProtectedRoute>
+              <RechargeHistory />
             </ProtectedRoute>
           } />
           <Route path="/planner" element={
@@ -46,6 +57,21 @@ const App = () => (
           <Route path="/profile" element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/add-ons" element={
+            <ProtectedRoute>
+              <AddOns />
+            </ProtectedRoute>
+          } />
+          <Route path="/orders/:id" element={
+            <ProtectedRoute>
+              <OrderDetails />
+            </ProtectedRoute>
+          } />
+          <Route path="/orders/my-orders" element={
+            <ProtectedRoute>
+              <MyOrders />
             </ProtectedRoute>
           } />
 

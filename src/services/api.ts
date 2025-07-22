@@ -12,8 +12,13 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (token) {
+    // List of public endpoints that should NOT send the Authorization header
+    const publicEndpoints = ['/schools', '/auth/login', '/auth/register', '/auth/forgot-password', '/auth/reset-password'];
+    const isPublic = publicEndpoints.some((url) => config.url?.includes(url));
+    if (token && !isPublic) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      delete config.headers.Authorization;
     }
     return config;
   },
@@ -28,8 +33,6 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Don't redirect immediately, let components handle it
-      console.log('Authentication error - token may be invalid');
-      // Only remove token if it's definitely invalid
       if (error.response?.data?.message === 'Unauthenticated') {
         localStorage.removeItem('token');
       }
@@ -67,6 +70,33 @@ export const walletApi = {
     api.post('/wallet/top-up', data),
   withdraw: (data: { amount: number; bank_details: any }) =>
     api.post('/wallet/withdraw', data),
+  // New: Recharge via Fawry
+  rechargeFawry: (data: { cardToken: string; cvv: string }) =>
+    api.post('/wallet/recharge-fawry', data),
+  // New: Request refund
+  requestRefund: (data: { amount: number; reason?: string }) =>
+    api.post('/wallet/request-refund', data),
+  // New: Initiate Fawry recharge
+  initiateFawryRecharge: (data: { amount: number }) =>
+    api.post('/wallet/initiate-fawry-recharge', data),
+  // New: Get recharge/refund history
+  getRechargeHistory: () => api.get('/wallet/recharge-history'),
+  getRefunds: () => api.get('/wallet/refunds'),
+  // Refund a transaction
+  refundTransaction: (id: number, data?: { amount?: number; reason?: string }) =>
+    api.post(`/transactions/${id}/refund`, data),
+};
+
+// Notifications API
+export const notificationApi = {
+  getNotifications: () => api.get('/notifications'),
+  markAsRead: (id: number) => api.post(`/notifications/${id}/read`),
+};
+
+// Orders API
+export const ordersApi = {
+  getOrders: (params?: { status?: string }) => api.get('/orders', { params }),
+  getOrder: (id: number) => api.get(`/orders/${id}`),
 };
 
 export const profileApi = {
@@ -82,7 +112,7 @@ export const profileApi = {
 export const plannerApi = {
   getMeals: (params: { date?: string; type?: string; category?: string; subcategory?: string }) =>
     api.get('/meals', { params }),
-  preOrderMeal: (mealId: number) => api.post(`/meals/${mealId}/pre-order`),
+  preOrderMeal: (payload: any) => api.post('/student/pre-orders', payload),
   getWeeklyPlansBySchool: (schoolId: number) => api.get(`/schools/${schoolId}/weekly-plans`),
   getMealCategories: () => api.get('/meals/categories'),
   getMealSubcategories: () => api.get('/meals/subcategories'),
@@ -92,8 +122,22 @@ export const addOnApi = {
   getAddOns: () => api.get('/add-ons'),
 };
 
+export const addOnOrderApi = {
+  createOrder: (add_on_id: number, quantity: number) => api.post('/add-on-orders', { add_on_id, quantity }),
+  getMyOrders: () => api.get('/add-on-orders'),
+  getOrder: (id: number) => api.get(`/add-on-orders/${id}`),
+};
+
 export const schoolApi = {
   getSchools: () => api.get('/schools'),
+};
+
+export const studentPreOrdersApi = {
+  getMyPreOrders: () => api.get('/student/pre-orders'),
+};
+
+export const mealApi = {
+  getMeal: (id: number) => api.get(`/meals/${id}`),
 };
 
 export { api }; 

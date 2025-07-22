@@ -55,6 +55,7 @@ const Profile = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [allergies, setAllergies] = useState<string[]>([]);
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
+  const [allergiesInput, setAllergiesInput] = useState("");
 
   const { data: profileResponse, isLoading: isLoadingProfile, error: profileError, refetch: refetchProfile } = useQuery<{ data: UserProfile }>({
     queryKey: ["profile"],
@@ -68,23 +69,6 @@ const Profile = () => {
   });
 
   const profileData = profileResponse?.data;
-  console.log('Profile response:', profileResponse);
-  console.log('Profile data:', profileData);
-  console.log('Wallet:', profileData?.wallet);
-  console.log('Wallet balance:', profileData?.wallet?.balance);
-
-  const { data: transactionsResponse, isLoading: isLoadingTransactions, error: transactionsError, refetch: refetchTransactions } = useQuery<{ data: Transaction[] }>({
-    queryKey: ["transactions"],
-    queryFn: async () => {
-      const response = await walletApi.getTransactions();
-      // Transactions API uses successResponse which wraps in { success: true, data: [...] }
-      return response.data?.data ? response.data : { data: response.data };
-    },
-    retry: 3,
-    retryDelay: 1000,
-  });
-
-  const transactionsData = transactionsResponse?.data;
 
   useEffect(() => {
     setAllergies([
@@ -106,8 +90,22 @@ const Profile = () => {
       setSchoolName(profileData.school?.name || "");
       setPhone(profileData.phone || "");
       setSelectedAllergies(Array.isArray(profileData.allergies) ? profileData.allergies : []);
+      setAllergiesInput(Array.isArray(profileData.allergies) ? profileData.allergies.join(", ") : (profileData.allergies || ""));
     }
   }, [profileData]);
+
+  const { data: transactionsResponse, isLoading: isLoadingTransactions, error: transactionsError, refetch: refetchTransactions } = useQuery<{ data: Transaction[] }>({
+    queryKey: ["transactions"],
+    queryFn: async () => {
+      const response = await walletApi.getTransactions();
+      // Transactions API uses successResponse which wraps in { success: true, data: [...] }
+      return response.data?.data ? response.data : { data: response.data };
+    },
+    retry: 3,
+    retryDelay: 1000,
+  });
+
+  const transactionsData = transactionsResponse?.data;
 
   const updateProfileMutation = useMutation({
     mutationFn: (data: { name?: string; phone?: string | null; allergies?: string[]; }) => profileApi.updateProfile(data).then(response => response.data),
@@ -146,7 +144,7 @@ const Profile = () => {
   };
 
   const handleUpdateProfile = () => {
-    updateProfileMutation.mutate({ name, phone, allergies: selectedAllergies });
+    updateProfileMutation.mutate({ name, phone, allergies: allergiesInput.split(",").map(a => a.trim()).filter(Boolean) });
   };
 
   const handleChangePassword = () => {
@@ -230,7 +228,6 @@ const Profile = () => {
   }
 
   const user = profileData;
-  console.log('Profile user:', user);
   const balance = Number(user?.wallet?.balance) || 0;
 
   const totalSpent = transactionsData?.filter(t => t.type === 'debit').reduce((sum, t) => sum + t.amount, 0) || 0;
@@ -284,6 +281,28 @@ const Profile = () => {
               <span className="text-sm sm:text-base text-gray-600">Wallet Balance</span>
               <span className="text-sm sm:text-base font-medium text-gray-900">{formatAmount(balance, 'credit')}</span>
             </div>
+            {/* Allergies Badges (non-editable, no duplicates) */}
+            {allergiesInput && (
+              <div className="mt-4">
+                <div className="text-sm font-semibold text-gray-700 mb-1">Allergies</div>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {[...new Set(allergiesInput.split(',').map(a => a.trim()).filter(Boolean))].map((allergy, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold shadow-sm border border-blue-200"
+                    >
+                      {allergy}
+                    </span>
+                  ))}
+                </div>
+                <Button
+                  className="bg-blue-500 hover:bg-blue-600 text-white mb-4"
+                  onClick={() => navigate('/orders/my-orders')}
+                >
+                  My Orders
+                </Button>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -309,29 +328,6 @@ const Profile = () => {
                   onChange={(e) => setPhone(e.target.value)}
                   className="h-12 bg-gray-50"
                 />
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Allergies (Select all that apply)</label>
-                <div className="bg-gray-100 rounded-xl p-4 max-h-32 overflow-y-auto">
-                  <div className="grid grid-cols-2 gap-2">
-                    {allergies.map((allergy) => (
-                      <div key={allergy} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={allergy}
-                          checked={selectedAllergies.includes(allergy)}
-                          onChange={e => handleAllergyChange(allergy, e.target.checked)}
-                          className="accent-blue-500"
-                        />
-                        <label htmlFor={allergy} className="text-sm text-gray-700 cursor-pointer">
-                          {allergy}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
             </div>
             <Button
