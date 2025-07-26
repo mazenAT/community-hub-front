@@ -55,7 +55,7 @@ const Recharge = () => {
       cvv: cvv,
       isDefault: true,
       enable3ds: true,
-      returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${Date.now()}&amount=${finalAmount}&step=token`,
+      returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${Date.now()}&amount=${finalAmount}&step=token&customerProfileId=${profile.id}&customerName=${encodeURIComponent(profile.name)}&customerMobile=${mobile}&customerEmail=${encodeURIComponent(profile.email)}`,
     };
 
     try {
@@ -105,7 +105,7 @@ const Recharge = () => {
         amount.toFixed(2) + 
         cardToken + 
         cvv + 
-        `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment` + // returnUrl
+        `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment&customerProfileId=${profile.id}&customerName=${encodeURIComponent(profile.name)}&customerMobile=${profile.phone}&customerEmail=${encodeURIComponent(profile.email)}` + // returnUrl
         securityKey;
       
       const signature = await generateSHA256(signatureString);
@@ -135,7 +135,7 @@ const Recharge = () => {
           }
         ],
         enable3DS: true,
-        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment`,
+        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment&customerProfileId=${profile.id}&customerName=${encodeURIComponent(profile.name)}&customerMobile=${profile.phone}&customerEmail=${encodeURIComponent(profile.email)}`,
         signature: signature
       };
 

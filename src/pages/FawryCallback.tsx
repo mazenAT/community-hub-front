@@ -17,6 +17,12 @@ const FawryCallback = () => {
   const [amount, setAmount] = useState<string | null>(null);
   const [cvv, setCvv] = useState('');
   const [showCvvForm, setShowCvvForm] = useState(false);
+  const [profileData, setProfileData] = useState({
+    id: '777777', // Default fallback
+    name: 'Ahmed Ali', // Default fallback
+    mobile: '01234567891', // Default fallback
+    email: 'example@gmail.com' // Default fallback
+  });
 
   useEffect(() => {
     // Handle the callback from 3DS
@@ -28,9 +34,25 @@ const FawryCallback = () => {
     const message = params.get('message') || params.get('statusDescription'); // Check both message and statusDescription
     const token = params.get('cardToken') || params.get('token'); // Check both cardToken and token
     
+    // Get profile data from URL parameters
+    const customerProfileId = params.get('customerProfileId');
+    const customerName = params.get('customerName');
+    const customerMobile = params.get('customerMobile');
+    const customerEmail = params.get('customerEmail');
+    
     if (merchantRefNum && chargeAmount) {
       setStep(callbackStep);
       setAmount(chargeAmount);
+      
+      // Store profile data in state for later use
+      if (customerProfileId) {
+        setProfileData({
+          id: customerProfileId,
+          name: customerName || 'Ahmed Ali',
+          mobile: customerMobile || '01234567891',
+          email: customerEmail || 'example@gmail.com'
+        });
+      }
       
       if (callbackStep === 'token') {
         // This is callback from token creation step
@@ -84,14 +106,11 @@ const FawryCallback = () => {
 
     setLoading(true);
     try {
-      // Get user profile to get customerProfileId
-      const profileResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/profile`, {
-        headers: { 
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-      });
-      const profileData = await profileResponse.json();
-      const customerProfileId = profileData.data.id.toString();
+      // Use profile data from state (passed via URL parameters)
+      const customerProfileId = profileData.id;
+      const customerName = profileData.name;
+      const customerMobile = profileData.mobile;
+      const customerEmail = profileData.email;
 
       // Call Fawry directly for payment
       const merchantRefNum = Date.now().toString();
@@ -106,7 +125,7 @@ const FawryCallback = () => {
         parseFloat(amount).toFixed(2) + 
         cardToken + 
         cvv + 
-        `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment` + // returnUrl
+        `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}` + // returnUrl
         securityKey;
       
       const signature = await generateSHA256(signatureString);
@@ -117,9 +136,9 @@ const FawryCallback = () => {
         merchantCode: merchantCode,
         merchantRefNum: merchantRefNum,
         customerProfileId: customerProfileId,
-        customerName: profileData.data.name,
-        customerMobile: profileData.data.phone,
-        customerEmail: profileData.data.email,
+        customerName: customerName,
+        customerMobile: customerMobile,
+        customerEmail: customerEmail,
         cardToken: cardToken,
         cvv: cvv,
         amount: parseFloat(amount),
@@ -136,7 +155,7 @@ const FawryCallback = () => {
           }
         ],
         enable3DS: true,
-        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment`,
+        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}`,
         signature: signature
       };
 
