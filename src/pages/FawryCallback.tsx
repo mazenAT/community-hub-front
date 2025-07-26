@@ -172,14 +172,14 @@ const FawryCallback = () => {
       const paymentData = await paymentResponse.json();
       console.log('Fawry payment response:', paymentData);
 
-      if (paymentData.statusCode === 200 && paymentData.nextAction?.redirectUrl) {
-        // Payment requires 3DS, redirect to Fawry
-        window.location.href = paymentData.nextAction.redirectUrl;
-      } else if (paymentData.statusCode === 200) {
-        // Payment successful without 3DS, update wallet balance
+      if (paymentData.statusCode === 200) {
+        // Payment successful - update wallet balance
         await updateWalletBalance(parseFloat(amount));
         setSuccess(true);
-        toast.success('Payment successful! Your wallet has been recharged.');
+        // Don't show duplicate success message - updateWalletBalance will handle it
+      } else if (paymentData.nextAction?.redirectUrl) {
+        // Payment requires 3DS, redirect to Fawry
+        window.location.href = paymentData.nextAction.redirectUrl;
       } else {
         // Payment failed
         setError(paymentData.statusDescription || 'Failed to complete payment.');
@@ -206,6 +206,8 @@ const FawryCallback = () => {
   // Helper function to update wallet balance via backend
   const updateWalletBalance = async (amount: number) => {
     try {
+      console.log('Updating wallet balance with amount:', amount);
+      
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/wallet/update-balance`, {
         method: 'POST',
         headers: { 
@@ -219,12 +221,21 @@ const FawryCallback = () => {
         }),
       });
 
-      const data = await response.json();
-      if (!data.success) {
-        console.error('Failed to update wallet balance:', data.error);
+      console.log('Update balance response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Update balance success:', data);
+        toast.success('Wallet balance updated successfully!');
+        navigate('/wallet');
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to update wallet balance:', response.status, errorText);
+        toast.error(`Failed to update wallet balance: ${response.status}`);
       }
     } catch (error) {
       console.error('Error updating wallet balance:', error);
+      toast.error('Error updating wallet balance. Please contact support.');
     }
   };
 
