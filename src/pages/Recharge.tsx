@@ -53,7 +53,7 @@ const Recharge = () => {
       cvv: cvv,
       enable3ds: true,
       isDefault: false,
-      returnUrl: `http://localhost:3001/fawry-callback?amount=${finalAmount}`,
+      returnUrl: `https://community-hub-front.vercel.app/fawry-callback?amount=${finalAmount}`,
       cardAlias: cardAlias || profile.name, // Use state or fallback to profile name
     };
 
