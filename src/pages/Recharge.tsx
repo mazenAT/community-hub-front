@@ -43,33 +43,31 @@ const Recharge = () => {
     const finalAmount = selectedAmount || parseFloat(customAmount) || 0;
 
     const payload = {
-      merchantCode: "770000017341", // Your Fawry Merchant Code
-      customerProfileId: String(profile.id),
-      customerMobile: mobile,
-      customerEmail: profile.email,
+      amount: finalAmount,
       cardNumber: cardNumber,
-      expiryYear: expiryYear,
-      expiryMonth: expiryMonth,
+      cardExpiryYear: expiryYear,
+      cardExpiryMonth: expiryMonth,
       cvv: cvv,
-      enable3ds: true,
-      isDefault: false,
-      returnUrl: `https://community-hub-front.vercel.app/fawry-callback?amount=${finalAmount}`,
-      cardAlias: cardAlias || profile.name, // Use state or fallback to profile name
+      customerMobile: mobile,
+      customerName: cardAlias || profile.name,
     };
 
     try {
-      const response = await fetch('https://atfawry.fawrystaging.com/fawrypay-api/api/cards/cardToken', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/wallet/initiate-fawry-recharge`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: JSON.stringify(payload),
       });
 
       const data = await response.json();
 
-      if (data && data.nextAction && data.nextAction.redirectUrl) {
-        window.location.href = data.nextAction.redirectUrl;
+      if (data.success && data.redirectUrl) {
+        window.location.href = data.redirectUrl;
       } else {
-        toast.error(data.statusDescription || "Failed to initiate payment. Please check card details.");
+        toast.error(data.error || "Failed to initiate payment. Please check card details.");
         setIsSubmitting(false);
       }
     } catch (error) {

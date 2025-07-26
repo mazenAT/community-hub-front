@@ -16,11 +16,13 @@ const FawryCallback = () => {
   const [amount, setAmount] = useState<string | null>(null);
 
   useEffect(() => {
-    // Step 4: Handle the callback from 3DS and extract the token
+    // Handle the callback from 3DS and extract the parameters
     const params = new URLSearchParams(location.search);
-    const token = params.get('token');
-    const chargeAmount = params.get('amount');
-    if (token && chargeAmount) {
+    const token = params.get('token'); // From Fawry 3DS callback
+    const merchantRefNum = params.get('merchantRefNum'); // From our return URL
+    const chargeAmount = params.get('amount'); // From our return URL
+    
+    if (token && merchantRefNum && chargeAmount) {
       setCardToken(token);
       setAmount(chargeAmount);
     } else {
