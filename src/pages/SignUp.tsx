@@ -147,15 +147,6 @@ const SignUp = () => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
       <img src="/Logo.jpg" alt="App Logo" className="w-32 h-32 mb-6" />
       <div className="w-full max-w-sm space-y-8">
-        {/* App Icon */}
-        <div className="flex justify-center">
-          <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-          </div>
-        </div>
-
         {/* Welcome Text */}
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-semibold text-gray-900">Create Account</h1>
