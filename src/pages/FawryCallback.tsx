@@ -24,9 +24,9 @@ const FawryCallback = () => {
     const merchantRefNum = params.get('merchantRefNum');
     const chargeAmount = params.get('amount');
     const callbackStep = params.get('step');
-    const status = params.get('status');
-    const message = params.get('message');
-    const token = params.get('cardToken');
+    const status = params.get('status') || params.get('statusCode'); // Check both status and statusCode
+    const message = params.get('message') || params.get('statusDescription'); // Check both message and statusDescription
+    const token = params.get('cardToken') || params.get('token'); // Check both cardToken and token
     
     if (merchantRefNum && chargeAmount) {
       setStep(callbackStep);
