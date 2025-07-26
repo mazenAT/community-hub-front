@@ -42,36 +42,86 @@ const Recharge = () => {
     setIsSubmitting(true);
     const finalAmount = selectedAmount || parseFloat(customAmount) || 0;
 
-    const payload = {
-      amount: finalAmount,
-      cardNumber: cardNumber,
-      cardExpiryYear: expiryYear,
-      cardExpiryMonth: expiryMonth,
-      cvv: cvv,
+    // Step 1: Call Fawry directly for card token creation
+    const tokenPayload = {
+      merchantCode: '770000017341', // Your merchant code
+      customerProfileId: profile.id.toString(),
       customerMobile: mobile,
-      customerName: cardAlias || profile.name,
+      customerEmail: profile.email,
+      cardNumber: cardNumber,
+      cardAlias: cardAlias || profile.name,
+      expiryYear: expiryYear.length === 4 ? expiryYear.slice(-2) : expiryYear, // Convert 4-digit to 2-digit if needed
+      expiryMonth: expiryMonth,
+      cvv: cvv,
+      isDefault: true,
+      enable3ds: true,
+      returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${Date.now()}&amount=${finalAmount}&step=token`,
     };
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/wallet/initiate-fawry-recharge`, {
+      console.log('Calling Fawry card token endpoint directly:', tokenPayload);
+      
+      const tokenResponse = await fetch('https://atfawry.fawrystaging.com/fawrypay-api/api/cards/cardToken', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(tokenPayload),
+      });
+
+      const tokenData = await tokenResponse.json();
+      console.log('Fawry token response:', tokenData);
+
+      if (tokenData.statusCode === 200 && tokenData.nextAction?.redirectUrl) {
+        // Token creation requires 3DS, redirect to Fawry
+        window.location.href = tokenData.nextAction.redirectUrl;
+      } else if (tokenData.cardToken) {
+        // Token created successfully without 3DS, proceed to payment
+        await processPaymentWithToken(tokenData.cardToken);
+      } else {
+        // Token creation failed
+        toast.error(tokenData.statusDescription || "Failed to create card token. Please check card details.");
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error('Error calling Fawry:', error);
+      toast.error("An unexpected error occurred while creating card token. Please try again.");
+      setIsSubmitting(false);
+    }
+  };
+
+  // Helper function to process payment with token
+  const processPaymentWithToken = async (cardToken: string) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/wallet/recharge-fawry`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          cardToken: cardToken,
+          cvv: cvv,
+          amount: selectedAmount || parseFloat(customAmount) || 0
+        }),
       });
 
       const data = await response.json();
 
       if (data.success && data.redirectUrl) {
+        // Payment requires 3DS, redirect to Fawry
         window.location.href = data.redirectUrl;
+      } else if (data.message) {
+        // Payment successful without 3DS
+        toast.success('Payment successful! Your wallet has been recharged.');
+        navigate('/wallet');
       } else {
-        toast.error(data.error || "Failed to initiate payment. Please check card details.");
+        toast.error(data.error || "Failed to complete payment. Please try again.");
         setIsSubmitting(false);
       }
     } catch (error) {
-      toast.error("An unexpected error occurred. Please try again.");
+      console.error('Error processing payment:', error);
+      toast.error("An error occurred while completing payment. Please try again.");
       setIsSubmitting(false);
     }
   };
