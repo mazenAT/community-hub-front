@@ -7,9 +7,13 @@ import { Input } from "@/components/ui/input";
 import { secureStorage } from "@/services/native";
 import { authApi } from "@/services/api";
 
+const shakeClass = "animate-shake border-red-500";
+
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [shake, setShake] = useState<{ email: boolean; password: boolean }>({ email: false, password: false });
   const navigate = useNavigate();
 
   const signInMutation = useMutation({
@@ -21,16 +25,40 @@ const SignIn = () => {
       navigate("/wallet");
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to sign in");
+      const apiMsg = error.response?.data?.message || "Failed to sign in";
+      toast.error(apiMsg);
+      // Example: if API returns field errors, set them here
+      if (error.response?.data?.errors) {
+        setErrors(error.response.data.errors);
+        setShake({
+          email: !!error.response.data.errors.email,
+          password: !!error.response.data.errors.password,
+        });
+      } else {
+        setErrors({ email: apiMsg, password: apiMsg });
+        setShake({ email: true, password: true });
+      }
+      setTimeout(() => setShake({ email: false, password: false }), 600);
     },
   });
 
   const handleSignIn = () => {
-    if (!email || !password) {
-      toast.error("Please fill in all fields");
+    let newErrors: { email?: string; password?: string } = {};
+    let newShake = { email: false, password: false };
+    if (!email) {
+      newErrors.email = "Email is required";
+      newShake.email = true;
+    }
+    if (!password) {
+      newErrors.password = "Password is required";
+      newShake.password = true;
+    }
+    setErrors(newErrors);
+    setShake(newShake);
+    if (Object.keys(newErrors).length > 0) {
+      setTimeout(() => setShake({ email: false, password: false }), 600);
       return;
     }
-
     signInMutation.mutate({
       email,
       password,
@@ -38,7 +66,8 @@ const SignIn = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+      <img src="/Logo.jpg" alt="App Logo" className="w-32 h-32 mb-6" />
       <div className="w-full max-w-sm space-y-8">
         {/* App Icon */}
         <div className="flex justify-center">
@@ -63,15 +92,17 @@ const SignIn = () => {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-12 bg-gray-100 border-0 text-base"
+              className={`h-12 bg-gray-100 border-0 text-base ${shake.email ? shakeClass : ''}`}
             />
+            {errors.email && <div className="text-red-500 text-xs mt-1 animate-fade-in">{errors.email}</div>}
             <Input
               type="password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="h-12 bg-gray-100 border-0 text-base"
+              className={`h-12 bg-gray-100 border-0 text-base ${shake.password ? shakeClass : ''}`}
             />
+            {errors.password && <div className="text-red-500 text-xs mt-1 animate-fade-in">{errors.password}</div>}
           </div>
 
           <div className="flex justify-end">
@@ -110,6 +141,25 @@ const SignIn = () => {
           </button>
         </div>
       </div>
+      {/* Shake animation keyframes */}
+      <style>{`
+        .animate-shake {
+          animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+          10%, 90% { transform: translateX(-2px); }
+          20%, 80% { transform: translateX(4px); }
+          30%, 50%, 70% { transform: translateX(-8px); }
+          40%, 60% { transform: translateX(8px); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };

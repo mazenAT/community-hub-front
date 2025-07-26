@@ -150,9 +150,12 @@ const Wallet = () => {
       {/* Header */}
       <div className="bg-white px-4 sm:px-6 py-4 border-b border-gray-100">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Wallet</h1>
-            <p className="text-xs sm:text-sm text-gray-500">Welcome back, {userProfile?.name || 'User'}</p>
+          <div className="flex items-center gap-3">
+            <img src="/Logo.jpg" alt="App Logo" className="w-10 h-10 rounded" />
+            <div>
+              <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Wallet</h1>
+              <p className="text-xs sm:text-sm text-gray-500">Welcome back, {userProfile?.name || 'User'}</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <NotificationBell />
