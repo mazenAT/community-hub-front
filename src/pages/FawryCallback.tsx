@@ -84,19 +84,29 @@ const FawryCallback = () => {
 
     setLoading(true);
     try {
+      // Get user profile to get customerProfileId
+      const profileResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/profile`, {
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+      });
+      const profileData = await profileResponse.json();
+      const customerProfileId = profileData.data.id.toString();
+
       // Call Fawry directly for payment
       const merchantRefNum = Date.now().toString();
       const merchantCode = '770000017341';
       const securityKey = '02b9d0e3-5088-4b6e-be41-111d4359fe10';
       
-      // Generate signature for payment
+      // Generate signature for payment - same format as Recharge.tsx
       const signatureString = merchantCode + 
         merchantRefNum + 
-        '777777' + // customerProfileId - you might want to get this from user profile
+        customerProfileId + 
         'CARD' + 
         parseFloat(amount).toFixed(2) + 
         cardToken + 
         cvv + 
+        `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment` + // returnUrl
         securityKey;
       
       const signature = await generateSHA256(signatureString);
@@ -106,10 +116,10 @@ const FawryCallback = () => {
       const paymentPayload = {
         merchantCode: merchantCode,
         merchantRefNum: merchantRefNum,
-        customerProfileId: '777777', // You might want to get this from user profile
-        customerName: 'Ahmed Ali', // You might want to get this from user profile
-        customerMobile: '01234567891', // You might want to get this from user profile
-        customerEmail: 'example@gmail.com', // You might want to get this from user profile
+        customerProfileId: customerProfileId,
+        customerName: profileData.data.name,
+        customerMobile: profileData.data.phone,
+        customerEmail: profileData.data.email,
         cardToken: cardToken,
         cvv: cvv,
         amount: parseFloat(amount),

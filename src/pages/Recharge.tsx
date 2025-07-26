@@ -105,6 +105,7 @@ const Recharge = () => {
         amount.toFixed(2) + 
         cardToken + 
         cvv + 
+        `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment` + // returnUrl
         securityKey;
       
       const signature = await generateSHA256(signatureString);
