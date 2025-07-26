@@ -77,7 +77,7 @@ const Recharge = () => {
         window.location.href = tokenData.nextAction.redirectUrl;
       } else if (tokenData.cardToken) {
         // Token created successfully without 3DS, proceed to payment
-        await processPaymentWithToken(tokenData.cardToken);
+        await processPaymentWithToken(tokenData.cardToken, finalAmount);
       } else {
         // Token creation failed
         toast.error(tokenData.statusDescription || "Failed to create card token. Please check card details.");
@@ -90,33 +90,77 @@ const Recharge = () => {
     }
   };
 
-  // Helper function to process payment with token
-  const processPaymentWithToken = async (cardToken: string) => {
+  // Helper function to process payment with token directly with Fawry
+  const processPaymentWithToken = async (cardToken: string, amount: number) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/wallet/recharge-fawry`, {
+      const merchantRefNum = Date.now().toString();
+      const merchantCode = '770000017341';
+      const securityKey = '02b9d0e3-5088-4b6e-be41-111d4359fe10'; // Your security key
+      
+      // Generate signature for payment
+      const signatureString = merchantCode + 
+        merchantRefNum + 
+        profile.id.toString() + 
+        'CARD' + 
+        amount.toFixed(2) + 
+        cardToken + 
+        cvv + 
+        securityKey;
+      
+      const signature = await generateSHA256(signatureString);
+      console.log('Payment signature string:', signatureString);
+      console.log('Payment signature:', signature);
+
+      const paymentPayload = {
+        merchantCode: merchantCode,
+        merchantRefNum: merchantRefNum,
+        customerProfileId: profile.id.toString(),
+        customerName: profile.name,
+        customerMobile: profile.phone,
+        customerEmail: profile.email,
+        cardToken: cardToken,
+        cvv: cvv,
+        amount: amount,
+        paymentMethod: 'CARD',
+        currencyCode: 'EGP',
+        description: 'Wallet Recharge',
+        language: 'en-gb',
+        chargeItems: [
+          {
+            itemId: 'wallet_recharge',
+            description: 'Wallet Recharge',
+            price: amount,
+            quantity: 1
+          }
+        ],
+        enable3DS: true,
+        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment`,
+        signature: signature
+      };
+
+      console.log('Calling Fawry payment endpoint directly:', paymentPayload);
+
+      const paymentResponse = await fetch('https://atfawry.fawrystaging.com/ECommerceWeb/Fawry/payments/charge', {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          cardToken: cardToken,
-          cvv: cvv,
-          amount: selectedAmount || parseFloat(customAmount) || 0
-        }),
+        body: JSON.stringify(paymentPayload),
       });
 
-      const data = await response.json();
+      const paymentData = await paymentResponse.json();
+      console.log('Fawry payment response:', paymentData);
 
-      if (data.success && data.redirectUrl) {
+      if (paymentData.statusCode === 200 && paymentData.nextAction?.redirectUrl) {
         // Payment requires 3DS, redirect to Fawry
-        window.location.href = data.redirectUrl;
-      } else if (data.message) {
+        window.location.href = paymentData.nextAction.redirectUrl;
+      } else if (paymentData.statusCode === 200) {
         // Payment successful without 3DS
         toast.success('Payment successful! Your wallet has been recharged.');
         navigate('/wallet');
       } else {
-        toast.error(data.error || "Failed to complete payment. Please try again.");
+        // Payment failed
+        toast.error(paymentData.statusDescription || "Failed to complete payment. Please try again.");
         setIsSubmitting(false);
       }
     } catch (error) {
@@ -124,6 +168,15 @@ const Recharge = () => {
       toast.error("An error occurred while completing payment. Please try again.");
       setIsSubmitting(false);
     }
+  };
+
+  // Helper function to generate SHA256 hash
+  const generateSHA256 = async (message: string): Promise<string> => {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
   };
   
   const handleAmountSelect = (amount: number) => {

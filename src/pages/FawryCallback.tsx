@@ -84,37 +84,118 @@ const FawryCallback = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/wallet/recharge-fawry`, {
+      // Call Fawry directly for payment
+      const merchantRefNum = Date.now().toString();
+      const merchantCode = '770000017341';
+      const securityKey = '02b9d0e3-5088-4b6e-be41-111d4359fe10';
+      
+      // Generate signature for payment
+      const signatureString = merchantCode + 
+        merchantRefNum + 
+        '777777' + // customerProfileId - you might want to get this from user profile
+        'CARD' + 
+        parseFloat(amount).toFixed(2) + 
+        cardToken + 
+        cvv + 
+        securityKey;
+      
+      const signature = await generateSHA256(signatureString);
+      console.log('Payment signature string:', signatureString);
+      console.log('Payment signature:', signature);
+
+      const paymentPayload = {
+        merchantCode: merchantCode,
+        merchantRefNum: merchantRefNum,
+        customerProfileId: '777777', // You might want to get this from user profile
+        customerName: 'Ahmed Ali', // You might want to get this from user profile
+        customerMobile: '01234567891', // You might want to get this from user profile
+        customerEmail: 'example@gmail.com', // You might want to get this from user profile
+        cardToken: cardToken,
+        cvv: cvv,
+        amount: parseFloat(amount),
+        paymentMethod: 'CARD',
+        currencyCode: 'EGP',
+        description: 'Wallet Recharge',
+        language: 'en-gb',
+        chargeItems: [
+          {
+            itemId: 'wallet_recharge',
+            description: 'Wallet Recharge',
+            price: parseFloat(amount),
+            quantity: 1
+          }
+        ],
+        enable3DS: true,
+        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment`,
+        signature: signature
+      };
+
+      console.log('Calling Fawry payment endpoint directly:', paymentPayload);
+
+      const paymentResponse = await fetch('https://atfawry.fawrystaging.com/ECommerceWeb/Fawry/payments/charge', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(paymentPayload),
+      });
+
+      const paymentData = await paymentResponse.json();
+      console.log('Fawry payment response:', paymentData);
+
+      if (paymentData.statusCode === 200 && paymentData.nextAction?.redirectUrl) {
+        // Payment requires 3DS, redirect to Fawry
+        window.location.href = paymentData.nextAction.redirectUrl;
+      } else if (paymentData.statusCode === 200) {
+        // Payment successful without 3DS, update wallet balance
+        await updateWalletBalance(parseFloat(amount));
+        setSuccess(true);
+        toast.success('Payment successful! Your wallet has been recharged.');
+      } else {
+        // Payment failed
+        setError(paymentData.statusDescription || 'Failed to complete payment.');
+        toast.error(paymentData.statusDescription || 'Failed to complete payment.');
+      }
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      setError('An error occurred while completing payment.');
+      toast.error('An error occurred while completing payment.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper function to generate SHA256 hash
+  const generateSHA256 = async (message: string): Promise<string> => {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+  };
+
+  // Helper function to update wallet balance via backend
+  const updateWalletBalance = async (amount: number) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/wallet/update-balance`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          cardToken: cardToken,
-          cvv: cvv,
-          amount: amount
+          amount: amount,
+          type: 'recharge',
+          note: 'Recharge via Fawry (Direct)'
         }),
       });
 
       const data = await response.json();
-
-      if (data.success && data.redirectUrl) {
-        // Payment requires 3DS, redirect to Fawry
-        window.location.href = data.redirectUrl;
-      } else if (data.message) {
-        // Payment successful without 3DS
-        setSuccess(true);
-        toast.success('Payment successful! Your wallet has been recharged.');
-      } else {
-        setError(data.error || 'Failed to complete payment.');
-        toast.error(data.error || 'Failed to complete payment.');
+      if (!data.success) {
+        console.error('Failed to update wallet balance:', data.error);
       }
     } catch (error) {
-      setError('An error occurred while completing payment.');
-      toast.error('An error occurred while completing payment.');
-    } finally {
-      setLoading(false);
+      console.error('Error updating wallet balance:', error);
     }
   };
 
