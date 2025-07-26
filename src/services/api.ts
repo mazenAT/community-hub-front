@@ -2,7 +2,7 @@ import axios from 'axios';
 import { secureStorage } from './native';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8081/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api',
   headers: {
     'Content-Type': 'application/json',
   },

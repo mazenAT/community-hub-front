@@ -3,7 +3,7 @@ export const APP_CONFIG = {
   version: import.meta.env.VITE_APP_VERSION || '1.0.0',
   environment: import.meta.env.VITE_APP_ENV || 'development',
   api: {
-    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8081/api',
+    baseUrl: import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api',
     timeout: 30000,
     retryAttempts: 3,
   },
