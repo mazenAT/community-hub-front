@@ -255,54 +255,79 @@ const Recharge = () => {
   const finalAmount = selectedAmount || parseFloat(customAmount) || 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <div className="bg-white px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center space-x-3">
+    <div className="min-h-screen bg-brand-yellow/5 pb-24">
+      <div className="bg-white px-4 sm:px-6 py-4 border-b-2 border-brand-red flex items-center space-x-3">
         <button 
           onClick={() => navigate("/wallet")}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-brand-yellow/20 hover:bg-brand-yellow/30 transition border border-brand-yellow/30"
         >
-          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
         <div>
-          <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Recharge Wallet</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-brand-black">Recharge Wallet</h1>
         </div>
       </div>
 
       <div className="p-4 sm:p-6 space-y-4">
-        <Card>
-          <CardHeader><CardTitle>Select Amount</CardTitle></CardHeader>
+        <Card className="border border-brand-yellow/30 bg-brand-yellow/10">
+          <CardHeader><CardTitle className="text-brand-black">Select Amount</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[50, 100, 200, 500].map((amount) => (
-              <Button key={amount} variant={selectedAmount === amount ? "default" : "outline"} onClick={() => handleAmountSelect(amount)} className="h-16 text-lg">
+              <Button 
+                key={amount} 
+                variant={selectedAmount === amount ? "default" : "outline"} 
+                onClick={() => handleAmountSelect(amount)} 
+                className={`h-16 text-lg ${
+                  selectedAmount === amount 
+                    ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
+                    : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
+                }`}
+              >
                 {amount} EGP
               </Button>
             ))}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader><CardTitle>Or Enter Custom Amount</CardTitle></CardHeader>
+        <Card className="border border-brand-yellow/30 bg-brand-yellow/10">
+          <CardHeader><CardTitle className="text-brand-black">Or Enter Custom Amount</CardTitle></CardHeader>
           <CardContent>
-            <Input type="number" placeholder="e.g., 150" value={customAmount} onChange={(e) => handleCustomAmountChange(e.target.value)} className="h-12 text-lg"/>
+            <Input 
+              type="number" 
+              placeholder="e.g., 150" 
+              value={customAmount} 
+              onChange={(e) => handleCustomAmountChange(e.target.value)} 
+              className="h-12 text-lg border-brand-yellow/30 focus:border-brand-red"
+            />
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader><CardTitle>Card Information</CardTitle></CardHeader>
+        <Card className="border border-brand-yellow/30 bg-brand-yellow/10">
+          <CardHeader><CardTitle className="text-brand-black">Card Information</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             {/* Payment Mode Selection */}
             <div className="flex space-x-4 mb-4">
               <Button
                 variant={paymentMode === 'saved' ? 'default' : 'outline'}
                 onClick={() => setPaymentMode('saved')}
+                className={`${
+                  paymentMode === 'saved' 
+                    ? 'bg-brand-orange text-white border-brand-orange hover:bg-brand-orange/90' 
+                    : 'bg-white text-brand-black border-brand-orange hover:bg-brand-orange/10'
+                }`}
               >
                 Use Saved Card
               </Button>
               <Button
                 variant={paymentMode === 'new' ? 'default' : 'outline'}
                 onClick={() => setPaymentMode('new')}
+                className={`${
+                  paymentMode === 'new' 
+                    ? 'bg-brand-orange text-white border-brand-orange hover:bg-brand-orange/90' 
+                    : 'bg-white text-brand-black border-brand-orange hover:bg-brand-orange/10'
+                }`}
               >
                 Add New Card
               </Button>
@@ -315,34 +340,65 @@ const Recharge = () => {
                   selectedCardId={selectedCard?.id}
                 />
                 {selectedCard && (
-                  <div className="p-4 border rounded-lg bg-blue-50">
-                    <p className="text-sm text-gray-600 mb-2">Selected card: {selectedCard.card_alias}</p>
+                  <div className="p-4 border border-brand-yellow/30 rounded-lg bg-brand-yellow/20">
+                    <p className="text-sm text-brand-black/70 mb-2">Selected card: {selectedCard.card_alias}</p>
                     <Input
                       placeholder="CVV"
                       value={cvv}
                       onChange={(e) => setCvv(e.target.value)}
                       maxLength={4}
-                      className="w-32"
+                      className="w-32 border-brand-yellow/30 focus:border-brand-red"
                     />
                   </div>
                 )}
               </div>
             ) : (
               <div className="space-y-2">
-                <Input placeholder="Mobile Number (e.g. 01012345678)" value={mobile} onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, '').slice(0,11))} maxLength={11} />
-                <Input placeholder="Name on Card" value={cardAlias} onChange={(e) => setCardAlias(e.target.value)} />
-                <Input placeholder="Card Number" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} />
+                <Input 
+                  placeholder="Mobile Number (e.g. 01012345678)" 
+                  value={mobile} 
+                  onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, '').slice(0,11))} 
+                  maxLength={11} 
+                  className="border-brand-yellow/30 focus:border-brand-red"
+                />
+                <Input 
+                  placeholder="Name on Card" 
+                  value={cardAlias} 
+                  onChange={(e) => setCardAlias(e.target.value)} 
+                  className="border-brand-yellow/30 focus:border-brand-red"
+                />
+                <Input 
+                  placeholder="Card Number" 
+                  value={cardNumber} 
+                  onChange={(e) => setCardNumber(e.target.value)} 
+                  className="border-brand-yellow/30 focus:border-brand-red"
+                />
                 <div className="flex gap-2">
-                  <Input placeholder="MM" value={expiryMonth} onChange={(e) => setExpiryMonth(e.target.value)} />
-                  <Input placeholder="YY" value={expiryYear} onChange={(e) => setExpiryYear(e.target.value)} />
+                  <Input 
+                    placeholder="MM" 
+                    value={expiryMonth} 
+                    onChange={(e) => setExpiryMonth(e.target.value)} 
+                    className="border-brand-yellow/30 focus:border-brand-red"
+                  />
+                  <Input 
+                    placeholder="YY" 
+                    value={expiryYear} 
+                    onChange={(e) => setExpiryYear(e.target.value)} 
+                    className="border-brand-yellow/30 focus:border-brand-red"
+                  />
                 </div>
-                <Input placeholder="CVV" value={cvv} onChange={(e) => setCvv(e.target.value)} />
+                <Input 
+                  placeholder="CVV" 
+                  value={cvv} 
+                  onChange={(e) => setCvv(e.target.value)} 
+                  className="border-brand-yellow/30 focus:border-brand-red"
+                />
               </div>
             )}
           </CardContent>
         </Card>
 
-        <div className="bg-blue-500 text-white p-4 rounded-lg">
+        <div className="bg-brand-red text-white p-4 rounded-lg">
           <div className="flex justify-between items-center text-lg font-bold">
             <span>Total</span>
             <span>{finalAmount.toFixed(2)} EGP</span>
@@ -350,8 +406,12 @@ const Recharge = () => {
         </div>
       </div>
       
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 sm:px-6 py-4">
-        <Button onClick={handleRechargeClick} disabled={isSubmitting || finalAmount <= 0} className="w-full h-14 text-xl">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-brand-red px-4 sm:px-6 py-4">
+        <Button 
+          onClick={handleRechargeClick} 
+          disabled={isSubmitting || finalAmount <= 0} 
+          className="w-full h-14 text-xl bg-brand-red hover:bg-brand-red/90 text-white"
+        >
           {isSubmitting ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : `Pay ${finalAmount.toFixed(2)} EGP`}
         </Button>
       </div>

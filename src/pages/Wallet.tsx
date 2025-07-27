@@ -205,13 +205,6 @@ const Wallet = () => {
               >
                 Request Refund
               </Button>
-              <Button
-                onClick={() => navigate("/wallet/history")}
-                className="bg-white text-brand-red border-0 rounded-xl text-base w-full xs:w-auto shadow"
-                variant="outline"
-              >
-                View History
-              </Button>
             </div>
           </div>
         </Card>

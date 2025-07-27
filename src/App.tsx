@@ -13,9 +13,8 @@ import Planner from "./pages/Planner";
 import Recharge from "./pages/Recharge";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
-import RechargeHistory from "./pages/wallet/RechargeHistory";
 import OrderDetails from "./pages/orders/OrderDetails";
-import AddOns from "./pages/AddOns";
+
 import MyOrders from "./pages/orders/MyOrders";
 import FawryCallback from "./pages/FawryCallback";
 
@@ -41,11 +40,6 @@ const App = () => (
               <Wallet />
             </ProtectedRoute>
           } />
-          <Route path="/wallet/history" element={
-            <ProtectedRoute>
-              <RechargeHistory />
-            </ProtectedRoute>
-          } />
           <Route path="/planner" element={
             <ProtectedRoute>
               <Planner />
@@ -61,11 +55,7 @@ const App = () => (
               <Profile />
             </ProtectedRoute>
           } />
-          <Route path="/add-ons" element={
-            <ProtectedRoute>
-              <AddOns />
-            </ProtectedRoute>
-          } />
+
           <Route path="/orders/:id" element={
             <ProtectedRoute>
               <OrderDetails />

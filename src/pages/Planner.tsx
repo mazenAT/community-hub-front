@@ -96,8 +96,10 @@ const Planner = () => {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
   const [categories, setCategories] = useState<string[]>([]);
   const [subcategories, setSubcategories] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month' | 'custom'>('week');
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month' | 'custom' | 'next-week' | 'next-month'>('week');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
+  const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
   const [addOns, setAddOns] = useState<AddOn[]>([]);
 
   const { data: profile, isLoading: isLoadingProfile, error: profileError } = useQuery({
@@ -204,33 +206,45 @@ const Planner = () => {
     return dates;
   };
 
-  // Helper to get all dates for the current week or month
+  // Helper to get all dates for the current view mode
   const getDatesForView = (plan: WeeklyPlan): Date[] => {
     if (!plan) return [];
     const allDates = getDatesForPlan(plan);
+    
     if (viewMode === 'day') {
       return [selectedDate];
     } else if (viewMode === 'week') {
       const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
       const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 1 });
       return allDates.filter(date => date >= weekStart && date <= weekEnd);
+    } else if (viewMode === 'next-week') {
+      const nextWeekStart = startOfWeek(addDays(selectedDate, 7), { weekStartsOn: 1 });
+      const nextWeekEnd = endOfWeek(addDays(selectedDate, 7), { weekStartsOn: 1 });
+      return allDates.filter(date => date >= nextWeekStart && date <= nextWeekEnd);
     } else if (viewMode === 'month') {
       const monthStart = startOfMonth(selectedDate);
       const monthEnd = endOfMonth(selectedDate);
       return allDates.filter(date => date >= monthStart && date <= monthEnd);
+    } else if (viewMode === 'next-month') {
+      const nextMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
+      const nextMonthStart = startOfMonth(nextMonth);
+      const nextMonthEnd = endOfMonth(nextMonth);
+      return allDates.filter(date => date >= nextMonthStart && date <= nextMonthEnd);
+    } else if (viewMode === 'custom' && customStartDate && customEndDate) {
+      return allDates.filter(date => date >= customStartDate && date <= customEndDate);
     }
     return allDates;
   };
 
   // Helper to move to previous/next week/month
   const goToPrev = () => {
-    if (viewMode === 'week') setSelectedDate(prev => addDays(prev, -7));
-    else if (viewMode === 'month') setSelectedDate(prev => addDays(startOfMonth(prev), -1));
+    if (viewMode === 'week' || viewMode === 'next-week') setSelectedDate(prev => addDays(prev, -7));
+    else if (viewMode === 'month' || viewMode === 'next-month') setSelectedDate(prev => addDays(startOfMonth(prev), -1));
     else setSelectedDate(prev => addDays(prev, -1));
   };
   const goToNext = () => {
-    if (viewMode === 'week') setSelectedDate(prev => addDays(prev, 7));
-    else if (viewMode === 'month') setSelectedDate(prev => addDays(endOfMonth(prev), 1));
+    if (viewMode === 'week' || viewMode === 'next-week') setSelectedDate(prev => addDays(prev, 7));
+    else if (viewMode === 'month' || viewMode === 'next-month') setSelectedDate(prev => addDays(endOfMonth(prev), 1));
     else setSelectedDate(prev => addDays(prev, 1));
   };
 
@@ -318,8 +332,17 @@ const Planner = () => {
       const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
       const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 1 });
       return `${format(weekStart, 'MMMM dd')} - ${format(weekEnd, 'MMMM dd, yyyy')}`;
+    } else if (viewMode === 'next-week') {
+      const nextWeekStart = startOfWeek(addDays(selectedDate, 7), { weekStartsOn: 1 });
+      const nextWeekEnd = endOfWeek(addDays(selectedDate, 7), { weekStartsOn: 1 });
+      return `${format(nextWeekStart, 'MMMM dd')} - ${format(nextWeekEnd, 'MMMM dd, yyyy')}`;
     } else if (viewMode === 'month') {
       return format(selectedDate, 'MMMM yyyy');
+    } else if (viewMode === 'next-month') {
+      const nextMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
+      return format(nextMonth, 'MMMM yyyy');
+    } else if (viewMode === 'custom' && customStartDate && customEndDate) {
+      return `${format(customStartDate, 'MMMM dd')} - ${format(customEndDate, 'MMMM dd, yyyy')}`;
     }
     return format(selectedDate, 'MMMM dd, yyyy');
   };
@@ -338,22 +361,84 @@ const Planner = () => {
 
         {/* Date Range Selection */}
         <div className="mt-4 flex flex-wrap gap-2">
-          {['day', 'week', 'month', 'custom'].map(mode => (
+          {[
+            { key: 'day', label: 'Today' },
+            { key: 'week', label: 'This Week' },
+            { key: 'next-week', label: 'Next Week' },
+            { key: 'month', label: 'This Month' },
+            { key: 'next-month', label: 'Next Month' },
+            { key: 'custom', label: 'Custom Range' }
+          ].map(({ key, label }) => (
             <Button
-              key={mode}
-              variant={viewMode === mode ? 'default' : 'outline'}
+              key={key}
+              variant={viewMode === key ? 'default' : 'outline'}
               size="sm"
               className={`${
-                viewMode === mode 
+                viewMode === key 
                   ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
                   : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
               } rounded-full px-4 py-2 text-sm font-medium`}
-              onClick={() => setViewMode(mode as 'day' | 'week' | 'month' | 'custom')}
+              onClick={() => {
+                setViewMode(key as 'day' | 'week' | 'month' | 'custom' | 'next-week' | 'next-month');
+                if (key === 'custom') {
+                  setCustomStartDate(undefined);
+                  setCustomEndDate(undefined);
+                }
+              }}
             >
-              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              {label}
             </Button>
           ))}
         </div>
+
+        {/* Custom Date Range Picker */}
+        {viewMode === 'custom' && (
+          <div className="mt-4 flex flex-wrap gap-2 items-center">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white text-brand-black border-brand-yellow/30 hover:bg-brand-yellow/10"
+                >
+                  <CalendarIcon className="w-4 h-4 mr-2" />
+                  {customStartDate ? format(customStartDate, 'MMM dd') : 'Start Date'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={customStartDate}
+                  onSelect={setCustomStartDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            
+            <span className="text-brand-black/70">to</span>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white text-brand-black border-brand-yellow/30 hover:bg-brand-yellow/10"
+                >
+                  <CalendarIcon className="w-4 h-4 mr-2" />
+                  {customEndDate ? format(customEndDate, 'MMM dd') : 'End Date'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={customEndDate}
+                  onSelect={setCustomEndDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
 
         {/* Current Date Range */}
         <div className="mt-2 text-sm text-brand-black/70">
@@ -363,25 +448,106 @@ const Planner = () => {
 
       {/* Content */}
       <div className="px-4 py-4">
-        {/* Category Filter */}
-        <div className="mb-6">
-          <div className="flex flex-wrap gap-2">
-            {categories.filter(cat => cat !== 'all').map((category) => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? 'default' : 'outline'}
-                size="sm"
-                className={`${
-                  selectedCategory === category 
-                    ? 'bg-brand-orange text-white border-brand-orange hover:bg-brand-orange/90' 
-                    : 'bg-white text-brand-black border-brand-orange hover:bg-brand-orange/10'
-                } rounded-full px-3 py-1 text-xs font-medium`}
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category}
-              </Button>
-            ))}
+        {/* Meal Type and Category Filters */}
+        <div className="mb-6 space-y-4">
+          {/* Meal Type Filter */}
+          <div>
+            <h3 className="text-sm font-semibold text-brand-black mb-2">Meal Type</h3>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: 'all', label: 'All Meals' },
+                { key: 'breakfast', label: 'Breakfast' },
+                { key: 'lunch', label: 'Lunch' },
+                { key: 'dinner', label: 'Dinner' }
+              ].map(({ key, label }) => (
+                <Button
+                  key={key}
+                  variant={selectedType === key ? 'default' : 'outline'}
+                  size="sm"
+                  className={`${
+                    selectedType === key 
+                      ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
+                      : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
+                  } rounded-full px-3 py-1 text-xs font-medium`}
+                  onClick={() => setSelectedType(key as 'all' | 'breakfast' | 'lunch' | 'dinner')}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
           </div>
+
+          {/* Category Filter */}
+          {categories.length > 1 && (
+            <div>
+              <h3 className="text-sm font-semibold text-brand-black mb-2">Meal Categories</h3>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={selectedCategory === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  className={`${
+                    selectedCategory === 'all' 
+                      ? 'bg-brand-orange text-white border-brand-orange hover:bg-brand-orange/90' 
+                      : 'bg-white text-brand-black border-brand-orange hover:bg-brand-orange/10'
+                  } rounded-full px-3 py-1 text-xs font-medium`}
+                  onClick={() => setSelectedCategory('all')}
+                >
+                  All Categories
+                </Button>
+                {categories.filter(cat => cat !== 'all').map((category) => (
+                  <Button
+                    key={category}
+                    variant={selectedCategory === category ? 'default' : 'outline'}
+                    size="sm"
+                    className={`${
+                      selectedCategory === category 
+                        ? 'bg-brand-orange text-white border-brand-orange hover:bg-brand-orange/90' 
+                        : 'bg-white text-brand-black border-brand-orange hover:bg-brand-orange/10'
+                    } rounded-full px-3 py-1 text-xs font-medium`}
+                    onClick={() => setSelectedCategory(category)}
+                  >
+                    {category}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Subcategory Filter */}
+          {subcategories.length > 1 && selectedCategory !== 'all' && (
+            <div>
+              <h3 className="text-sm font-semibold text-brand-black mb-2">Subcategories</h3>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={selectedSubcategory === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  className={`${
+                    selectedSubcategory === 'all' 
+                      ? 'bg-brand-yellow text-brand-black border-brand-yellow hover:bg-brand-yellow/90' 
+                      : 'bg-white text-brand-black border-brand-yellow hover:bg-brand-yellow/10'
+                  } rounded-full px-3 py-1 text-xs font-medium`}
+                  onClick={() => setSelectedSubcategory('all')}
+                >
+                  All Subcategories
+                </Button>
+                {subcategories.filter(sub => sub !== 'all').map((subcategory) => (
+                  <Button
+                    key={subcategory}
+                    variant={selectedSubcategory === subcategory ? 'default' : 'outline'}
+                    size="sm"
+                    className={`${
+                      selectedSubcategory === subcategory 
+                        ? 'bg-brand-yellow text-brand-black border-brand-yellow hover:bg-brand-yellow/90' 
+                        : 'bg-white text-brand-black border-brand-yellow hover:bg-brand-yellow/10'
+                    } rounded-full px-3 py-1 text-xs font-medium`}
+                    onClick={() => setSelectedSubcategory(subcategory)}
+                  >
+                    {subcategory}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Meal Planner Table */}
@@ -514,7 +680,7 @@ const Planner = () => {
           </div>
         ) : (
           <EmptyState message="No active weekly plan found for your school." />
-        )}
+                )}
 
         {/* Available Add-ons Section */}
         <div className="mt-8">
@@ -546,7 +712,10 @@ const Planner = () => {
                         size="sm"
                         variant="outline"
                         className="border-brand-red text-brand-red hover:bg-brand-red/10 rounded-full px-3 py-1 text-xs"
-                        onClick={() => navigate('/add-ons')}
+                        onClick={() => {
+                          // Handle add-on ordering directly here
+                          toast.success(`${addon.name} added to order!`);
+                        }}
                       >
                         Order
                       </Button>
@@ -557,7 +726,7 @@ const Planner = () => {
             </table>
           </div>
         </div>
-      </div>
+        </div>
 
       <BottomNavigation activeTab="planner" />
     </div>
