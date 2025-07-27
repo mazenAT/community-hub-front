@@ -52,33 +52,33 @@ const AddOns = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-white px-4 py-4 border-b border-gray-100 shadow-sm">
-        <h1 className="text-xl font-bold text-gray-900">Available Add-ons</h1>
-        <p className="text-gray-500 text-sm">Choose extras to add to your order at any time.</p>
+    <div className="min-h-screen bg-brand-yellow/5 pb-20">
+      <div className="bg-white px-4 py-4 border-b-2 border-brand-red shadow-sm">
+        <h1 className="text-xl font-bold text-brand-black">Available Add-ons</h1>
+        <p className="text-brand-black/70 text-sm">Choose extras to add to your order at any time.</p>
       </div>
       <div className="px-4 py-6 grid grid-cols-1 gap-4">
         {loading ? (
-          <div className="col-span-full text-center text-gray-500">Loading...</div>
+          <div className="col-span-full text-center text-brand-black/70">Loading...</div>
         ) : addOns.length === 0 ? (
-          <div className="col-span-full text-center text-gray-500">No add-ons available</div>
+          <div className="col-span-full text-center text-brand-black/70">No add-ons available</div>
         ) : (
           addOns.filter(a => a.is_active).map((addOn) => (
-            <Card key={addOn.id} className="p-4 flex flex-col space-y-3">
+            <Card key={addOn.id} className="p-4 flex flex-col space-y-3 border border-brand-yellow/30 bg-brand-yellow/10">
               <div>
-                <h2 className="text-base font-semibold text-gray-900">{addOn.name}</h2>
-                {addOn.description && <p className="text-gray-600 text-sm mt-1">{addOn.description}</p>}
+                <h2 className="text-base font-semibold text-brand-black">{addOn.name}</h2>
+                {addOn.description && <p className="text-brand-black/70 text-sm mt-1">{addOn.description}</p>}
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 space-y-2 sm:space-y-0">
-                <span className="text-blue-600 font-bold text-lg">{addOn.price.toFixed(2)} EGP</span>
+                <span className="text-brand-red font-bold text-lg">{addOn.price.toFixed(2)} EGP</span>
                 <Input
                   type="number"
                   min={1}
                   value={quantities[addOn.id] || 1}
                   onChange={e => handleQuantityChange(addOn.id, e.target.value)}
-                  className="w-full sm:w-20 text-center"
+                  className="w-full sm:w-20 text-center border-brand-yellow/30 focus:border-brand-red"
                 />
-                <Button onClick={() => handleOrderNow(addOn)} className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto">
+                <Button onClick={() => handleOrderNow(addOn)} className="bg-brand-red hover:bg-brand-red/90 text-white w-full sm:w-auto">
                   Order Now
                 </Button>
               </div>

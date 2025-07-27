@@ -144,13 +144,13 @@ const SignUp = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-brand-yellow/10">
       <img src="/Logo.jpg" alt="App Logo" className="w-32 h-32 mb-6" />
       <div className="w-full max-w-sm space-y-8">
         {/* Welcome Text */}
         <div className="text-center space-y-2">
-          <h1 className="text-2xl font-semibold text-gray-900">Create Account</h1>
-          <p className="text-gray-500">Sign up to get started</p>
+          <h1 className="text-2xl font-semibold text-brand-black">Create Account</h1>
+          <p className="text-brand-black/70">Sign up to get started</p>
         </div>
 
         {/* Sign Up Form */}
@@ -161,15 +161,15 @@ const SignUp = () => {
               placeholder="Full Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className={`h-12 bg-gray-100 border-0 text-base ${shake.name ? 'animate-shake border-red-500' : ''}`}
+              className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.name ? 'animate-shake border-brand-red' : ''}`}
             />
-            {errors.name && <div className="text-red-500 text-xs mt-1 animate-fade-in">{errors.name}</div>}
+            {errors.name && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.name}</div>}
 
             <Select value={selectedSchool} onValueChange={setSelectedSchool} disabled={loadingSchools}>
-              <SelectTrigger className={`h-12 bg-gray-100 border-0 text-base ${shake.selectedSchool ? 'animate-shake border-red-500' : ''}`}>
+              <SelectTrigger className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.selectedSchool ? 'animate-shake border-brand-red' : ''}`}>
                 <SelectValue placeholder={loadingSchools ? "Loading schools..." : "Select your school"} />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+              <SelectContent className="bg-white border border-brand-yellow/30 shadow-lg z-50">
                 {schools.map((school) => (
                   <SelectItem key={school.id} value={String(school.id)}>
                     {school.name}
@@ -177,12 +177,12 @@ const SignUp = () => {
                 ))}
               </SelectContent>
             </Select>
-            {errors.selectedSchool && <div className="text-red-500 text-xs mt-1 animate-fade-in">{errors.selectedSchool}</div>}
+            {errors.selectedSchool && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.selectedSchool}</div>}
 
             {/* Allergies Selection */}
             <div className="space-y-3">
-              <label className="text-sm font-medium text-gray-700">Allergies (Select all that apply)</label>
-              <div className="bg-gray-100 rounded-xl p-4 max-h-32 overflow-y-auto">
+              <label className="text-sm font-medium text-brand-black">Allergies (Select all that apply)</label>
+              <div className="bg-brand-yellow/10 rounded-xl p-4 max-h-32 overflow-y-auto border border-brand-yellow/30">
                 <div className="grid grid-cols-2 gap-2">
                   {allergies.map((allergy) => (
                     <div key={allergy} className="flex items-center space-x-2">
@@ -190,9 +190,9 @@ const SignUp = () => {
                         id={allergy}
                         checked={selectedAllergies.includes(allergy)}
                         onCheckedChange={(checked) => handleAllergyChange(allergy, checked as boolean)}
-                        className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                        className="data-[state=checked]:bg-brand-red data-[state=checked]:border-brand-red"
                       />
-                      <label htmlFor={allergy} className="text-sm text-gray-700 cursor-pointer">
+                      <label htmlFor={allergy} className="text-sm text-brand-black cursor-pointer">
                         {allergy}
                       </label>
                     </div>
@@ -206,39 +206,39 @@ const SignUp = () => {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={`h-12 bg-gray-100 border-0 text-base ${shake.email ? 'animate-shake border-red-500' : ''}`}
+              className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.email ? 'animate-shake border-brand-red' : ''}`}
             />
-            {errors.email && <div className="text-red-500 text-xs mt-1 animate-fade-in">{errors.email}</div>}
+            {errors.email && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.email}</div>}
             <Input
               type="password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`h-12 bg-gray-100 border-0 text-base ${shake.password ? 'animate-shake border-red-500' : ''}`}
+              className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.password ? 'animate-shake border-brand-red' : ''}`}
             />
-            {errors.password && <div className="text-red-500 text-xs mt-1 animate-fade-in">{errors.password}</div>}
+            {errors.password && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.password}</div>}
             <Input
               type="password"
               placeholder="Confirm Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className={`h-12 bg-gray-100 border-0 text-base ${shake.confirmPassword ? 'animate-shake border-red-500' : ''}`}
+              className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.confirmPassword ? 'animate-shake border-brand-red' : ''}`}
             />
-            {errors.confirmPassword && <div className="text-red-500 text-xs mt-1 animate-fade-in">{errors.confirmPassword}</div>}
+            {errors.confirmPassword && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.confirmPassword}</div>}
             <Input
               type="text"
               placeholder="Phone Number"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className={`h-12 bg-gray-100 border-0 text-base ${shake.phone ? 'animate-shake border-red-500' : ''}`}
+              className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.phone ? 'animate-shake border-brand-red' : ''}`}
             />
-            {errors.phone && <div className="text-red-500 text-xs mt-1 animate-fade-in">{errors.phone}</div>}
+            {errors.phone && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.phone}</div>}
           </div>
 
           <Button 
             onClick={handleSignUp}
             disabled={signUpMutation.isPending}
-            className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl"
+            className="w-full h-12 bg-brand-red hover:bg-brand-red/90 text-white font-medium rounded-xl"
           >
             {signUpMutation.isPending ? (
               <div className="flex items-center space-x-2">
@@ -253,10 +253,10 @@ const SignUp = () => {
 
         {/* Sign In Link */}
         <div className="text-center">
-          <span className="text-gray-500">Already have an account? </span>
+          <span className="text-brand-black/70">Already have an account? </span>
           <button 
             onClick={() => navigate("/")}
-            className="text-blue-500 font-medium"
+            className="text-brand-red font-medium hover:text-brand-red/80"
           >
             Sign In
           </button>

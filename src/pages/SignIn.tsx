@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { secureStorage } from "@/services/native";
 import { authApi } from "@/services/api";
 
-const shakeClass = "animate-shake border-red-500";
+const shakeClass = "animate-shake border-brand-red";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -66,13 +66,13 @@ const SignIn = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-brand-yellow/10">
       <img src="/Logo.jpg" alt="App Logo" className="w-32 h-32 mb-6" />
       <div className="w-full max-w-sm space-y-8">
         {/* Welcome Text */}
         <div className="text-center space-y-2">
-          <h1 className="text-2xl font-semibold text-gray-900">Welcome back</h1>
-          <p className="text-gray-500">Sign in to continue</p>
+          <h1 className="text-2xl font-semibold text-brand-black">Welcome back</h1>
+          <p className="text-brand-black/70">Sign in to continue</p>
         </div>
 
         {/* Sign In Form */}
@@ -83,23 +83,23 @@ const SignIn = () => {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={`h-12 bg-gray-100 border-0 text-base ${shake.email ? shakeClass : ''}`}
+              className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.email ? shakeClass : ''}`}
             />
-            {errors.email && <div className="text-red-500 text-xs mt-1 animate-fade-in">{errors.email}</div>}
+            {errors.email && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.email}</div>}
             <Input
               type="password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`h-12 bg-gray-100 border-0 text-base ${shake.password ? shakeClass : ''}`}
+              className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.password ? shakeClass : ''}`}
             />
-            {errors.password && <div className="text-red-500 text-xs mt-1 animate-fade-in">{errors.password}</div>}
+            {errors.password && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.password}</div>}
           </div>
 
           <div className="flex justify-end">
             <button 
               onClick={() => navigate("/forgot-password")}
-              className="text-blue-500 text-sm"
+              className="text-brand-red text-sm hover:text-brand-red/80"
             >
               Forgot Password?
             </button>
@@ -108,7 +108,7 @@ const SignIn = () => {
           <Button 
             onClick={handleSignIn}
             disabled={signInMutation.isPending}
-            className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl"
+            className="w-full h-12 bg-brand-red hover:bg-brand-red/90 text-white font-medium rounded-xl"
           >
             {signInMutation.isPending ? (
               <div className="flex items-center space-x-2">
@@ -123,10 +123,10 @@ const SignIn = () => {
 
         {/* Sign Up Link */}
         <div className="text-center">
-          <span className="text-gray-500">Don't have an account? </span>
+          <span className="text-brand-black/70">Don't have an account? </span>
           <button 
             onClick={() => navigate("/signup")}
-            className="text-blue-500 font-medium"
+            className="text-brand-red font-medium hover:text-brand-red/80"
           >
             Sign Up
           </button>

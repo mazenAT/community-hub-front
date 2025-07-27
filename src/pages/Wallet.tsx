@@ -146,32 +146,32 @@ const Wallet = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-brand-yellow/5 pb-20">
       {/* Header */}
-      <div className="bg-white px-4 sm:px-6 py-4 border-b border-gray-100">
+      <div className="bg-white px-4 sm:px-6 py-4 border-b-2 border-brand-red">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/Logo.jpg" alt="App Logo" className="w-10 h-10 rounded" />
             <div>
-              <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Wallet</h1>
-              <p className="text-xs sm:text-sm text-gray-500">Welcome back, {userProfile?.name || 'User'}</p>
+              <h1 className="text-lg sm:text-xl font-semibold text-brand-black">Wallet</h1>
+              <p className="text-xs sm:text-sm text-brand-black/70">Welcome back, {userProfile?.name || 'User'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <NotificationBell />
             <button 
               onClick={() => navigate("/profile")}
-              className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden"
+              className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-yellow/20 rounded-full flex items-center justify-center overflow-hidden border border-brand-yellow/30"
             >
               {userProfile?.profile_image ? (
                 <img src={userProfile.profile_image} alt={userProfile.name || 'User Avatar'} className="w-full h-full object-cover" />
               ) : (
-                <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                <User className="w-4 h-4 sm:w-5 sm:h-5 text-brand-red" />
               )}
             </button>
             <Button
               variant="outline"
-              className="ml-2"
+              className="ml-2 border-brand-red text-brand-red hover:bg-brand-red/10"
               onClick={() => {
                 localStorage.removeItem('token');
                 navigate('/');
@@ -185,21 +185,21 @@ const Wallet = () => {
 
       <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Balance Card */}
-        <Card className="bg-blue-500 text-white p-4 rounded-2xl border-0 w-full mb-4">
+        <Card className="bg-brand-red text-white p-4 rounded-2xl border-0 w-full mb-4">
           <div className="space-y-2">
-            <p className="text-blue-100 text-xs">Total Balance</p>
+            <p className="text-white/80 text-xs">Total Balance</p>
             <h2 className="text-3xl font-bold">{loading ? <LoadingSpinner size={24} /> : formatCurrency(balance)}</h2>
             <div className="flex flex-col xs:flex-row gap-2 mt-2">
               <Button
                 onClick={() => navigate("/recharge")}
-                className="bg-blue-400 hover:bg-blue-300 text-white border-0 rounded-xl text-base w-full xs:w-auto"
+                className="bg-brand-orange hover:bg-brand-orange/90 text-white border-0 rounded-xl text-base w-full xs:w-auto"
                 disabled={loading}
               >
                 + Recharge
               </Button>
               <Button
                 onClick={() => setRefundModalOpen(true)}
-                className="bg-white text-blue-500 border-0 rounded-xl text-base w-full xs:w-auto shadow"
+                className="bg-white text-brand-red border-0 rounded-xl text-base w-full xs:w-auto shadow"
                 disabled={loading}
                 variant="outline"
               >
@@ -207,7 +207,7 @@ const Wallet = () => {
               </Button>
               <Button
                 onClick={() => navigate("/wallet/history")}
-                className="bg-white text-blue-500 border-0 rounded-xl text-base w-full xs:w-auto shadow"
+                className="bg-white text-brand-red border-0 rounded-xl text-base w-full xs:w-auto shadow"
                 variant="outline"
               >
                 View History
@@ -247,7 +247,7 @@ const Wallet = () => {
 
         {/* Recent Transactions */}
         <div className="space-y-3 sm:space-y-4">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900">Recent Transactions</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-brand-black">Recent Transactions</h3>
           {loading && transactions.length === 0 ? (
             <div className="text-center py-4">
               <LoadingSpinner size={32} />

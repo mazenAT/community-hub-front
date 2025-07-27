@@ -62,6 +62,14 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Lite Bite brand colors
+				brand: {
+					red: '#FF0000',      // Vibrant red from logo border
+					yellow: '#FFD700',    // Bright yellow from logo center
+					orange: '#FF6B35',    // Orange-red from logo text
+					black: '#000000',     // Black from logo text band
+					white: '#FFFFFF',     // White from logo text
 				}
 			},
 			borderRadius: {

@@ -206,20 +206,20 @@ const Profile = () => {
 
   if (isLoadingProfile || isLoadingTransactions) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-brand-yellow/5 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-brand-red border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (profileError || transactionsError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-brand-yellow/5 flex items-center justify-center">
         <div className="text-center p-6">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Data</h2>
-          <p className="text-gray-600 mb-4">There was a problem loading your profile or transactions. Please try again.</p>
-          <Button onClick={() => { refetchProfile(); refetchTransactions(); }} className="bg-blue-500 hover:bg-blue-600 text-white">
+          <AlertCircle className="w-12 h-12 text-brand-red mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-brand-black mb-2">Error Loading Data</h2>
+          <p className="text-brand-black/70 mb-4">There was a problem loading your profile or transactions. Please try again.</p>
+          <Button onClick={() => { refetchProfile(); refetchTransactions(); }} className="bg-brand-red hover:bg-brand-red/90 text-white">
             Retry
           </Button>
         </div>
@@ -234,19 +234,19 @@ const Profile = () => {
   const totalTransactions = transactionsData?.length || 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-brand-yellow/5 pb-20">
       {/* Header */}
-      <div className="bg-white px-4 sm:px-6 py-4 border-b border-gray-100">
+      <div className="bg-white px-4 sm:px-6 py-4 border-b-2 border-brand-red">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Profile</h1>
-            <p className="text-xs sm:text-sm text-gray-500">Manage your account</p>
+            <h1 className="text-lg sm:text-xl font-semibold text-brand-black">Profile</h1>
+            <p className="text-xs sm:text-sm text-brand-black/70">Manage your account</p>
           </div>
           <button 
             onClick={() => navigate("/wallet")}
-            className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex items-center justify-center"
+            className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-yellow/20 rounded-full flex items-center justify-center border border-brand-yellow/30"
           >
-            <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+            <User className="w-4 h-4 sm:w-5 sm:h-5 text-brand-red" />
           </button>
         </div>
       </div>
@@ -256,47 +256,47 @@ const Profile = () => {
         <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white">
           <div className="flex items-start justify-between mb-4 sm:mb-6">
             <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                <User className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-brand-yellow/20 rounded-full flex items-center justify-center border border-brand-yellow/30">
+                <User className="w-6 h-6 sm:w-8 sm:h-8 text-brand-red" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                <h2 className="text-lg sm:text-xl font-semibold text-brand-black">
                   {user?.name}
                 </h2>
-                <p className="text-sm sm:text-base text-gray-500">{user?.email}</p>
+                <p className="text-sm sm:text-base text-brand-black/70">{user?.email}</p>
               </div>
             </div>
           </div>
 
           <div className="space-y-3 sm:space-y-4">
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm sm:text-base text-gray-600">School</span>
-              <span className="text-sm sm:text-base font-medium text-gray-900">{schoolName}</span>
+            <div className="flex justify-between items-center py-2 border-b border-brand-yellow/30">
+              <span className="text-sm sm:text-base text-brand-black/70">School</span>
+              <span className="text-sm sm:text-base font-medium text-brand-black">{schoolName}</span>
             </div>
             <div className="flex justify-between items-center py-2">
-              <span className="text-sm sm:text-base text-gray-600">Phone</span>
-              <span className="text-sm sm:text-base font-medium text-gray-900">{user?.phone || 'N/A'}</span>
+              <span className="text-sm sm:text-base text-brand-black/70">Phone</span>
+              <span className="text-sm sm:text-base font-medium text-brand-black">{user?.phone || 'N/A'}</span>
             </div>
-            <div className="flex justify-between items-center py-2 border-t border-gray-100">
-              <span className="text-sm sm:text-base text-gray-600">Wallet Balance</span>
-              <span className="text-sm sm:text-base font-medium text-gray-900">{formatAmount(balance, 'credit')}</span>
+            <div className="flex justify-between items-center py-2 border-t border-brand-yellow/30">
+              <span className="text-sm sm:text-base text-brand-black/70">Wallet Balance</span>
+              <span className="text-sm sm:text-base font-medium text-brand-black">{formatAmount(balance, 'credit')}</span>
             </div>
             {/* Allergies Badges (non-editable, no duplicates) */}
             {allergiesInput && (
               <div className="mt-4">
-                <div className="text-sm font-semibold text-gray-700 mb-1">Allergies</div>
+                <div className="text-sm font-semibold text-brand-black mb-1">Allergies</div>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {[...new Set(allergiesInput.split(',').map(a => a.trim()).filter(Boolean))].map((allergy, idx) => (
                     <span
                       key={idx}
-                      className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold shadow-sm border border-blue-200"
+                      className="inline-block bg-brand-orange/20 text-brand-orange px-3 py-1 rounded-full text-xs font-semibold shadow-sm border border-brand-orange/30"
                     >
                       {allergy}
                     </span>
                   ))}
                 </div>
                 <Button
-                  className="bg-blue-500 hover:bg-blue-600 text-white mb-4"
+                  className="bg-brand-red hover:bg-brand-red/90 text-white mb-4"
                   onClick={() => navigate('/orders/my-orders')}
                 >
                   My Orders

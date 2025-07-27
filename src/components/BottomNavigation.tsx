@@ -45,8 +45,8 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeTab }) => {
             onClick={() => navigate(tab.path)}
             className={`flex flex-col items-center justify-center w-full h-full ${
               tab.active
-                ? "text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
+                ? "text-brand-red"
+                : "text-gray-500 hover:text-brand-red"
             }`}
           >
             <tab.icon className="w-6 h-6" />

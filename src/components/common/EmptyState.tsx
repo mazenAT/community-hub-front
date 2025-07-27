@@ -7,8 +7,8 @@ interface EmptyStateProps {
 }
 
 const EmptyState: React.FC<EmptyStateProps> = ({ icon, message, action }) => (
-  <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
-    {icon && <div className="mb-4 text-5xl">{icon}</div>}
+  <div className="flex flex-col items-center justify-center py-12 text-center text-brand-black/70">
+    {icon && <div className="mb-4 text-5xl text-brand-red">{icon}</div>}
     <div className="mb-2 text-lg font-medium">{message}</div>
     {action && <div className="mt-4">{action}</div>}
   </div>
