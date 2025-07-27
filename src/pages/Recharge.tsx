@@ -7,6 +7,19 @@ import { Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { profileApi } from "../services/api";
 import { useNavigate } from "react-router-dom";
+import SavedCards from "../components/SavedCards";
+
+interface SavedCard {
+  id: number;
+  card_alias: string;
+  last_four_digits: string;
+  first_six_digits: string;
+  brand: string;
+  expiry_year: string;
+  expiry_month: string;
+  is_default: boolean;
+  is_active: boolean;
+}
 
 const Recharge = () => {
   const navigate = useNavigate();
@@ -19,6 +32,8 @@ const Recharge = () => {
   const [cardAlias, setCardAlias] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mobile, setMobile] = useState("");
+  const [selectedCard, setSelectedCard] = useState<SavedCard | null>(null);
+  const [paymentMode, setPaymentMode] = useState<'saved' | 'new'>('saved');
 
   const { data: profileData } = useQuery({
     queryKey: ["profile"],
@@ -42,6 +57,22 @@ const Recharge = () => {
     setIsSubmitting(true);
     const finalAmount = selectedAmount || parseFloat(customAmount) || 0;
 
+    try {
+      if (paymentMode === 'saved' && selectedCard) {
+        // Use saved card - just need CVV
+        await processPaymentWithSavedCard(selectedCard, finalAmount);
+      } else {
+        // Create new card token
+        await createNewCardToken(finalAmount);
+      }
+    } catch (error) {
+      console.error('Error in recharge:', error);
+      toast.error("An unexpected error occurred. Please try again.");
+      setIsSubmitting(false);
+    }
+  };
+
+  const createNewCardToken = async (amount: number) => {
     // Step 1: Call Fawry directly for card token creation
     const tokenPayload = {
       merchantCode: '770000017341', // Your merchant code
@@ -55,38 +86,69 @@ const Recharge = () => {
       cvv: cvv,
       isDefault: true,
       enable3ds: true,
-      returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${Date.now()}&amount=${finalAmount}&step=token&customerProfileId=${profile.id}&customerName=${encodeURIComponent(profile.name)}&customerMobile=${mobile}&customerEmail=${encodeURIComponent(profile.email)}`,
+      returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${Date.now()}&amount=${amount}&step=token&customerProfileId=${profile.id}&customerName=${encodeURIComponent(profile.name)}&customerMobile=${mobile}&customerEmail=${encodeURIComponent(profile.email)}`,
     };
 
+    console.log('Calling Fawry card token endpoint directly:', tokenPayload);
+    
+    const tokenResponse = await fetch('https://atfawry.fawrystaging.com/fawrypay-api/api/cards/cardToken', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(tokenPayload),
+    });
+
+    const tokenData = await tokenResponse.json();
+    console.log('Fawry token response:', tokenData);
+
+    if (tokenData.statusCode === 200 && tokenData.nextAction?.redirectUrl) {
+      // Token creation requires 3DS, redirect to Fawry
+      window.location.href = tokenData.nextAction.redirectUrl;
+    } else if (tokenData.cardToken) {
+      // Token created successfully without 3DS, save it and proceed with payment
+      await saveCardToken(tokenData);
+      await processPaymentWithToken(tokenData.cardToken, amount);
+    } else {
+      // Token creation failed
+      toast.error(tokenData.statusDescription || "Failed to create card token. Please check card details.");
+      setIsSubmitting(false);
+    }
+  };
+
+  const processPaymentWithSavedCard = async (savedCard: SavedCard, amount: number) => {
+    // Use saved card token for payment
+    await processPaymentWithToken(savedCard.card_alias, amount); // card_alias contains the token
+  };
+
+  const saveCardToken = async (tokenData: any) => {
     try {
-      console.log('Calling Fawry card token endpoint directly:', tokenPayload);
-      
-      const tokenResponse = await fetch('https://atfawry.fawrystaging.com/fawrypay-api/api/cards/cardToken', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/wallet/save-card-token`, {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(tokenPayload),
+        body: JSON.stringify({
+          card_token: tokenData.token,
+          card_alias: cardAlias || profile.name,
+          last_four_digits: tokenData.lastFourDigits,
+          first_six_digits: tokenData.firstSixDigits,
+          brand: tokenData.brand,
+          expiry_year: expiryYear.length === 4 ? expiryYear.slice(-2) : expiryYear,
+          expiry_month: expiryMonth,
+          is_default: true,
+          fawry_response: tokenData
+        }),
       });
 
-      const tokenData = await tokenResponse.json();
-      console.log('Fawry token response:', tokenData);
-
-      if (tokenData.statusCode === 200 && tokenData.nextAction?.redirectUrl) {
-        // Token creation requires 3DS, redirect to Fawry
-        window.location.href = tokenData.nextAction.redirectUrl;
-      } else if (tokenData.cardToken) {
-        // Token created successfully without 3DS, proceed to payment
-        await processPaymentWithToken(tokenData.cardToken, finalAmount);
+      if (response.ok) {
+        console.log('Card token saved successfully');
       } else {
-        // Token creation failed
-        toast.error(tokenData.statusDescription || "Failed to create card token. Please check card details.");
-        setIsSubmitting(false);
+        console.error('Failed to save card token');
       }
     } catch (error) {
-      console.error('Error calling Fawry:', error);
-      toast.error("An unexpected error occurred while creating card token. Please try again.");
-      setIsSubmitting(false);
+      console.error('Error saving card token:', error);
     }
   };
 
@@ -229,15 +291,54 @@ const Recharge = () => {
 
         <Card>
           <CardHeader><CardTitle>Card Information</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            <Input placeholder="Mobile Number (e.g. 01012345678)" value={mobile} onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, '').slice(0,11))} maxLength={11} />
-            <Input placeholder="Name on Card" value={cardAlias} onChange={(e) => setCardAlias(e.target.value)} />
-            <Input placeholder="Card Number" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} />
-            <div className="flex gap-2">
-              <Input placeholder="MM" value={expiryMonth} onChange={(e) => setExpiryMonth(e.target.value)} />
-              <Input placeholder="YY" value={expiryYear} onChange={(e) => setExpiryYear(e.target.value)} />
+          <CardContent className="space-y-4">
+            {/* Payment Mode Selection */}
+            <div className="flex space-x-4 mb-4">
+              <Button
+                variant={paymentMode === 'saved' ? 'default' : 'outline'}
+                onClick={() => setPaymentMode('saved')}
+              >
+                Use Saved Card
+              </Button>
+              <Button
+                variant={paymentMode === 'new' ? 'default' : 'outline'}
+                onClick={() => setPaymentMode('new')}
+              >
+                Add New Card
+              </Button>
             </div>
-            <Input placeholder="CVV" value={cvv} onChange={(e) => setCvv(e.target.value)} />
+
+            {paymentMode === 'saved' ? (
+              <div className="space-y-4">
+                <SavedCards
+                  onCardSelect={setSelectedCard}
+                  selectedCardId={selectedCard?.id}
+                />
+                {selectedCard && (
+                  <div className="p-4 border rounded-lg bg-blue-50">
+                    <p className="text-sm text-gray-600 mb-2">Selected card: {selectedCard.card_alias}</p>
+                    <Input
+                      placeholder="CVV"
+                      value={cvv}
+                      onChange={(e) => setCvv(e.target.value)}
+                      maxLength={4}
+                      className="w-32"
+                    />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Input placeholder="Mobile Number (e.g. 01012345678)" value={mobile} onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, '').slice(0,11))} maxLength={11} />
+                <Input placeholder="Name on Card" value={cardAlias} onChange={(e) => setCardAlias(e.target.value)} />
+                <Input placeholder="Card Number" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} />
+                <div className="flex gap-2">
+                  <Input placeholder="MM" value={expiryMonth} onChange={(e) => setExpiryMonth(e.target.value)} />
+                  <Input placeholder="YY" value={expiryYear} onChange={(e) => setExpiryYear(e.target.value)} />
+                </div>
+                <Input placeholder="CVV" value={cvv} onChange={(e) => setCvv(e.target.value)} />
+              </div>
+            )}
           </CardContent>
         </Card>
 

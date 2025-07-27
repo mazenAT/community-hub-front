@@ -62,6 +62,9 @@ const FawryCallback = () => {
             setCardToken(token);
             setShowCvvForm(true);
             toast.success('Card token created successfully. Please enter CVV to complete payment.');
+            
+            // Save the card token to backend
+            saveCardTokenToBackend(token);
           } else {
             setError('Card token not received. Please try again.');
             toast.error('Card token not received. Please try again.');
@@ -191,6 +194,42 @@ const FawryCallback = () => {
       toast.error('An error occurred while completing payment.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Helper function to save card token to backend
+  const saveCardTokenToBackend = async (token: string) => {
+    try {
+      // Get card details from URL parameters
+      const params = new URLSearchParams(location.search);
+      const customerName = params.get('customerName') || 'Card';
+      
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/wallet/save-card-token`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          card_token: token,
+          card_alias: customerName,
+          last_four_digits: '****', // We don't have this from callback
+          first_six_digits: '******', // We don't have this from callback
+          brand: 'Card',
+          expiry_year: '**',
+          expiry_month: '**',
+          is_default: true,
+          fawry_response: { token }
+        }),
+      });
+
+      if (response.ok) {
+        console.log('Card token saved successfully');
+      } else {
+        console.error('Failed to save card token');
+      }
+    } catch (error) {
+      console.error('Error saving card token:', error);
     }
   };
 
