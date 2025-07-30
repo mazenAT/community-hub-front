@@ -16,6 +16,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
 import { AlertCircle } from 'lucide-react';
 import { TransactionList } from '@/components/Wallet/TransactionList';
+import CampaignSlider from '../components/CampaignSlider';
 
 interface UserProfile {
   id: number;
@@ -96,7 +97,7 @@ const Wallet = () => {
       toast({ title: "Invalid amount", description: "Please enter a valid refund amount.", variant: "destructive" });
       return;
     }
-    setRefundLoading(true);
+    setRefundLoading(0);
     try {
       await walletApi.requestRefund({ amount: Number(refundAmount), reason: refundReason });
       toast({ title: "Refund Requested", description: `Refund request for ${formatCurrency(Number(refundAmount))} has been submitted. It will be processed within 3-5 business days.` });
@@ -181,6 +182,11 @@ const Wallet = () => {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Campaign Slider */}
+      <div className="px-4 py-4">
+        <CampaignSlider />
       </div>
 
       <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">

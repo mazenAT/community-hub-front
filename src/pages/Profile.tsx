@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { profileApi, walletApi } from "@/services/api";
 import { format, parseISO } from 'date-fns';
 import { formatCurrency } from "@/utils/format";
+import { FamilyMembersSection } from "@/components/FamilyMembersSection";
 
 interface UserProfile {
   id: number;
@@ -307,33 +308,33 @@ const Profile = () => {
         </Card>
 
         {/* Update Profile */}
-        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white">
+        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white border border-brand-yellow/30">
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900">Update Profile</h2>
+            <h2 className="text-xl font-semibold text-brand-black">Update Profile</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Full Name</label>
+                <label className="text-sm font-medium text-brand-black">Full Name</label>
                 <Input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="h-12 bg-gray-50"
+                  className="h-12 bg-white border-2 border-brand-yellow/30 focus:border-brand-red"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Phone</label>
+                <label className="text-sm font-medium text-brand-black">Phone</label>
                 <Input
                   type="tel"
                   value={phone || ''}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="h-12 bg-gray-50"
+                  className="h-12 bg-white border-2 border-brand-yellow/30 focus:border-brand-red"
                 />
               </div>
             </div>
             <Button
               onClick={handleUpdateProfile}
               disabled={updateProfileMutation.isPending}
-              className="w-full md:w-auto bg-blue-500 hover:bg-blue-600 text-white"
+              className="w-full md:w-auto bg-brand-red hover:bg-brand-red/90 text-white"
             >
               {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
@@ -341,65 +342,68 @@ const Profile = () => {
         </Card>
 
         {/* Change Password */}
-        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white">
+        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white border border-brand-yellow/30">
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900">Change Password</h2>
+            <h2 className="text-xl font-semibold text-brand-black">Change Password</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Current Password</label>
+                <label className="text-sm font-medium text-brand-black">Current Password</label>
                 <Input
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="h-12 bg-gray-50"
+                  className="h-12 bg-white border-2 border-brand-yellow/30 focus:border-brand-red"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">New Password</label>
+                <label className="text-sm font-medium text-brand-black">New Password</label>
                 <Input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="h-12 bg-gray-50"
+                  className="h-12 bg-white border-2 border-brand-yellow/30 focus:border-brand-red"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Confirm New Password</label>
+                <label className="text-sm font-medium text-brand-black">Confirm New Password</label>
                 <Input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="h-12 bg-gray-50"
+                  className="h-12 bg-white border-2 border-brand-yellow/30 focus:border-brand-red"
                 />
               </div>
             </div>
             <Button
               onClick={handleChangePassword}
               disabled={handleChangePasswordMutation.isPending}
-              className="w-full md:w-auto bg-blue-500 hover:bg-blue-600 text-white"
+              className="w-full md:w-auto bg-brand-red hover:bg-brand-red/90 text-white"
             >
               {handleChangePasswordMutation.isPending ? "Changing..." : "Change Password"}
             </Button>
           </div>
         </Card>
 
+        {/* Family Members Section */}
+        <FamilyMembersSection />
+
         {/* Financial Overview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-          <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+          <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-brand-red text-white">
             <div className="flex items-center space-x-3 sm:space-x-4">
               <DollarSign className="w-6 h-6 sm:w-8 sm:h-8" />
               <div>
-                <p className="text-sm sm:text-base text-blue-100">Wallet Balance</p>
+                <p className="text-sm sm:text-base text-white/80">Wallet Balance</p>
                 <p className="text-lg sm:text-xl font-bold">{formatAmount(balance, 'credit')}</p>
               </div>
             </div>
           </Card>
           
-          <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+          <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-brand-orange text-white">
             <div className="flex items-center space-x-3 sm:space-x-4">
               <Calendar className="w-6 h-6 sm:w-8 sm:h-8" />
               <div>
-                <p className="text-sm sm:text-base text-purple-100">Total Transactions</p>
+                <p className="text-sm sm:text-base text-white/80">Total Transactions</p>
                 <p className="text-lg sm:text-xl font-bold">{totalTransactions}</p>
               </div>
             </div>
@@ -407,11 +411,11 @@ const Profile = () => {
         </div>
 
         {/* Transaction History */}
-        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white">
+        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white border border-brand-yellow/30">
           <div className="space-y-3 sm:space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Transaction History</h3>
-              <button className="flex items-center text-blue-600 text-sm font-medium">
+              <h3 className="text-base sm:text-lg font-semibold text-brand-black">Transaction History</h3>
+              <button className="flex items-center text-brand-red text-sm font-medium hover:text-brand-red/80">
                 View All
                 <ChevronRight className="w-4 h-4 ml-1" />
               </button>
@@ -425,8 +429,8 @@ const Profile = () => {
                   onClick={() => setSelectedFilter(filter as "all" | "credit" | "debit")}
                   className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                     selectedFilter === filter
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      ? "bg-brand-red text-white"
+                      : "bg-brand-yellow/20 text-brand-black hover:bg-brand-yellow/30 border border-brand-yellow/30"
                   }`}
                 >
                   {filter.charAt(0).toUpperCase() + filter.slice(1)}
@@ -437,30 +441,30 @@ const Profile = () => {
             {/* Transactions List */}
             <div className="space-y-2 sm:space-y-3 max-h-64 sm:max-h-80 overflow-y-auto">
               {filteredTransactions.map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+                <div key={transaction.id} className="flex items-center justify-between p-3 rounded-xl bg-brand-yellow/10 border border-brand-yellow/30">
                   <div className="flex items-center space-x-3">
                     <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center ${
-                      transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100'
+                      transaction.type === 'credit' ? 'bg-brand-orange/20' : 'bg-brand-red/20'
                     }`}>
                       {transaction.type === 'credit' ? (
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-brand-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                         </svg>
                       ) : (
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                         </svg>
                       )}
                     </div>
                     <div>
-                      <p className="text-sm sm:text-base font-medium text-gray-900">{transaction.note || transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}</p>
-                      <p className="text-xs sm:text-sm text-gray-500">
+                      <p className="text-sm sm:text-base font-medium text-brand-black">{transaction.note || transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}</p>
+                      <p className="text-xs sm:text-sm text-brand-black/70">
                         {formatDate(transaction.created_at)}, {formatTime(transaction.created_at)}
                       </p>
                     </div>
                   </div>
                   <p className={`text-sm sm:text-base font-semibold ${
-                    transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                    transaction.type === 'credit' ? 'text-brand-orange' : 'text-brand-red'
                   }`}>
                     {formatAmount(transaction.amount, transaction.type)}
                   </p>

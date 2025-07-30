@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format, parseISO, getDay, isAfter, isBefore, startOfDay, subDays, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameDay, isSameWeek, isSameMonth } from "date-fns";
-import { CalendarIcon, ShoppingCart, AlertCircle, ChevronLeft, ChevronRight, Info, Filter } from "lucide-react";
+import { CalendarIcon, ShoppingCart, AlertCircle, ChevronLeft, ChevronRight, Info, Filter, FileText } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -21,6 +21,12 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import NotificationBell from "@/components/NotificationBell";
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Meal {
   id: number;
@@ -28,12 +34,13 @@ interface Meal {
   description?: string;
   price: number;
   calories: number;
-  type: "breakfast" | "lunch" | "dinner";
+  type: "hot meal" | "sandwich" | "pasta" | "salad";
   date: string;
   time: string;
   status: "available" | "sold_out" | "pre_ordered";
   category?: string;
   subcategory?: string;
+  pdf_path?: string;
 }
 
 // Define a more specific type for meals that come with weekly plan pivot data
@@ -91,7 +98,7 @@ const findPreOrderForMeal = (mealId: number, date: Date, plans?: WeeklyPlan[]): 
 
 const Planner = () => {
   const navigate = useNavigate();
-  const [selectedType, setSelectedType] = useState<"all" | "breakfast" | "lunch" | "dinner">("all");
+  const [selectedType, setSelectedType] = useState<"all" | "hot meal" | "sandwich" | "pasta" | "salad">("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
   const [categories, setCategories] = useState<string[]>([]);
@@ -101,6 +108,9 @@ const Planner = () => {
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
   const [addOns, setAddOns] = useState<AddOn[]>([]);
+  const [showPdfModal, setShowPdfModal] = useState(false);
+  const [selectedPdfUrl, setSelectedPdfUrl] = useState<string>('');
+  const [loadingPdf, setLoadingPdf] = useState(false);
 
   const { data: profile, isLoading: isLoadingProfile, error: profileError } = useQuery({
     queryKey: ["profile"],
@@ -140,6 +150,24 @@ const Planner = () => {
       ],
     };
     preOrderMutation.mutate(payload);
+  };
+
+  // Handle PDF viewing
+  const handleViewPdf = async (meal: MealWithPivot) => {
+    try {
+      setLoadingPdf(true);
+      const response = await plannerApi.getMealPdf(meal.id);
+      if (response.data.pdf_url) {
+        setSelectedPdfUrl(response.data.pdf_url);
+        setShowPdfModal(true);
+      } else {
+        toast.error('No PDF available for this meal');
+      }
+    } catch (error) {
+      toast.error('Failed to load PDF');
+    } finally {
+      setLoadingPdf(false);
+    }
   };
 
   // Add normalization helper
@@ -446,6 +474,8 @@ const Planner = () => {
         </div>
       </div>
 
+
+
       {/* Content */}
       <div className="px-4 py-4">
         {/* Meal Type and Category Filters */}
@@ -456,9 +486,10 @@ const Planner = () => {
             <div className="flex flex-wrap gap-2">
               {[
                 { key: 'all', label: 'All Meals' },
-                { key: 'breakfast', label: 'Breakfast' },
-                { key: 'lunch', label: 'Lunch' },
-                { key: 'dinner', label: 'Dinner' }
+                { key: 'hot meal', label: 'Hot Meal' },
+                { key: 'sandwich', label: 'Sandwich' },
+                { key: 'pasta', label: 'Pasta' },
+                { key: 'salad', label: 'Salad' }
               ].map(({ key, label }) => (
                 <Button
                   key={key}
@@ -469,7 +500,7 @@ const Planner = () => {
                       ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
                       : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
                   } rounded-full px-3 py-1 text-xs font-medium`}
-                  onClick={() => setSelectedType(key as 'all' | 'breakfast' | 'lunch' | 'dinner')}
+                  onClick={() => setSelectedType(key as 'all' | 'hot meal' | 'sandwich' | 'pasta' | 'salad')}
                 >
                   {label}
                 </Button>
@@ -559,17 +590,21 @@ const Planner = () => {
                   <tr className="border-b-2 border-brand-red">
                     <th className="text-left py-3 px-4 font-bold text-brand-black">Date</th>
                     <th className="text-left py-3 px-4 font-bold text-brand-black">Day</th>
-                    <th className="text-left py-3 px-4 font-bold text-brand-black">Breakfast</th>
-                    <th className="text-left py-3 px-4 font-bold text-brand-black">Lunch</th>
+                    <th className="text-left py-3 px-4 font-bold text-brand-black">Hot Meals</th>
+                    <th className="text-left py-3 px-4 font-bold text-brand-black">Sandwiches</th>
+                    <th className="text-left py-3 px-4 font-bold text-brand-black">Pasta</th>
+                    <th className="text-left py-3 px-4 font-bold text-brand-black">Salads</th>
                   </tr>
                 </thead>
                 <tbody>
                   {getDatesForView(activePlan).map((date) => {
                     const dayOfWeek = getDay(date) === 0 ? 7 : getDay(date);
-                    const breakfastMeals = getMealsForDay(dayOfWeek, [activePlan]).filter(meal => meal.type === 'breakfast');
-                    const lunchMeals = getMealsForDay(dayOfWeek, [activePlan]).filter(meal => meal.type === 'lunch');
+                    const hotMeals = getMealsForDay(dayOfWeek, [activePlan]).filter(meal => meal.type === 'hot meal');
+                    const sandwiches = getMealsForDay(dayOfWeek, [activePlan]).filter(meal => meal.type === 'sandwich');
+                    const pastas = getMealsForDay(dayOfWeek, [activePlan]).filter(meal => meal.type === 'pasta');
+                    const salads = getMealsForDay(dayOfWeek, [activePlan]).filter(meal => meal.type === 'salad');
                     
-                    if (breakfastMeals.length === 0 && lunchMeals.length === 0) {
+                    if (hotMeals.length === 0 && sandwiches.length === 0 && pastas.length === 0 && salads.length === 0) {
                       return null;
                     }
 
@@ -584,7 +619,7 @@ const Planner = () => {
                           {format(date, 'EEEE')}
                         </td>
                         <td className="py-4 px-4">
-                          {breakfastMeals.map((meal: MealWithPivot) => {
+                          {hotMeals.map((meal: MealWithPivot) => {
                             const isWindowOpen = isOrderingWindowOpen(date);
                             const existingPreOrder = findPreOrderForMeal(meal.id, date, normalizedPlans);
                             let displayState: 'pre_ordered' | 'sold_out' | 'ordering_closed' | 'available';
@@ -609,26 +644,40 @@ const Planner = () => {
                                 </div>
                                 <div className="flex justify-between items-center">
                                   <span className="text-sm font-medium text-brand-black">${meal.price.toFixed(2)}</span>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className={`${
-                                      canOrder 
-                                        ? 'border-brand-red text-brand-red hover:bg-brand-red/10' 
-                                        : 'border-gray-300 text-gray-400 cursor-not-allowed'
-                                    } rounded-full px-3 py-1 text-xs`}
-                                    onClick={() => handlePreOrder(meal, date)}
-                                    disabled={!canOrder || preOrderMutation.isPending}
-                                  >
-                                    {displayState === 'available' ? 'Order' : 'Unavailable'}
-                                  </Button>
+                                  <div className="flex space-x-2">
+                                    {meal.pdf_path && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="border-brand-blue text-brand-blue hover:bg-brand-blue/10 rounded-full px-3 py-1 text-xs"
+                                        onClick={() => handleViewPdf(meal)}
+                                        disabled={loadingPdf}
+                                      >
+                                        <FileText className="w-3 h-3 mr-1" />
+                                        PDF
+                                      </Button>
+                                    )}
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className={`${
+                                        canOrder 
+                                          ? 'border-brand-red text-brand-red hover:bg-brand-red/10' 
+                                          : 'border-gray-300 text-gray-400 cursor-not-allowed'
+                                      } rounded-full px-3 py-1 text-xs`}
+                                      onClick={() => handlePreOrder(meal, date)}
+                                      disabled={!canOrder || preOrderMutation.isPending}
+                                    >
+                                      {displayState === 'available' ? 'Order' : 'Unavailable'}
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                             );
                           })}
                         </td>
                         <td className="py-4 px-4">
-                          {lunchMeals.map((meal: MealWithPivot) => {
+                          {sandwiches.map((meal: MealWithPivot) => {
                             const isWindowOpen = isOrderingWindowOpen(date);
                             const existingPreOrder = findPreOrderForMeal(meal.id, date, normalizedPlans);
                             let displayState: 'pre_ordered' | 'sold_out' | 'ordering_closed' | 'available';
@@ -666,6 +715,122 @@ const Planner = () => {
                                   >
                                     {displayState === 'available' ? 'Order' : 'Unavailable'}
                                   </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </td>
+                        <td className="py-4 px-4">
+                          {pastas.map((meal: MealWithPivot) => {
+                            const isWindowOpen = isOrderingWindowOpen(date);
+                            const existingPreOrder = findPreOrderForMeal(meal.id, date, normalizedPlans);
+                            let displayState: 'pre_ordered' | 'sold_out' | 'ordering_closed' | 'available';
+                            if (existingPreOrder) {
+                              displayState = 'pre_ordered';
+                            } else if (meal.status === 'sold_out') {
+                              displayState = 'sold_out';
+                            } else if (!isWindowOpen) {
+                              displayState = 'ordering_closed';
+                            } else {
+                              displayState = 'available';
+                            }
+                            const canOrder = displayState === 'available';
+
+                            return (
+                              <div key={meal.id} className="mb-3 p-3 bg-brand-yellow/20 rounded-lg border border-brand-yellow/30">
+                                <div className="flex justify-between items-start mb-2">
+                                  <h3 className="font-medium text-brand-black">{meal.title}</h3>
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-brand-orange text-white">
+                                    {meal.category || 'Pasta'}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm font-medium text-brand-black">${meal.price.toFixed(2)}</span>
+                                  <div className="flex space-x-2">
+                                    {meal.pdf_path && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="border-brand-blue text-brand-blue hover:bg-brand-blue/10 rounded-full px-3 py-1 text-xs"
+                                        onClick={() => handleViewPdf(meal)}
+                                        disabled={loadingPdf}
+                                      >
+                                        <FileText className="w-3 h-3 mr-1" />
+                                        PDF
+                                      </Button>
+                                    )}
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className={`${
+                                        canOrder 
+                                          ? 'border-brand-red text-brand-red hover:bg-brand-red/10' 
+                                          : 'border-gray-300 text-gray-400 cursor-not-allowed'
+                                      } rounded-full px-3 py-1 text-xs`}
+                                      onClick={() => handlePreOrder(meal, date)}
+                                      disabled={!canOrder || preOrderMutation.isPending}
+                                    >
+                                      {displayState === 'available' ? 'Order' : 'Unavailable'}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </td>
+                        <td className="py-4 px-4">
+                          {salads.map((meal: MealWithPivot) => {
+                            const isWindowOpen = isOrderingWindowOpen(date);
+                            const existingPreOrder = findPreOrderForMeal(meal.id, date, normalizedPlans);
+                            let displayState: 'pre_ordered' | 'sold_out' | 'ordering_closed' | 'available';
+                            if (existingPreOrder) {
+                              displayState = 'pre_ordered';
+                            } else if (meal.status === 'sold_out') {
+                              displayState = 'sold_out';
+                            } else if (!isWindowOpen) {
+                              displayState = 'ordering_closed';
+                            } else {
+                              displayState = 'available';
+                            }
+                            const canOrder = displayState === 'available';
+
+                            return (
+                              <div key={meal.id} className="mb-3 p-3 bg-brand-yellow/20 rounded-lg border border-brand-yellow/30">
+                                <div className="flex justify-between items-start mb-2">
+                                  <h3 className="font-medium text-brand-black">{meal.title}</h3>
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-brand-orange text-white">
+                                    {meal.category || 'Salad'}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm font-medium text-brand-black">${meal.price.toFixed(2)}</span>
+                                  <div className="flex space-x-2">
+                                    {meal.pdf_path && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="border-brand-blue text-brand-blue hover:bg-brand-blue/10 rounded-full px-3 py-1 text-xs"
+                                        onClick={() => handleViewPdf(meal)}
+                                        disabled={loadingPdf}
+                                      >
+                                        <FileText className="w-3 h-3 mr-1" />
+                                        PDF
+                                      </Button>
+                                    )}
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className={`${
+                                        canOrder 
+                                          ? 'border-brand-red text-brand-red hover:bg-brand-red/10' 
+                                          : 'border-gray-300 text-gray-400 cursor-not-allowed'
+                                      } rounded-full px-3 py-1 text-xs`}
+                                      onClick={() => handlePreOrder(meal, date)}
+                                      disabled={!canOrder || preOrderMutation.isPending}
+                                    >
+                                      {displayState === 'available' ? 'Order' : 'Unavailable'}
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                             );
@@ -727,6 +892,24 @@ const Planner = () => {
           </div>
         </div>
         </div>
+
+      {/* PDF Viewer Modal */}
+      <Dialog open={showPdfModal} onOpenChange={setShowPdfModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Meal PDF</DialogTitle>
+          </DialogHeader>
+          <div className="w-full h-[70vh]">
+            {selectedPdfUrl && (
+              <iframe
+                src={selectedPdfUrl}
+                className="w-full h-full border-0"
+                title="Meal PDF"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <BottomNavigation activeTab="planner" />
     </div>

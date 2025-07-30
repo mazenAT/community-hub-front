@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Wallet, Calendar, User } from "lucide-react";
+import { Wallet, Calendar, User, MessageCircle } from "lucide-react";
 
 interface BottomNavigationProps {
   activeTab?: "wallet" | "planner" | "profile";
@@ -21,6 +21,12 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeTab }) => {
       icon: Calendar,
       path: "/planner",
       active: location.pathname === "/planner",
+    },
+    {
+      name: "Contact",
+      icon: MessageCircle,
+      path: "/contact",
+      active: location.pathname === "/contact",
     },
     {
       name: "Profile",

@@ -17,6 +17,7 @@ import OrderDetails from "./pages/orders/OrderDetails";
 
 import MyOrders from "./pages/orders/MyOrders";
 import FawryCallback from "./pages/FawryCallback";
+import ContactUs from "./pages/ContactUs";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,11 @@ const App = () => (
           <Route path="/profile" element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/contact" element={
+            <ProtectedRoute>
+              <ContactUs />
             </ProtectedRoute>
           } />
 

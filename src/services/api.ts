@@ -116,6 +116,7 @@ export const plannerApi = {
   getWeeklyPlansBySchool: (schoolId: number) => api.get(`/schools/${schoolId}/weekly-plans`),
   getMealCategories: () => api.get('/meals/categories'),
   getMealSubcategories: () => api.get('/meals/subcategories'),
+  getMealPdf: (mealId: number) => api.get(`/meals/${mealId}/pdf`),
 };
 
 export const addOnApi = {
@@ -138,6 +139,42 @@ export const studentPreOrdersApi = {
 
 export const mealApi = {
   getMeal: (id: number) => api.get(`/meals/${id}`),
+};
+
+// Family Members API
+export const familyMembersApi = {
+  getFamilyMembers: () => api.get('/family-members'),
+  createFamilyMember: (data: {
+    name: string;
+    grade: string;
+    class: string;
+    allergies: string[];
+  }) => api.post('/family-members', data),
+  updateFamilyMember: (id: number, data: {
+    name: string;
+    grade: string;
+    class: string;
+    allergies: string[];
+  }) => api.put(`/family-members/${id}`, data),
+  deleteFamilyMember: (id: number) => api.delete(`/family-members/${id}`),
+};
+
+// Campaigns API
+export const campaignApi = {
+  getCampaigns: (params?: any) => api.get('/campaigns', { params }),
+  getFeatured: () => api.get('/campaigns/featured'),
+  getCampaign: (id: number) => api.get(`/campaigns/${id}`),
+};
+
+// Contact API
+export const contactApi = {
+  submitContact: (data: {
+    name: string;
+    email: string;
+    phone?: string;
+    message: string;
+  }) => api.post('/contact', data),
+  getUserNotes: () => api.get('/contact/notes'),
 };
 
 export { api }; 
