@@ -4,7 +4,6 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -21,26 +20,11 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [selectedSchool, setSelectedSchool] = useState("");
-  const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
   const [schools, setSchools] = useState<{ id: number; name: string }[]>([]);
   const [loadingSchools, setLoadingSchools] = useState(true);
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [shake, setShake] = useState<{ [key: string]: boolean }>({});
-
-  const allergies = [
-    "Nuts",
-    "Dairy",
-    "Gluten",
-    "Eggs",
-    "Shellfish",
-    "Fish",
-    "Soy",
-    "Sesame",
-    "Peanuts",
-    "Tree Nuts",
-    "None"
-  ];
 
   const signUpMutation = useMutation({
     mutationFn: (data: {
@@ -51,7 +35,6 @@ const SignUp = () => {
       role: string;
       school_id: number;
       phone?: string;
-      allergies: string[];
     }) =>
       authApi.register(data),
     onSuccess: () => {
@@ -78,17 +61,7 @@ const SignUp = () => {
     fetchSchools();
   }, []);
 
-  const handleAllergyChange = (allergy: string, checked: boolean) => {
-    if (checked) {
-      if (allergy === "None") {
-        setSelectedAllergies(["None"]);
-      } else {
-        setSelectedAllergies(prev => prev.filter(a => a !== "None").concat(allergy));
-      }
-    } else {
-      setSelectedAllergies(prev => prev.filter(a => a !== allergy));
-    }
-  };
+
 
   const handleSignUp = () => {
     let newErrors: { [key: string]: string } = {};
@@ -139,7 +112,6 @@ const SignUp = () => {
       role: 'student',
       school_id: Number(selectedSchool),
       phone,
-      allergies: selectedAllergies,
     });
   };
 
@@ -179,27 +151,7 @@ const SignUp = () => {
             </Select>
             {errors.selectedSchool && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.selectedSchool}</div>}
 
-            {/* Allergies Selection */}
-            <div className="space-y-3">
-              <label className="text-sm font-medium text-brand-black">Allergies (Select all that apply)</label>
-              <div className="bg-brand-yellow/10 rounded-xl p-4 max-h-32 overflow-y-auto border border-brand-yellow/30">
-                <div className="grid grid-cols-2 gap-2">
-                  {allergies.map((allergy) => (
-                    <div key={allergy} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={allergy}
-                        checked={selectedAllergies.includes(allergy)}
-                        onCheckedChange={(checked) => handleAllergyChange(allergy, checked as boolean)}
-                        className="data-[state=checked]:bg-brand-red data-[state=checked]:border-brand-red"
-                      />
-                      <label htmlFor={allergy} className="text-sm text-brand-black cursor-pointer">
-                        {allergy}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+
             
             <Input
               type="email"

@@ -21,8 +21,7 @@ interface FamilyMemberFormProps {
 }
 
 const allergies = [
-  'Peanuts', 'Tree Nuts', 'Milk', 'Eggs', 'Soy', 'Wheat', 'Fish', 'Shellfish',
-  'Gluten', 'Lactose', 'Sesame', 'Mustard', 'Celery', 'Sulfites'
+  'Lactose', 'Soya', 'Chocolate', 'Beans', 'Peanuts', 'Fruits', 'Sesame'
 ];
 
 const grades = [
