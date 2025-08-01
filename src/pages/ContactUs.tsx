@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { contactApi } from '../services/api';
 import { toast } from 'sonner';
 import { Mail, Phone, MapPin, Send, CheckCircle } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import BottomNavigation from '../components/BottomNavigation';
 
 const ContactUs = () => {
   const [form, setForm] = useState({
@@ -14,6 +15,34 @@ const ContactUs = () => {
   });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [contactInfo, setContactInfo] = useState({
+    email: 'support@smartcommunity.com',
+    phone: '+20 123 456 7890',
+    address: '123 Smart Street, Cairo, Egypt',
+    business_hours: 'Mon-Fri 9AM-6PM',
+    response_time: 'We\'ll respond within 24 hours',
+  });
+  const [contactLoading, setContactLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/contact-information`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data) {
+            setContactInfo(data.data);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch contact information:', error);
+      } finally {
+        setContactLoading(false);
+      }
+    };
+
+    fetchContactInfo();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +94,7 @@ const ContactUs = () => {
   }
 
   return (
-    <div className="min-h-screen bg-brand-yellow/5 p-4">
+    <div className="min-h-screen bg-brand-yellow/5 p-4 pb-20">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -87,8 +116,8 @@ const ContactUs = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-brand-black">Email</h3>
-                  <p className="text-brand-black/70">support@smartcommunity.com</p>
-                  <p className="text-sm text-brand-black/50">We'll respond within 24 hours</p>
+                  <p className="text-brand-black/70">{contactInfo.email}</p>
+                  <p className="text-sm text-brand-black/50">{contactInfo.response_time}</p>
                 </div>
               </div>
 
@@ -98,8 +127,8 @@ const ContactUs = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-brand-black">Phone</h3>
-                  <p className="text-brand-black/70">+20 123 456 7890</p>
-                  <p className="text-sm text-brand-black/50">Mon-Fri 9AM-6PM</p>
+                  <p className="text-brand-black/70">{contactInfo.phone}</p>
+                  <p className="text-sm text-brand-black/50">{contactInfo.business_hours}</p>
                 </div>
               </div>
 
@@ -109,7 +138,7 @@ const ContactUs = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-brand-black">Address</h3>
-                  <p className="text-brand-black/70">123 Smart Street, Cairo, Egypt</p>
+                  <p className="text-brand-black/70">{contactInfo.address}</p>
                   <p className="text-sm text-brand-black/50">Visit us anytime</p>
                 </div>
               </div>
@@ -223,6 +252,8 @@ const ContactUs = () => {
           </div>
         </div>
       </div>
+      
+      <BottomNavigation activeTab="contact" />
     </div>
   );
 };

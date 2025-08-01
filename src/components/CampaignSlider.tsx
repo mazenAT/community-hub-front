@@ -110,7 +110,14 @@ const CampaignSlider: React.FC = () => {
   }
 
   if (campaigns.length === 0) {
-    return null; // Don't render anything if no campaigns
+    return (
+      <div className="w-full h-48 bg-gradient-to-r from-brand-red to-brand-orange rounded-lg shadow-lg flex items-center justify-center">
+        <div className="text-center text-white">
+          <h3 className="text-xl font-bold mb-2">Welcome to Smart Community</h3>
+          <p className="text-sm opacity-90">Stay tuned for exciting updates and offers!</p>
+        </div>
+      </div>
+    );
   }
 
   return (
