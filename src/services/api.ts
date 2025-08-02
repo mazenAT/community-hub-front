@@ -117,6 +117,7 @@ export const plannerApi = {
   getMealCategories: () => api.get('/meals/categories'),
   getMealSubcategories: () => api.get('/meals/subcategories'),
   getMealPdf: (mealId: number) => api.get(`/meals/${mealId}/pdf`),
+  getMealPlanPdf: (mealPlanId: number) => api.get(`/meal-plans/${mealPlanId}/pdf`),
 };
 
 export const addOnApi = {
