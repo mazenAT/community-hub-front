@@ -298,7 +298,7 @@ const Planner = () => {
     // Format date as YYYY-MM-DD to match the API structure
     const dateKey = format(date, 'yyyy-MM-dd');
     
-    // Check if we have meals_by_day structure
+    // Check if we have meals_by_day structure (for monthly plans)
     if (activePlan.meals_by_day && activePlan.meals_by_day[dateKey]) {
       const mealsForDay = activePlan.meals_by_day[dateKey].filter((meal: any) => {
         const matchesType = selectedType === "all" || meal.type === selectedType;
@@ -307,12 +307,14 @@ const Planner = () => {
       return mealsForDay;
     }
     
-    // Fallback: if no meals_by_day structure, try to find meals with date matching
+    // For weekly plans: map day_of_week to calendar date
+    const dayOfWeek = getDay(date) === 0 ? 7 : getDay(date); // Convert Sunday=0 to Sunday=7
+    
     const allMeals = activePlan.meals || [];
     const mealsForDay = allMeals.filter((meal: any) => {
       const matchesType = selectedType === "all" || meal.type === selectedType;
-      const matchesDate = !meal.date || meal.date === dateKey;
-      return matchesType && matchesDate;
+      const matchesDayOfWeek = meal.pivot?.day_of_week === dayOfWeek;
+      return matchesType && matchesDayOfWeek;
     });
     
     return mealsForDay;
