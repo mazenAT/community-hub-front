@@ -728,60 +728,88 @@ const Planner = () => {
               }
 
               return (
-                <div className="space-y-6">
-                  {datesWithMeals.map((date) => {
-                    const mealsForDay = getMealsForDay(date, [activePlan]);
-                    
-                    return (
-                      <div key={date.toISOString()} className="bg-white rounded-lg border border-brand-yellow/30 overflow-hidden">
-                        {/* Date Header */}
-                        <div className="bg-brand-yellow/20 px-4 py-3 border-b border-brand-yellow/30">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-semibold text-brand-black">
-                                {format(date, 'EEEE')} - {format(date, 'dd/MM/yyyy')}
-                              </h3>
-                              <p className="text-sm text-brand-black/70">
-                                {mealsForDay.length} meal{mealsForDay.length !== 1 ? 's' : ''} available
-                                {mealsForDay.some((meal: any) => meal.pivot?.meal_date) && (
-                                  <span className="ml-2 px-2 py-1 bg-brand-blue/20 text-brand-blue text-xs rounded-full">
-                                    Monthly Plan
-                                  </span>
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Meals for this date */}
-                        <div className="divide-y divide-brand-yellow/20">
-                          {mealsForDay.map((meal: any) => (
-                            <div key={meal.id} className="p-4">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <div className="flex items-center space-x-3 mb-2">
-                                    <h4 className="font-medium text-brand-black">
-                                      {meal.title || meal.name}
-                                    </h4>
-                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-brand-orange text-white">
-                                      {meal.type || meal.category}
-                                    </span>
+                <div className="bg-white rounded-lg border border-brand-yellow/30 overflow-hidden">
+                  {/* Table Header */}
+                  <div className="bg-brand-yellow/20 px-6 py-4 border-b border-brand-yellow/30">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-brand-black">Meal Plan Schedule</h3>
+                      <div className="text-sm text-brand-black/70">
+                        {datesWithMeals.length} day{datesWithMeals.length !== 1 ? 's' : ''} with meals
+                        {activePlan && (
+                          <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
+                            isMonthlyPlan(activePlan)
+                              ? 'bg-brand-blue/20 text-brand-blue'
+                              : 'bg-brand-orange/20 text-brand-orange'
+                          }`}>
+                            {isMonthlyPlan(activePlan) ? 'Monthly Plan' : 'Weekly Plan'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-brand-yellow/10">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
+                            Date
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
+                            Meal
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
+                            Type
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
+                            Price
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
+                            Calories
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-brand-yellow/20">
+                        {datesWithMeals.map((date) => {
+                          const mealsForDay = getMealsForDay(date, [activePlan]);
+                          
+                          return mealsForDay.map((meal: any, mealIndex: number) => (
+                            <tr key={`${date.toISOString()}-${meal.id}-${mealIndex}`} className="hover:bg-brand-yellow/5">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-brand-black">
+                                  {format(date, 'EEEE')}
+                                </div>
+                                <div className="text-sm text-brand-black/60">
+                                  {format(date, 'MMM dd, yyyy')}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div>
+                                  <div className="text-sm font-medium text-brand-black">
+                                    {meal.title || meal.name}
                                   </div>
-                                  <p className="text-sm text-brand-black/70 mb-2">
+                                  <div className="text-sm text-brand-black/60 max-w-xs truncate">
                                     {meal.description || 'No description available'}
-                                  </p>
-                                  <div className="flex items-center space-x-4">
-                                    <span className="text-sm font-medium text-brand-black">
-                                      ${meal.price ? meal.price.toFixed(2) : 'N/A'}
-                                    </span>
-                                    {meal.calories && (
-                                      <span className="text-sm text-brand-black/60">
-                                        {meal.calories} calories
-                                      </span>
-                                    )}
                                   </div>
                                 </div>
-                                <div className="flex space-x-2 ml-4">
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-brand-orange/20 text-brand-orange">
+                                  {meal.type || meal.category || 'N/A'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-brand-black">
+                                ${meal.price ? meal.price.toFixed(2) : 'N/A'}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black/60">
+                                {meal.calories ? `${meal.calories} cal` : 'N/A'}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div className="flex space-x-2">
                                   {meal.pdf_path && (
                                     <Button
                                       size="sm"
@@ -804,13 +832,13 @@ const Planner = () => {
                                     Order
                                   </Button>
                                 </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
+                              </td>
+                            </tr>
+                          ));
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               );
             })()}
