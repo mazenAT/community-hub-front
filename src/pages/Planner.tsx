@@ -4,20 +4,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { plannerApi, profileApi, addOnApi } from "@/services/api";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { format, parseISO, getDay, isAfter, isBefore, startOfDay, subDays, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameDay, isSameWeek, isSameMonth } from "date-fns";
-import { CalendarIcon, ShoppingCart, AlertCircle, ChevronLeft, ChevronRight, Info, Filter, FileText } from "lucide-react";
+import { format, parseISO, getDay, isBefore, startOfDay, subDays, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameDay } from "date-fns";
+import { CalendarIcon, AlertCircle, Filter, FileText } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import NotificationBell from "@/components/NotificationBell";
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
@@ -97,7 +88,6 @@ const findPreOrderForMeal = (mealId: number, date: Date, plans?: WeeklyPlan[]): 
 };
 
 const Planner = () => {
-  const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState<"all" | "hot meal" | "sandwich" | "pasta" | "salad">("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
@@ -111,8 +101,9 @@ const Planner = () => {
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [selectedPdfUrl, setSelectedPdfUrl] = useState<string>('');
   const [loadingPdf, setLoadingPdf] = useState(false);
-  const [allMeals, setAllMeals] = useState<Meal[]>([]);
-  const [isLoadingMeals, setIsLoadingMeals] = useState(false);
+  const [selectedAddOnType, setSelectedAddOnType] = useState<"all" | "drinks" | "sides" | "condiments" | "desserts">("all");
+  const [selectedAddOnPriceRange, setSelectedAddOnPriceRange] = useState<"all" | "low" | "medium" | "high">("all");
+  const [addOnSearchTerm, setAddOnSearchTerm] = useState<string>("");
 
   const { data: profile, isLoading: isLoadingProfile, error: profileError } = useQuery({
     queryKey: ["profile"],
@@ -128,25 +119,69 @@ const Planner = () => {
     retry: 1,
   });
 
-  // Fetch all meals for filtering
-  const { data: mealsData, isLoading: isLoadingMealsData, error: mealsError } = useQuery({
-    queryKey: ["allMeals"],
-    queryFn: () => plannerApi.getMeals({}),
-    retry: 1,
-  });
-
-  // Extract categories and subcategories from all meals
+  // Extract categories and subcategories from weekly plans meals
   useEffect(() => {
-    if (mealsData?.data) {
-      const meals = mealsData.data;
-      const uniqueCategories = Array.from(new Set(meals.map((meal: any) => meal.category).filter(Boolean))) as string[];
-      const uniqueSubcategories = Array.from(new Set(meals.map((meal: any) => meal.subcategory).filter(Boolean))) as string[];
+    if (weeklyPlans?.data) {
+      const allMealsFromPlans = weeklyPlans.data.flatMap((plan: any) => 
+        Array.isArray(plan.meals) ? plan.meals : []
+      );
+      
+      const uniqueCategories = Array.from(new Set(allMealsFromPlans.map((meal: any) => meal.category).filter(Boolean))) as string[];
+      const uniqueSubcategories = Array.from(new Set(allMealsFromPlans.map((meal: any) => meal.subcategory).filter(Boolean))) as string[];
       
       setCategories(["all", ...uniqueCategories]);
       setSubcategories(["all", ...uniqueSubcategories]);
-      setAllMeals(meals);
     }
-  }, [mealsData]);
+  }, [weeklyPlans]);
+
+  // Filter add-ons based on selected filters (Frontend-only filtering)
+  const filteredAddOns = addOns.filter((addon) => {
+    // Filter by search term
+    const addonName = addon.name.toLowerCase();
+    const addonDescription = (addon.description || '').toLowerCase();
+    const searchText = `${addonName} ${addonDescription}`;
+    
+    const searchMatch = !addOnSearchTerm || searchText.includes(addOnSearchTerm.toLowerCase());
+    
+    // Filter by type (based on name/description - more flexible matching)
+    const typeMatch = selectedAddOnType === "all" || 
+      (selectedAddOnType === "drinks" && (
+        searchText.includes('cola') || 
+        searchText.includes('drink') || 
+        searchText.includes('soda') || 
+        searchText.includes('coke') ||
+        searchText.includes('beverage')
+      )) ||
+      (selectedAddOnType === "sides" && (
+        searchText.includes('fries') || 
+        searchText.includes('side') ||
+        searchText.includes('chips') ||
+        searchText.includes('potato')
+      )) ||
+      (selectedAddOnType === "condiments" && (
+        searchText.includes('sauce') || 
+        searchText.includes('dressing') || 
+        searchText.includes('cheese') ||
+        searchText.includes('ketchup') ||
+        searchText.includes('mayo') ||
+        searchText.includes('mustard')
+      )) ||
+      (selectedAddOnType === "desserts" && (
+        searchText.includes('dessert') || 
+        searchText.includes('sweet') ||
+        searchText.includes('cake') ||
+        searchText.includes('cookie') ||
+        searchText.includes('ice cream')
+      ));
+
+    // Filter by price range
+    const priceMatch = selectedAddOnPriceRange === "all" ||
+      (selectedAddOnPriceRange === "low" && addon.price <= 1.00) ||
+      (selectedAddOnPriceRange === "medium" && addon.price > 1.00 && addon.price <= 3.00) ||
+      (selectedAddOnPriceRange === "high" && addon.price > 3.00);
+
+    return searchMatch && typeMatch && priceMatch;
+  });
 
   const preOrderMutation = useMutation({
     mutationFn: (payload: any) => plannerApi.preOrderMeal(payload),
@@ -252,15 +287,7 @@ const Planner = () => {
     return mealsForDay;
   };
 
-  const daysOfWeek = [
-    { name: 'Monday', dayOfWeek: 1 },
-    { name: 'Tuesday', dayOfWeek: 2 },
-    { name: 'Wednesday', dayOfWeek: 3 },
-    { name: 'Thursday', dayOfWeek: 4 },
-    { name: 'Friday', dayOfWeek: 5 },
-    { name: 'Saturday', dayOfWeek: 6 },
-    { name: 'Sunday', dayOfWeek: 7 },
-  ];
+
 
   // Helper to compare only the date part (ignoring time and timezone)
   const isDateInRange = (date: Date, start: Date, end: Date) => {
@@ -313,17 +340,7 @@ const Planner = () => {
     return allDates;
   };
 
-  // Helper to move to previous/next week/month
-  const goToPrev = () => {
-    if (viewMode === 'week' || viewMode === 'next-week') setSelectedDate(prev => addDays(prev, -7));
-    else if (viewMode === 'month' || viewMode === 'next-month') setSelectedDate(prev => addDays(startOfMonth(prev), -1));
-    else setSelectedDate(prev => addDays(prev, -1));
-  };
-  const goToNext = () => {
-    if (viewMode === 'week' || viewMode === 'next-week') setSelectedDate(prev => addDays(prev, 7));
-    else if (viewMode === 'month' || viewMode === 'next-month') setSelectedDate(prev => addDays(endOfMonth(prev), 1));
-    else setSelectedDate(prev => addDays(prev, 1));
-  };
+
 
   // Find the active plan before using it in summary
   const activePlan = normalizedPlans.find((plan: WeeklyPlan) => {
@@ -343,39 +360,15 @@ const Planner = () => {
         console.log('Active Plan Meals:', activePlan.meals);
         console.log('Dates for View:', getDatesForView(activePlan));
       }
-    }
-    if (mealsData?.data) {
-      console.log('All Meals Data:', mealsData.data);
       console.log('Categories:', categories);
       console.log('Subcategories:', subcategories);
     }
     if (plansError) {
       console.error('Weekly plans error:', plansError);
     }
-    if (mealsError) {
-      console.error('Meals error:', mealsError);
-    }
-  }, [weeklyPlans, normalizedPlans, activePlan, plansError, mealsData, categories, subcategories, mealsError]);
+  }, [weeklyPlans, normalizedPlans, activePlan, plansError, categories, subcategories]);
 
-  // Calculate summary for the current view
-  const summary = (() => {
-    if (!activePlan) return { count: 0, total: 0 };
-    const dates = getDatesForView(activePlan);
-    let count = 0;
-    let total = 0;
-    dates.forEach(date => {
-      const dayOfWeek = getDay(date) === 0 ? 7 : getDay(date);
-      const mealsForDay = activePlan.meals.filter(
-        (meal: MealWithPivot) => meal.pivot.day_of_week === dayOfWeek &&
-          (selectedType === "all" || meal.type === selectedType) &&
-          (selectedCategory === "all" || (meal.category && meal.category === selectedCategory)) &&
-          (selectedSubcategory === "all" || (meal.subcategory && meal.subcategory === selectedSubcategory))
-      );
-      count += mealsForDay.length;
-      total += mealsForDay.reduce((sum: number, meal: MealWithPivot) => sum + meal.price, 0);
-    });
-    return { count, total };
-  })();
+
 
   useEffect(() => {
     // Handle add-ons with error handling
@@ -390,7 +383,7 @@ const Planner = () => {
   }, []);
 
   // Replace loading spinner in loading state
-  if (isLoadingProfile || isLoadingPlans || isLoadingMealsData) {
+  if (isLoadingProfile || isLoadingPlans) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <LoadingSpinner size={48} />
@@ -410,20 +403,13 @@ const Planner = () => {
     );
   }
 
-  if (plansError || mealsError) {
+  if (plansError) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center p-6">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Data</h2>
-          <p className="text-gray-600 mb-4">
-            {plansError && mealsError 
-              ? "There was a problem loading both weekly plans and meals data." 
-              : plansError 
-                ? "There was a problem loading the weekly plans." 
-                : "There was a problem loading meals data."
-            } Please try again.
-          </p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Weekly Plans</h2>
+          <p className="text-gray-600 mb-4">There was a problem loading the weekly plans. Please try again.</p>
           <div className="space-x-2">
             <Button onClick={() => refetch()} className="bg-blue-500 hover:bg-blue-600 text-white">
               Retry Plans
@@ -580,16 +566,14 @@ const Planner = () => {
             <p>Weekly Plans Error: {plansError ? 'Yes' : 'No'}</p>
             <p>Weekly Plans Data: {weeklyPlans?.data ? 'Available' : 'Not available'}</p>
             <p>Active Plan: {activePlan ? 'Found' : 'Not found'}</p>
-            <p>All Meals Loading: {isLoadingMealsData ? 'Yes' : 'No'}</p>
-            <p>All Meals Error: {mealsError ? 'Yes' : 'No'}</p>
-            <p>All Meals Data: {mealsData?.data ? `${mealsData.data.length} meals` : 'Not available'}</p>
             <p>Categories: {categories.length > 1 ? categories.slice(1).join(', ') : 'None'}</p>
             <p>Subcategories: {subcategories.length > 1 ? subcategories.slice(1).join(', ') : 'None'}</p>
+            <p>Add-ons: {addOns.length} total, {filteredAddOns.length} filtered</p>
+            <p>Add-on Type Filter: {selectedAddOnType}</p>
+            <p>Add-on Price Filter: {selectedAddOnPriceRange}</p>
+            <p>Add-on Search: {addOnSearchTerm || 'None'}</p>
             {plansError && (
               <p className="text-red-600">Plans Error: {JSON.stringify(plansError)}</p>
-            )}
-            {mealsError && (
-              <p className="text-red-600">Meals Error: {JSON.stringify(mealsError)}</p>
             )}
             <div className="mt-2 space-x-2">
               <Button 
@@ -795,7 +779,7 @@ const Planner = () => {
                           return null;
                         }
 
-                        const isToday = isSameDay(date, new Date());
+
                         
                         return (
                           <tr key={date.toISOString()} className="border-b border-brand-yellow/30">
@@ -1039,6 +1023,89 @@ const Planner = () => {
         {/* Available Add-ons Section */}
         <div className="mt-8">
           <h2 className="text-lg font-bold text-brand-black mb-4">Available Add-ons</h2>
+          
+          {/* Add-ons Filters */}
+          <div className="mb-6 space-y-4">
+            {/* Add-on Search */}
+            <div>
+              <h3 className="text-sm font-semibold text-brand-black mb-2">Search Add-ons</h3>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search by name or description..."
+                  value={addOnSearchTerm}
+                  onChange={(e) => setAddOnSearchTerm(e.target.value)}
+                  className="w-full px-4 py-2 border border-brand-yellow/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-yellow/50 focus:border-brand-yellow"
+                />
+                {addOnSearchTerm && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setAddOnSearchTerm("")}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    ✕
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Add-on Type Filter */}
+            <div>
+              <h3 className="text-sm font-semibold text-brand-black mb-2">Add-on Type</h3>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { key: 'all', label: 'All Types' },
+                  { key: 'drinks', label: 'Drinks' },
+                  { key: 'sides', label: 'Sides' },
+                  { key: 'condiments', label: 'Condiments' },
+                  { key: 'desserts', label: 'Desserts' }
+                ].map(({ key, label }) => (
+                  <Button
+                    key={key}
+                    variant={selectedAddOnType === key ? 'default' : 'outline'}
+                    size="sm"
+                    className={`${
+                      selectedAddOnType === key 
+                        ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
+                        : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
+                    } rounded-full px-3 py-1 text-xs font-medium`}
+                    onClick={() => setSelectedAddOnType(key as "all" | "drinks" | "sides" | "condiments" | "desserts")}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Add-on Price Range Filter */}
+            <div>
+              <h3 className="text-sm font-semibold text-brand-black mb-2">Price Range</h3>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { key: 'all', label: 'All Prices' },
+                  { key: 'low', label: 'Under $1.00' },
+                  { key: 'medium', label: '$1.00 - $3.00' },
+                  { key: 'high', label: 'Over $3.00' }
+                ].map(({ key, label }) => (
+                  <Button
+                    key={key}
+                    variant={selectedAddOnPriceRange === key ? 'default' : 'outline'}
+                    size="sm"
+                    className={`${
+                      selectedAddOnPriceRange === key 
+                        ? 'bg-brand-orange text-white border-brand-orange hover:bg-brand-orange/90' 
+                        : 'bg-white text-brand-black border-brand-orange hover:bg-brand-orange/10'
+                    } rounded-full px-3 py-1 text-xs font-medium`}
+                    onClick={() => setSelectedAddOnPriceRange(key as "all" | "low" | "medium" | "high")}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -1050,32 +1117,54 @@ const Planner = () => {
                 </tr>
               </thead>
               <tbody>
-                {addOns.map((addon) => (
-                  <tr key={addon.id} className="border-b border-brand-yellow/30">
-                    <td className="py-4 px-4 text-sm font-medium text-brand-black">
-                      {addon.name}
-                    </td>
-                    <td className="py-4 px-4 text-sm text-brand-black/70">
-                      {addon.description || 'Additional item'}
-                    </td>
-                    <td className="py-4 px-4 text-sm font-medium text-brand-black">
-                      ${addon.price.toFixed(2)}
-                    </td>
-                    <td className="py-4 px-4">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-brand-red text-brand-red hover:bg-brand-red/10 rounded-full px-3 py-1 text-xs"
-                        onClick={() => {
-                          // Handle add-on ordering directly here
-                          toast.success(`${addon.name} added to order!`);
-                        }}
-                      >
-                        Order
-                      </Button>
+                {filteredAddOns.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-brand-black/50">
+                      <div className="flex flex-col items-center">
+                        <AlertCircle className="w-8 h-8 mb-2" />
+                        <p>No add-ons match the selected filters.</p>
+                        <Button 
+                          size="sm" 
+                          onClick={() => {
+                            setSelectedAddOnType("all");
+                            setSelectedAddOnPriceRange("all");
+                            setAddOnSearchTerm("");
+                          }}
+                          className="mt-2 bg-brand-yellow text-brand-black border-brand-yellow hover:bg-brand-yellow/90"
+                        >
+                          Clear Filters
+                        </Button>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredAddOns.map((addon) => (
+                    <tr key={addon.id} className="border-b border-brand-yellow/30">
+                      <td className="py-4 px-4 text-sm font-medium text-brand-black">
+                        {addon.name}
+                      </td>
+                      <td className="py-4 px-4 text-sm text-brand-black/70">
+                        {addon.description || 'Additional item'}
+                      </td>
+                      <td className="py-4 px-4 text-sm font-medium text-brand-black">
+                        ${addon.price.toFixed(2)}
+                      </td>
+                      <td className="py-4 px-4">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-brand-red text-brand-red hover:bg-brand-red/10 rounded-full px-3 py-1 text-xs"
+                          onClick={() => {
+                            // Handle add-on ordering directly here
+                            toast.success(`${addon.name} added to order!`);
+                          }}
+                        >
+                          Order
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
