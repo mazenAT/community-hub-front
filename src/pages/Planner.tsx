@@ -35,7 +35,12 @@ interface Meal {
 }
 
 // Define a more specific type for meals that come with weekly plan pivot data
-type MealWithPivot = Meal & { pivot: { day_of_week: number } };
+interface MealWithPivot extends Meal {
+  pivot: { 
+    day_of_week: number;
+    meal_date?: string;
+  };
+}
 
 interface PreOrder {
   id: number;
@@ -258,7 +263,10 @@ const Planner = () => {
     // Correctly map the 'available' boolean from the backend to the frontend status
     status: meal.available === false ? 'sold_out' : 'available',
     // Add a default pivot structure since the API doesn't provide it
-    pivot: meal.pivot || { day_of_week: 1 }, // Default to Monday if no pivot data
+    pivot: meal.pivot || { 
+      day_of_week: 1, // Default to Monday if no pivot data
+      meal_date: meal.meal_date || null, // Include meal_date if available
+    },
   });
 
   const normalizedPlans = (() => {
@@ -331,6 +339,11 @@ const Planner = () => {
       currentDate = addDays(currentDate, 1);
     }
     return dates;
+  };
+
+  // Helper to determine if a plan is monthly (has specific date assignments) or weekly
+  const isMonthlyPlan = (plan: WeeklyPlan): boolean => {
+    return plan.meals.some(meal => meal.pivot?.meal_date);
   };
 
   // Helper to get all dates for the current view mode
@@ -565,6 +578,15 @@ const Planner = () => {
         {/* Current Date Range */}
         <div className="mt-2 text-sm text-brand-black/70">
           {getCurrentDateRange()}
+          {activePlan && (
+            <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
+              isMonthlyPlan(activePlan) 
+                ? 'bg-brand-blue/20 text-brand-blue' 
+                : 'bg-brand-orange/20 text-brand-orange'
+            }`}>
+              {isMonthlyPlan(activePlan) ? 'Monthly Plan' : 'Weekly Plan'}
+            </span>
+          )}
         </div>
 
         {/* Pre-Order Warning Message */}
@@ -719,6 +741,11 @@ const Planner = () => {
                               </h3>
                               <p className="text-sm text-brand-black/70">
                                 {mealsForDay.length} meal{mealsForDay.length !== 1 ? 's' : ''} available
+                                {mealsForDay.some((meal: any) => meal.pivot?.meal_date) && (
+                                  <span className="ml-2 px-2 py-1 bg-brand-blue/20 text-brand-blue text-xs rounded-full">
+                                    Monthly Plan
+                                  </span>
+                                )}
                               </p>
                             </div>
                           </div>
