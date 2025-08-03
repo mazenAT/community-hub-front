@@ -111,6 +111,8 @@ const Planner = () => {
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [selectedPdfUrl, setSelectedPdfUrl] = useState<string>('');
   const [loadingPdf, setLoadingPdf] = useState(false);
+  const [allMeals, setAllMeals] = useState<Meal[]>([]);
+  const [isLoadingMeals, setIsLoadingMeals] = useState(false);
 
   const { data: profile, isLoading: isLoadingProfile, error: profileError } = useQuery({
     queryKey: ["profile"],
@@ -125,6 +127,26 @@ const Planner = () => {
     enabled: !!schoolId, // Only run the query if schoolId is available
     retry: 1,
   });
+
+  // Fetch all meals for filtering
+  const { data: mealsData, isLoading: isLoadingMealsData, error: mealsError } = useQuery({
+    queryKey: ["allMeals"],
+    queryFn: () => plannerApi.getMeals({}),
+    retry: 1,
+  });
+
+  // Extract categories and subcategories from all meals
+  useEffect(() => {
+    if (mealsData?.data) {
+      const meals = mealsData.data;
+      const uniqueCategories = Array.from(new Set(meals.map((meal: any) => meal.category).filter(Boolean))) as string[];
+      const uniqueSubcategories = Array.from(new Set(meals.map((meal: any) => meal.subcategory).filter(Boolean))) as string[];
+      
+      setCategories(["all", ...uniqueCategories]);
+      setSubcategories(["all", ...uniqueSubcategories]);
+      setAllMeals(meals);
+    }
+  }, [mealsData]);
 
   const preOrderMutation = useMutation({
     mutationFn: (payload: any) => plannerApi.preOrderMeal(payload),
@@ -322,10 +344,18 @@ const Planner = () => {
         console.log('Dates for View:', getDatesForView(activePlan));
       }
     }
+    if (mealsData?.data) {
+      console.log('All Meals Data:', mealsData.data);
+      console.log('Categories:', categories);
+      console.log('Subcategories:', subcategories);
+    }
     if (plansError) {
       console.error('Weekly plans error:', plansError);
     }
-  }, [weeklyPlans, normalizedPlans, activePlan, plansError]);
+    if (mealsError) {
+      console.error('Meals error:', mealsError);
+    }
+  }, [weeklyPlans, normalizedPlans, activePlan, plansError, mealsData, categories, subcategories, mealsError]);
 
   // Calculate summary for the current view
   const summary = (() => {
@@ -348,26 +378,6 @@ const Planner = () => {
   })();
 
   useEffect(() => {
-    // Handle meal categories with error handling
-    plannerApi.getMealCategories()
-      .then((res) => {
-        setCategories(["all", ...res.data.categories.filter(Boolean)]);
-      })
-      .catch((error) => {
-        console.warn('Failed to load meal categories:', error);
-        setCategories(["all"]); // Set default categories
-      });
-
-    // Handle meal subcategories with error handling
-    plannerApi.getMealSubcategories()
-      .then((res) => {
-        setSubcategories(["all", ...res.data.subcategories.filter(Boolean)]);
-      })
-      .catch((error) => {
-        console.warn('Failed to load meal subcategories:', error);
-        setSubcategories(["all"]); // Set default subcategories
-      });
-
     // Handle add-ons with error handling
     addOnApi.getAddOns()
       .then((res) => {
@@ -380,7 +390,7 @@ const Planner = () => {
   }, []);
 
   // Replace loading spinner in loading state
-  if (isLoadingProfile || isLoadingPlans) {
+  if (isLoadingProfile || isLoadingPlans || isLoadingMealsData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <LoadingSpinner size={48} />
@@ -400,16 +410,28 @@ const Planner = () => {
     );
   }
 
-  if (plansError) {
+  if (plansError || mealsError) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center p-6">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Weekly Plans</h2>
-          <p className="text-gray-600 mb-4">There was a problem loading the weekly plans. Please try again.</p>
-          <Button onClick={() => refetch()} className="bg-blue-500 hover:bg-blue-600 text-white">
-            Retry
-          </Button>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Data</h2>
+          <p className="text-gray-600 mb-4">
+            {plansError && mealsError 
+              ? "There was a problem loading both weekly plans and meals data." 
+              : plansError 
+                ? "There was a problem loading the weekly plans." 
+                : "There was a problem loading meals data."
+            } Please try again.
+          </p>
+          <div className="space-x-2">
+            <Button onClick={() => refetch()} className="bg-blue-500 hover:bg-blue-600 text-white">
+              Retry Plans
+            </Button>
+            <Button onClick={() => window.location.reload()} className="bg-green-500 hover:bg-green-600 text-white">
+              Reload Page
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -558,16 +580,33 @@ const Planner = () => {
             <p>Weekly Plans Error: {plansError ? 'Yes' : 'No'}</p>
             <p>Weekly Plans Data: {weeklyPlans?.data ? 'Available' : 'Not available'}</p>
             <p>Active Plan: {activePlan ? 'Found' : 'Not found'}</p>
+            <p>All Meals Loading: {isLoadingMealsData ? 'Yes' : 'No'}</p>
+            <p>All Meals Error: {mealsError ? 'Yes' : 'No'}</p>
+            <p>All Meals Data: {mealsData?.data ? `${mealsData.data.length} meals` : 'Not available'}</p>
+            <p>Categories: {categories.length > 1 ? categories.slice(1).join(', ') : 'None'}</p>
+            <p>Subcategories: {subcategories.length > 1 ? subcategories.slice(1).join(', ') : 'None'}</p>
             {plansError && (
-              <p className="text-red-600">Error: {JSON.stringify(plansError)}</p>
+              <p className="text-red-600">Plans Error: {JSON.stringify(plansError)}</p>
             )}
-            <Button 
-              size="sm" 
-              onClick={() => refetch()}
-              className="mt-2 bg-blue-500 text-white hover:bg-blue-600"
-            >
-              Retry Load Plans
-            </Button>
+            {mealsError && (
+              <p className="text-red-600">Meals Error: {JSON.stringify(mealsError)}</p>
+            )}
+            <div className="mt-2 space-x-2">
+              <Button 
+                size="sm" 
+                onClick={() => refetch()}
+                className="bg-blue-500 text-white hover:bg-blue-600"
+              >
+                Retry Load Plans
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={() => window.location.reload()}
+                className="bg-green-500 text-white hover:bg-green-600"
+              >
+                Reload Page
+              </Button>
+            </div>
           </div>
         </div>
       </div>
