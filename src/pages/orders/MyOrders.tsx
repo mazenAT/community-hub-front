@@ -119,14 +119,16 @@ const MyOrders: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'completed':
-        return <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-semibold">Completed</span>;
-      case 'approved':
-        return <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-semibold">Approved</span>;
+      case 'delivered':
+        return <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-semibold">Delivered</span>;
+      case 'confirmed':
+        return <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-semibold">Confirmed</span>;
       case 'pending':
         return <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-semibold">Pending</span>;
       case 'cancelled':
         return <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-semibold">Cancelled</span>;
+      case 'refunded':
+        return <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs font-semibold">Refunded</span>;
       default:
         return <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs font-semibold">{status}</span>;
     }
