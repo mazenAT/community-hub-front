@@ -147,15 +147,15 @@ const Wallet = () => {
   }
 
   return (
-    <div className="min-h-screen bg-brand-yellow/5 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-brand-yellow/10 via-brand-orange/5 to-brand-red/5 pb-20">
       {/* Header */}
-      <div className="bg-white px-4 sm:px-6 py-4 border-b-2 border-brand-red">
+      <div className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 sm:px-6 py-4 border-b-2 border-brand-red">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/Logo.jpg" alt="App Logo" className="w-10 h-10 rounded" />
             <div>
-              <h1 className="text-lg sm:text-xl font-semibold text-brand-black">Wallet</h1>
-              <p className="text-xs sm:text-sm text-brand-black/70">Welcome back, {userProfile?.name || 'User'}</p>
+              <h1 className="text-lg sm:text-xl font-semibold text-white">Wallet</h1>
+              <p className="text-xs sm:text-sm text-white/90">Welcome back, {userProfile?.name || 'User'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

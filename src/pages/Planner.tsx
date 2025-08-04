@@ -115,7 +115,7 @@ const Planner = () => {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
   const [categories, setCategories] = useState<string[]>([]);
   const [subcategories, setSubcategories] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month' | 'custom' | 'next-week' | 'next-month'>('week');
+  const [viewMode, setViewMode] = useState<'custom'>('custom');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
@@ -425,29 +425,12 @@ const Planner = () => {
     if (!plan) return [];
     const allDates = getDatesForPlan(plan);
     
-    if (viewMode === 'day') {
-      return [selectedDate];
-    } else if (viewMode === 'week') {
-      const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
-      const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 1 });
-      return allDates.filter(date => date >= weekStart && date <= weekEnd);
-    } else if (viewMode === 'next-week') {
-      const nextWeekStart = startOfWeek(addDays(selectedDate, 7), { weekStartsOn: 1 });
-      const nextWeekEnd = endOfWeek(addDays(selectedDate, 7), { weekStartsOn: 1 });
-      return allDates.filter(date => date >= nextWeekStart && date <= nextWeekEnd);
-    } else if (viewMode === 'month') {
-      const monthStart = startOfMonth(selectedDate);
-      const monthEnd = endOfMonth(selectedDate);
-      return allDates.filter(date => date >= monthStart && date <= monthEnd);
-    } else if (viewMode === 'next-month') {
-      const nextMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
-      const nextMonthStart = startOfMonth(nextMonth);
-      const nextMonthEnd = endOfMonth(nextMonth);
-      return allDates.filter(date => date >= nextMonthStart && date <= nextMonthEnd);
-    } else if (viewMode === 'custom' && customStartDate && customEndDate) {
+    if (viewMode === 'custom' && customStartDate && customEndDate) {
       return allDates.filter(date => date >= customStartDate && date <= customEndDate);
     }
-    return allDates;
+    
+    // Default to week 1 if no custom range is set
+    return getDatesForWeek(plan, 1);
   };
 
   // Helper to get dates for specific week (1-4)
@@ -532,24 +515,20 @@ const Planner = () => {
 
   // Get current date range for display
   const getCurrentDateRange = () => {
-    if (viewMode === 'day') {
-      return format(selectedDate, 'MMMM dd, yyyy');
-    } else if (viewMode === 'week') {
-      const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
-      const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 1 });
-      return `${format(weekStart, 'MMMM dd')} - ${format(weekEnd, 'MMMM dd, yyyy')}`;
-    } else if (viewMode === 'next-week') {
-      const nextWeekStart = startOfWeek(addDays(selectedDate, 7), { weekStartsOn: 1 });
-      const nextWeekEnd = endOfWeek(addDays(selectedDate, 7), { weekStartsOn: 1 });
-      return `${format(nextWeekStart, 'MMMM dd')} - ${format(nextWeekEnd, 'MMMM dd, yyyy')}`;
-    } else if (viewMode === 'month') {
-      return format(selectedDate, 'MMMM yyyy');
-    } else if (viewMode === 'next-month') {
-      const nextMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
-      return format(nextMonth, 'MMMM yyyy');
-    } else if (viewMode === 'custom' && customStartDate && customEndDate) {
+    if (viewMode === 'custom' && customStartDate && customEndDate) {
       return `${format(customStartDate, 'MMMM dd')} - ${format(customEndDate, 'MMMM dd, yyyy')}`;
     }
+    
+    // Default to week 1 display
+    if (activePlan) {
+      const weekDates = getDatesForWeek(activePlan, parseInt(selectedWeek));
+      if (weekDates.length > 0) {
+        const start = weekDates[0];
+        const end = weekDates[weekDates.length - 1];
+        return `${format(start, 'MMMM dd')} - ${format(end, 'MMMM dd, yyyy')} (Week ${selectedWeek})`;
+      }
+    }
+    
     return format(selectedDate, 'MMMM dd, yyyy');
   };
 
@@ -558,43 +537,31 @@ const Planner = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 py-4 border-b-2 border-brand-red">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white">Meal Planner</h1>
+          <h1 className="text-2xl font-bold text-white">View Menu</h1>
           <div className="flex items-center space-x-2">
             <Filter className="w-5 h-5 text-white" />
             <NotificationBell />
           </div>
         </div>
 
-        {/* Date Range Selection */}
+        {/* Custom Date Range Selection */}
         <div className="mt-4 flex flex-wrap gap-2">
-          {[
-            { key: 'day', label: 'Today' },
-            { key: 'week', label: 'This Week' },
-            { key: 'next-week', label: 'Next Week' },
-            { key: 'month', label: 'This Month' },
-            { key: 'next-month', label: 'Next Month' },
-            { key: 'custom', label: 'Custom Range' }
-          ].map(({ key, label }) => (
-            <Button
-              key={key}
-              variant={viewMode === key ? 'default' : 'outline'}
-              size="sm"
-              className={`${
-                viewMode === key 
-                  ? 'bg-white text-brand-red border-white hover:bg-white/90' 
-                  : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
-              } rounded-full px-4 py-2 text-sm font-medium`}
-              onClick={() => {
-                setViewMode(key as 'day' | 'week' | 'month' | 'custom' | 'next-week' | 'next-month');
-                if (key === 'custom') {
-                  setCustomStartDate(undefined);
-                  setCustomEndDate(undefined);
-                }
-              }}
-            >
-              {label}
-            </Button>
-          ))}
+          <Button
+            variant={viewMode === 'custom' ? 'default' : 'outline'}
+            size="sm"
+            className={`${
+              viewMode === 'custom' 
+                ? 'bg-white text-brand-red border-white hover:bg-white/90' 
+                : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
+            } rounded-full px-4 py-2 text-sm font-medium`}
+            onClick={() => {
+              setViewMode('custom');
+              setCustomStartDate(undefined);
+              setCustomEndDate(undefined);
+            }}
+          >
+            Custom Range
+          </Button>
         </div>
 
         {/* Custom Date Range Picker */}
@@ -790,11 +757,12 @@ const Planner = () => {
         {activePlan ? (
           <div className="mb-8">
             {(() => {
-              // Get dates for the current view or selected week
-              let datesForView = getDatesForView(activePlan);
+              // Get dates based on week filter or custom range
+              let datesForView;
               
-              // If week filter is selected, use that instead
-              if (selectedWeek && selectedWeek !== "1") {
+              if (viewMode === 'custom' && customStartDate && customEndDate) {
+                datesForView = getDatesForView(activePlan);
+              } else {
                 datesForView = getDatesForWeek(activePlan, parseInt(selectedWeek));
               }
               
@@ -814,7 +782,9 @@ const Planner = () => {
                         variant="outline" 
                         onClick={() => {
                           setSelectedType("all");
-                          setViewMode("week");
+                          setSelectedWeek("1");
+                          setCustomStartDate(undefined);
+                          setCustomEndDate(undefined);
                         }}
                         className="bg-brand-yellow text-brand-black border-brand-yellow hover:bg-brand-yellow/90"
                       >

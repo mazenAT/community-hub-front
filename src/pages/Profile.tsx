@@ -235,13 +235,13 @@ const Profile = () => {
   const totalTransactions = transactionsData?.length || 0;
 
   return (
-    <div className="min-h-screen bg-brand-yellow/5 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-brand-yellow/10 via-brand-orange/5 to-brand-red/5 pb-20">
       {/* Header */}
-      <div className="bg-white px-4 sm:px-6 py-4 border-b-2 border-brand-red">
+      <div className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 sm:px-6 py-4 border-b-2 border-brand-red">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg sm:text-xl font-semibold text-brand-black">Profile</h1>
-            <p className="text-xs sm:text-sm text-brand-black/70">Manage your account</p>
+            <h1 className="text-lg sm:text-xl font-semibold text-white">Profile</h1>
+            <p className="text-xs sm:text-sm text-white/90">Manage your account</p>
           </div>
           <button 
             onClick={() => navigate("/wallet")}

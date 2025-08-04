@@ -17,7 +17,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeTab }) => {
       active: location.pathname === "/wallet",
     },
     {
-      name: "Planner",
+      name: "View Menu",
       icon: Calendar,
       path: "/planner",
       active: location.pathname === "/planner",

@@ -44,7 +44,7 @@ const ContactUs = () => {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-brand-yellow/5 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-brand-yellow/10 via-brand-orange/5 to-brand-red/5 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
           <div className="flex justify-center mb-6">
             <div className="bg-green-100 p-4 rounded-full">
@@ -67,7 +67,7 @@ const ContactUs = () => {
   }
 
   return (
-    <div className="min-h-screen bg-brand-yellow/5 p-4 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-brand-yellow/10 via-brand-orange/5 to-brand-red/5 p-4 pb-20">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
