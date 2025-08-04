@@ -308,15 +308,15 @@ const Planner = () => {
   const handleViewMealPlanPdf = async (mealPlan: WeeklyPlan) => {
     try {
       setLoadingPdf(true);
-      const response = await plannerApi.getMealPlanPdf(mealPlan.id);
+      const response = await plannerApi.getGeneralPdf();
       if (response.data.pdf_url) {
         setSelectedPdfUrl(response.data.pdf_url);
         setShowPdfModal(true);
       } else {
-        toast.error('No PDF available for this meal plan');
+        toast.error('No general PDF available');
       }
     } catch (error) {
-      toast.error('Failed to load meal plan PDF');
+      toast.error('Failed to load general PDF');
     } finally {
       setLoadingPdf(false);
     }

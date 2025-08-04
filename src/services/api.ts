@@ -119,6 +119,7 @@ export const plannerApi = {
   getMealSubcategories: () => api.get('/meals/subcategories'),
   getMealPdf: (mealId: number) => api.get(`/meals/${mealId}/pdf`),
   getMealPlanPdf: (mealPlanId: number) => api.get(`/meal-plans/${mealPlanId}/pdf`),
+  getGeneralPdf: () => api.get('/admin/general-pdfs'),
   getMealPlans: (params?: { start_date?: string; end_date?: string }) => api.get('/meal-plans', { params }),
   getMealPlan: (id: number) => api.get(`/meal-plans/${id}`),
 };
