@@ -67,21 +67,22 @@ export const walletApi = {
   getBalance: () => api.get('/wallet'),
   getTransactions: () => api.get('/transactions'),
   topUp: (data: { amount: number; payment_method: string }) =>
-    api.post('/wallet/top-up', data),
-  withdraw: (data: { amount: number; bank_details: any }) =>
-    api.post('/wallet/withdraw', data),
-  // New: Recharge via Fawry
-  rechargeFawry: (data: { cardToken: string; cvv: string }) =>
-    api.post('/wallet/recharge-fawry', data),
+    api.post('/wallet/topup', data),
+  // Remove withdraw as it's not implemented in backend
+  // withdraw: (data: { amount: number; bank_details: any }) =>
+  //   api.post('/wallet/withdraw', data),
+  // Remove Fawry specific routes as they're not implemented
+  // rechargeFawry: (data: { cardToken: string; cvv: string }) =>
+  //   api.post('/wallet/recharge-fawry', data),
   // New: Request refund
   requestRefund: (data: { amount: number; reason?: string }) =>
     api.post('/wallet/request-refund', data),
-  // New: Initiate Fawry recharge
-  initiateFawryRecharge: (data: { amount: number }) =>
-    api.post('/wallet/initiate-fawry-recharge', data),
-  // New: Get recharge/refund history
-  getRechargeHistory: () => api.get('/wallet/recharge-history'),
-  getRefunds: () => api.get('/wallet/refunds'),
+  // Remove Fawry specific routes as they're not implemented
+  // initiateFawryRecharge: (data: { amount: number }) =>
+  //   api.post('/wallet/initiate-fawry-recharge', data),
+  // Remove history routes as they're not implemented
+  // getRechargeHistory: () => api.get('/wallet/recharge-history'),
+  // getRefunds: () => api.get('/wallet/refunds'),
   // Refund a transaction
   refundTransaction: (id: number, data?: { amount?: number; reason?: string }) =>
     api.post(`/transactions/${id}/refund`, data),
@@ -95,7 +96,7 @@ export const notificationApi = {
 
 // Orders API
 export const ordersApi = {
-  getOrders: (params?: { status?: string }) => api.get('/orders', { params }),
+  getOrders: (params?: { status?: string }) => api.get('/orders/my-orders', { params }),
   getOrder: (id: number) => api.get(`/orders/${id}`),
 };
 
@@ -118,6 +119,8 @@ export const plannerApi = {
   getMealSubcategories: () => api.get('/meals/subcategories'),
   getMealPdf: (mealId: number) => api.get(`/meals/${mealId}/pdf`),
   getMealPlanPdf: (mealPlanId: number) => api.get(`/meal-plans/${mealPlanId}/pdf`),
+  getMealPlans: (params?: { start_date?: string; end_date?: string }) => api.get('/meal-plans', { params }),
+  getMealPlan: (id: number) => api.get(`/meal-plans/${id}`),
 };
 
 export const addOnApi = {
