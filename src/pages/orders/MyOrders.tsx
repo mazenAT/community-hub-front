@@ -5,7 +5,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
 import { useToast } from '@/components/ui/use-toast';
 import { AlertCircle } from 'lucide-react';
-import { studentPreOrdersApi, mealApi, addOnOrderApi } from '@/services/api';
+import { studentPreOrdersApi, mealApi, addOnOrderApi, familyMembersApi } from '@/services/api';
 import BottomNavigation from '@/components/BottomNavigation';
 
 interface PreOrderItem {
@@ -29,6 +29,13 @@ interface PreOrder {
   total_amount: number;
   created_at: string;
   items: PreOrderItem[];
+  family_member_id?: number;
+  familyMember?: {
+    id: number;
+    name: string;
+    grade: string;
+    class: string;
+  };
 }
 
 interface MealDetails {
@@ -63,11 +70,14 @@ const MyOrders: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [meals, setMeals] = useState<Record<number, MealDetails>>({});
+  const [familyMembers, setFamilyMembers] = useState<Array<{id: number, name: string, grade: string, class: string}>>([]);
+  const [selectedFamilyMember, setSelectedFamilyMember] = useState<string>('all');
 
   useEffect(() => {
     fetchOrders();
     fetchAddOnOrders();
-  }, []);
+    fetchFamilyMembers();
+  }, [selectedFamilyMember]);
 
   useEffect(() => {
     if (orders.length === 0) return;
@@ -92,7 +102,9 @@ const MyOrders: React.FC = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await studentPreOrdersApi.getMyPreOrders();
+      const response = await studentPreOrdersApi.getMyPreOrders({
+        family_member_id: selectedFamilyMember
+      });
       setOrders(response.data);
       setError(null);
     } catch (err) {
@@ -105,6 +117,15 @@ const MyOrders: React.FC = () => {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFamilyMembers = async () => {
+    try {
+      const response = await familyMembersApi.getFamilyMembers();
+      setFamilyMembers(response.data);
+    } catch (err) {
+      console.error('Failed to fetch family members:', err);
     }
   };
 
@@ -149,6 +170,27 @@ const MyOrders: React.FC = () => {
     <>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-6">My Orders</h1>
+        
+        {/* Family Member Filter */}
+        {familyMembers.length > 0 && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Filter by Family Member
+            </label>
+            <select
+              value={selectedFamilyMember}
+              onChange={(e) => setSelectedFamilyMember(e.target.value)}
+              className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red"
+            >
+              <option value="all">All Family Members</option>
+              {familyMembers.map((member) => (
+                <option key={member.id} value={member.id.toString()}>
+                  {member.name} ({member.grade} - {member.class})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         {orders.length === 0 && addOnOrders.length === 0 ? (
           <EmptyState icon={<AlertCircle />} message="No orders found" />
         ) : (
@@ -165,6 +207,11 @@ const MyOrders: React.FC = () => {
                     <div>
                       <h3 className="font-semibold text-lg">Pre-Order #{order.id}</h3>
                       <p className="text-xs text-gray-400 mb-1">{new Date(order.created_at).toLocaleDateString()}</p>
+                      {order.familyMember && (
+                        <p className="text-sm text-brand-red font-medium mb-1">
+                          For: {order.familyMember.name} ({order.familyMember.grade} - {order.familyMember.class})
+                        </p>
+                      )}
                       <ul className="mt-2 text-sm text-gray-700">
                         {order.items.map((item) => {
                           const meal = meals[item.meal_id] || {};

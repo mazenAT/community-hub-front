@@ -138,7 +138,7 @@ export const schoolApi = {
 };
 
 export const studentPreOrdersApi = {
-  getMyPreOrders: () => api.get('/student/pre-orders'),
+  getMyPreOrders: (params?: { family_member_id?: string }) => api.get('/student/pre-orders', { params }),
 };
 
 export const mealApi = {
