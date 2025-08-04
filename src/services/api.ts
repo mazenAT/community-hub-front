@@ -50,7 +50,7 @@ export const authApi = {
     password: string;
     password_confirmation: string;
     role: string;
-    school_id: number;
+    school_id?: number;
     phone?: string;
   }) => api.post('/auth/register', data),
   forgotPassword: (data: { email: string }) =>

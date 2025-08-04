@@ -20,23 +20,24 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [selectedSchool, setSelectedSchool] = useState("");
+  const [selectedRole, setSelectedRole] = useState("user"); // Default to parent
   const [schools, setSchools] = useState<{ id: number; name: string }[]>([]);
   const [loadingSchools, setLoadingSchools] = useState(true);
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [shake, setShake] = useState<{ [key: string]: boolean }>({});
 
-  const signUpMutation = useMutation({
-    mutationFn: (data: {
-      name: string;
-      email: string;
-      password: string;
-      password_confirmation: string;
-      role: string;
-      school_id: number;
-      phone?: string;
-    }) =>
-      authApi.register(data),
+      const signUpMutation = useMutation({
+      mutationFn: (data: {
+        name: string;
+        email: string;
+        password: string;
+        password_confirmation: string;
+        role: string;
+        school_id?: number;
+        phone?: string;
+      }) =>
+        authApi.register(data),
     onSuccess: () => {
       toast.success("Account created successfully");
       navigate("/family-setup");
@@ -70,8 +71,8 @@ const SignUp = () => {
       newErrors.name = "Full name is required.";
       newShake.name = true;
     }
-    if (!selectedSchool) {
-      newErrors.selectedSchool = "School is required.";
+    if (selectedRole === 'student' && !selectedSchool) {
+      newErrors.selectedSchool = "School is required for students.";
       newShake.selectedSchool = true;
     }
     if (!email) {
@@ -109,8 +110,8 @@ const SignUp = () => {
       email,
       password,
       password_confirmation: confirmPassword,
-      role: 'student',
-      school_id: Number(selectedSchool),
+      role: selectedRole,
+      school_id: selectedRole === 'student' ? Number(selectedSchool) : undefined,
       phone,
     });
   };
@@ -137,19 +138,33 @@ const SignUp = () => {
             />
             {errors.name && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.name}</div>}
 
-            <Select value={selectedSchool} onValueChange={setSelectedSchool} disabled={loadingSchools}>
-              <SelectTrigger className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.selectedSchool ? 'animate-shake border-brand-red' : ''}`}>
-                <SelectValue placeholder={loadingSchools ? "Loading schools..." : "Select your school"} />
+            <Select value={selectedRole} onValueChange={setSelectedRole}>
+              <SelectTrigger className="h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red">
+                <SelectValue placeholder="Select your role" />
               </SelectTrigger>
               <SelectContent className="bg-white border border-brand-yellow/30 shadow-lg z-50">
-                {schools.map((school) => (
-                  <SelectItem key={school.id} value={String(school.id)}>
-                    {school.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="user">Parent</SelectItem>
+                <SelectItem value="student">Student</SelectItem>
               </SelectContent>
             </Select>
-            {errors.selectedSchool && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.selectedSchool}</div>}
+
+            {selectedRole === 'student' && (
+              <>
+                <Select value={selectedSchool} onValueChange={setSelectedSchool} disabled={loadingSchools}>
+                  <SelectTrigger className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.selectedSchool ? 'animate-shake border-brand-red' : ''}`}>
+                    <SelectValue placeholder={loadingSchools ? "Loading schools..." : "Select your school"} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-brand-yellow/30 shadow-lg z-50">
+                    {schools.map((school) => (
+                      <SelectItem key={school.id} value={String(school.id)}>
+                        {school.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.selectedSchool && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.selectedSchool}</div>}
+              </>
+            )}
 
 
             
