@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { plannerApi, profileApi, addOnApi } from "@/services/api";
+import { plannerApi, profileApi, addOnApi, familyMembersApi } from "@/services/api";
 import { format, parseISO, getDay, isBefore, startOfDay, subDays, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameDay } from "date-fns";
-import { CalendarIcon, AlertCircle, Filter, FileText } from "lucide-react";
+import { CalendarIcon, AlertCircle, Filter, FileText, ChevronDown, Users } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -18,6 +18,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Meal {
   id: number;
@@ -67,6 +74,15 @@ interface AddOn {
   is_active: boolean;
 }
 
+interface FamilyMember {
+  id: number;
+  name: string;
+  grade: string;
+  class: string;
+  allergies: string[];
+  is_active: boolean;
+}
+
 const isOrderingWindowOpen = (mealDate: Date): boolean => {
   // Rule: Orders must be placed before midnight of the day BEFORE the meal.
   // For a meal on Wednesday, the deadline is the start of Tuesday (Tuesday 00:00).
@@ -110,6 +126,9 @@ const Planner = () => {
   const [selectedAddOnType, setSelectedAddOnType] = useState<"all" | "drinks" | "sides" | "condiments" | "desserts">("all");
   const [selectedAddOnPriceRange, setSelectedAddOnPriceRange] = useState<"all" | "low" | "medium" | "high">("all");
   const [addOnSearchTerm, setAddOnSearchTerm] = useState<string>("");
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [selectedFamilyMember, setSelectedFamilyMember] = useState<string>("");
+  const [selectedWeek, setSelectedWeek] = useState<string>("1");
 
   const { data: profile, isLoading: isLoadingProfile, error: profileError } = useQuery({
     queryKey: ["profile"],
@@ -123,6 +142,12 @@ const Planner = () => {
     queryFn: () => plannerApi.getWeeklyPlansBySchool(schoolId as number),
     enabled: !!schoolId, // Only run the query if schoolId is available
     retry: 1,
+  });
+
+  // Fetch family members
+  const { data: familyMembersResponse, isLoading: isLoadingFamilyMembers } = useQuery({
+    queryKey: ["family-members"],
+    queryFn: familyMembersApi.getFamilyMembers,
   });
 
   // Extract categories and subcategories from weekly plans meals
@@ -139,6 +164,13 @@ const Planner = () => {
       setSubcategories(["all", ...uniqueSubcategories]);
     }
   }, [weeklyPlans]);
+
+  // Update family members state
+  useEffect(() => {
+    if (familyMembersResponse?.data) {
+      setFamilyMembers(familyMembersResponse.data);
+    }
+  }, [familyMembersResponse]);
 
   // Filter add-ons based on selected filters (Frontend-only filtering)
   const filteredAddOns = addOns.filter((addon) => {
@@ -202,8 +234,15 @@ const Planner = () => {
 
   const handlePreOrder = (meal: MealWithPivot, date: Date) => {
     if (!activePlan) return;
+    
+    if (!selectedFamilyMember) {
+      toast.error("Please select a family member before placing an order");
+      return;
+    }
+    
     const payload = {
       weekly_plan_id: activePlan.id,
+      family_member_id: parseInt(selectedFamilyMember),
       items: [
         {
           meal_id: meal.id,
@@ -378,6 +417,19 @@ const Planner = () => {
     return allDates;
   };
 
+  // Helper to get dates for specific week (1-4)
+  const getDatesForWeek = (plan: WeeklyPlan, weekNumber: number): Date[] => {
+    if (!plan) return [];
+    const allDates = getDatesForPlan(plan);
+    
+    // Calculate week start based on plan start date
+    const planStart = parseISO(plan.start_date);
+    const weekStart = addDays(planStart, (weekNumber - 1) * 7);
+    const weekEnd = addDays(weekStart, 6);
+    
+    return allDates.filter(date => date >= weekStart && date <= weekEnd);
+  };
+
 
 
   // Find the active plan before using it in summary
@@ -388,23 +440,7 @@ const Planner = () => {
     return isDateInRange(today, start, end) && plan.is_active;
   });
 
-  // Debug logging to help understand data issues
-  useEffect(() => {
-    if (weeklyPlans?.data) {
-      console.log('Weekly Plans Data:', weeklyPlans.data);
-      console.log('Normalized Plans:', normalizedPlans);
-      console.log('Active Plan:', activePlan);
-      if (activePlan) {
-        console.log('Active Plan Meals:', activePlan.meals);
-        console.log('Dates for View:', getDatesForView(activePlan));
-      }
-      console.log('Categories:', categories);
-      console.log('Subcategories:', subcategories);
-    }
-    if (plansError) {
-      console.error('Weekly plans error:', plansError);
-    }
-  }, [weeklyPlans, normalizedPlans, activePlan, plansError, categories, subcategories]);
+
 
 
 
@@ -485,13 +521,13 @@ const Planner = () => {
   };
 
   return (
-    <div className="min-h-screen bg-brand-yellow/5 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-brand-yellow/10 via-brand-orange/5 to-brand-red/5 pb-20">
       {/* Header */}
-      <div className="bg-white px-4 py-4 border-b-2 border-brand-red">
+      <div className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 py-4 border-b-2 border-brand-red">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-brand-black">Meal Planner</h1>
+          <h1 className="text-2xl font-bold text-white">Meal Planner</h1>
           <div className="flex items-center space-x-2">
-            <Filter className="w-5 h-5 text-brand-red" />
+            <Filter className="w-5 h-5 text-white" />
             <NotificationBell />
           </div>
         </div>
@@ -512,8 +548,8 @@ const Planner = () => {
               size="sm"
               className={`${
                 viewMode === key 
-                  ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
-                  : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
+                  ? 'bg-white text-brand-red border-white hover:bg-white/90' 
+                  : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
               } rounded-full px-4 py-2 text-sm font-medium`}
               onClick={() => {
                 setViewMode(key as 'day' | 'week' | 'month' | 'custom' | 'next-week' | 'next-month');
@@ -536,7 +572,7 @@ const Planner = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="bg-white text-brand-black border-brand-yellow/30 hover:bg-brand-yellow/10"
+                  className="bg-white/20 text-white border-white/30 hover:bg-white/30"
                 >
                   <CalendarIcon className="w-4 h-4 mr-2" />
                   {customStartDate ? format(customStartDate, 'MMM dd') : 'Start Date'}
@@ -546,20 +582,26 @@ const Planner = () => {
                 <Calendar
                   mode="single"
                   selected={customStartDate}
-                  onSelect={setCustomStartDate}
+                  onSelect={(date) => {
+                    setCustomStartDate(date);
+                    // If end date is before start date, reset it
+                    if (customEndDate && date && customEndDate < date) {
+                      setCustomEndDate(undefined);
+                    }
+                  }}
                   initialFocus
                 />
               </PopoverContent>
             </Popover>
             
-            <span className="text-brand-black/70">to</span>
+            <span className="text-white/80">to</span>
             
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="bg-white text-brand-black border-brand-yellow/30 hover:bg-brand-yellow/10"
+                  className="bg-white/20 text-white border-white/30 hover:bg-white/30"
                 >
                   <CalendarIcon className="w-4 h-4 mr-2" />
                   {customEndDate ? format(customEndDate, 'MMM dd') : 'End Date'}
@@ -569,7 +611,13 @@ const Planner = () => {
                 <Calendar
                   mode="single"
                   selected={customEndDate}
-                  onSelect={setCustomEndDate}
+                  onSelect={(date) => {
+                    setCustomEndDate(date);
+                  }}
+                  disabled={(date) => {
+                    // Allow same day selection
+                    return customStartDate ? date < customStartDate : false;
+                  }}
                   initialFocus
                 />
               </PopoverContent>
@@ -578,13 +626,13 @@ const Planner = () => {
         )}
 
         {/* Current Date Range */}
-        <div className="mt-2 text-sm text-brand-black/70">
+        <div className="mt-2 text-sm text-white/90">
           {getCurrentDateRange()}
           {activePlan && (
             <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
               isMonthlyPlan(activePlan) 
-                ? 'bg-brand-blue/20 text-brand-blue' 
-                : 'bg-brand-orange/20 text-brand-orange'
+                ? 'bg-white/20 text-white' 
+                : 'bg-white/20 text-white'
             }`}>
               {isMonthlyPlan(activePlan) ? 'Monthly Plan' : 'Weekly Plan'}
             </span>
@@ -593,10 +641,10 @@ const Planner = () => {
 
         {/* Pre-Order Warning Message */}
         {activePlan && (
-          <div className="mt-4 p-3 bg-brand-yellow/20 border border-brand-yellow/30 rounded-lg">
+          <div className="mt-4 p-3 bg-white/20 border border-white/30 rounded-lg">
             <div className="flex items-start space-x-2">
-              <AlertCircle className="w-5 h-5 text-brand-red mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-brand-black">
+              <AlertCircle className="w-5 h-5 text-white mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-white">
                 <p className="font-medium mb-1">Pre-Order Deadline</p>
                 <p>Orders must be placed before <strong>12:00 AM (midnight)</strong> the day before each meal. After this time, ordering will be closed for that meal.</p>
               </div>
@@ -604,48 +652,60 @@ const Planner = () => {
           </div>
         )}
 
-        {/* Debug Info */}
-        <div className="mt-4 p-3 bg-gray-100 border border-gray-300 rounded-lg">
-          <div className="text-sm text-gray-700">
-            <p><strong>Debug Info:</strong></p>
-            <p>School ID: {schoolId || 'Not loaded'}</p>
-            <p>Weekly Plans Loading: {isLoadingPlans ? 'Yes' : 'No'}</p>
-            <p>Weekly Plans Error: {plansError ? 'Yes' : 'No'}</p>
-            <p>Weekly Plans Data: {weeklyPlans?.data ? 'Available' : 'Not available'}</p>
-            <p>Active Plan: {activePlan ? 'Found' : 'Not found'}</p>
-            <p>Categories: {categories.length > 1 ? categories.slice(1).join(', ') : 'None'}</p>
-            <p>Subcategories: {subcategories.length > 1 ? subcategories.slice(1).join(', ') : 'None'}</p>
-            <p>Add-ons: {addOns.length} total, {filteredAddOns.length} filtered</p>
-            <p>Add-on Type Filter: {selectedAddOnType}</p>
-            <p>Add-on Price Filter: {selectedAddOnPriceRange}</p>
-            <p>Add-on Search: {addOnSearchTerm || 'None'}</p>
-            {plansError && (
-              <p className="text-red-600">Plans Error: {JSON.stringify(plansError)}</p>
-            )}
-            <div className="mt-2 space-x-2">
-              <Button 
-                size="sm" 
-                onClick={() => refetch()}
-                className="bg-blue-500 text-white hover:bg-blue-600"
-              >
-                Retry Load Plans
-              </Button>
-              <Button 
-                size="sm" 
-                onClick={() => window.location.reload()}
-                className="bg-green-500 text-white hover:bg-green-600"
-              >
-                Reload Page
-              </Button>
-            </div>
-          </div>
-        </div>
+
       </div>
 
 
 
       {/* Content */}
       <div className="px-4 py-4">
+        {/* Family Member Selection */}
+        <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+          <div className="flex items-center space-x-2 mb-3">
+            <Users className="w-5 h-5 text-brand-red" />
+            <h3 className="text-sm font-semibold text-brand-black">Select Family Member</h3>
+          </div>
+          <Select value={selectedFamilyMember} onValueChange={setSelectedFamilyMember}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Choose a family member to order for" />
+            </SelectTrigger>
+            <SelectContent>
+              {familyMembers.map((member) => (
+                <SelectItem key={member.id} value={member.id.toString()}>
+                  {member.name} - {member.grade} Class {member.class}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {familyMembers.length === 0 && !isLoadingFamilyMembers && (
+            <p className="text-sm text-brand-black/60 mt-2">
+              No family members found. Please add family members in your profile.
+            </p>
+          )}
+        </div>
+
+        {/* Week Filter */}
+        <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+          <h3 className="text-sm font-semibold text-brand-black mb-3">Week Selection</h3>
+          <div className="flex flex-wrap gap-2">
+            {[1, 2, 3, 4].map((week) => (
+              <Button
+                key={week}
+                variant={selectedWeek === week.toString() ? 'default' : 'outline'}
+                size="sm"
+                className={`${
+                  selectedWeek === week.toString()
+                    ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
+                    : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
+                } rounded-full px-3 py-1 text-xs font-medium`}
+                onClick={() => setSelectedWeek(week.toString())}
+              >
+                Week {week}
+              </Button>
+            ))}
+          </div>
+        </div>
+
         {/* Meal Filters */}
         <div className="mb-6 space-y-4">
           {/* Meal Type Filter */}
@@ -697,8 +757,13 @@ const Planner = () => {
         {activePlan ? (
           <div className="mb-8">
             {(() => {
-              // Get dates for the current view
-              const datesForView = getDatesForView(activePlan);
+              // Get dates for the current view or selected week
+              let datesForView = getDatesForView(activePlan);
+              
+              // If week filter is selected, use that instead
+              if (selectedWeek && selectedWeek !== "1") {
+                datesForView = getDatesForWeek(activePlan, parseInt(selectedWeek));
+              }
               
               // Filter dates that have meals
               const datesWithMeals = datesForView.filter((date) => {

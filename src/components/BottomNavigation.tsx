@@ -23,7 +23,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeTab }) => {
       active: location.pathname === "/planner",
     },
     {
-      name: "Contact",
+      name: "Contact Us",
       icon: MessageCircle,
       path: "/contact",
       active: location.pathname === "/contact",
@@ -37,20 +37,20 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeTab }) => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+    <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow border-t border-gray-200">
       <div className="flex justify-around items-center h-16">
         {tabs.map((tab) => (
           <button
             key={tab.name}
             onClick={() => navigate(tab.path)}
-            className={`flex flex-col items-center justify-center w-full h-full ${
+            className={`flex flex-col items-center justify-center w-full h-full transition-colors duration-200 ${
               tab.active
-                ? "text-brand-red"
-                : "text-gray-500 hover:text-brand-red"
+                ? "text-white"
+                : "text-white/80 hover:text-white"
             }`}
           >
             <tab.icon className="w-6 h-6" />
-            <span className="text-xs mt-1">{tab.name}</span>
+            <span className="text-xs mt-1 font-medium">{tab.name}</span>
           </button>
         ))}
       </div>
