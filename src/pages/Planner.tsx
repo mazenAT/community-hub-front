@@ -367,13 +367,20 @@ const Planner = () => {
     const activePlan = plans.find(plan => plan.is_active);
     if (!activePlan) return [];
     
+    // Debug: Log available meal types and categories
+    if (activePlan.meals && activePlan.meals.length > 0) {
+      const mealTypes = [...new Set(activePlan.meals.map((meal: any) => meal.type || meal.category))];
+      console.log('Available meal types/categories:', mealTypes);
+      console.log('Selected type:', selectedType);
+    }
+    
     // Format date as YYYY-MM-DD to match the API structure
     const dateKey = format(date, 'yyyy-MM-dd');
     
     // Check if we have meals_by_day structure (for monthly plans)
     if (activePlan.meals_by_day && activePlan.meals_by_day[dateKey]) {
       const mealsForDay = activePlan.meals_by_day[dateKey].filter((meal: any) => {
-        const matchesType = selectedType === "all" || meal.type === selectedType;
+        const matchesType = selectedType === "all" || meal.type === selectedType || meal.category === selectedType;
         return matchesType;
       });
       return mealsForDay;
@@ -384,7 +391,7 @@ const Planner = () => {
     
     const allMeals = activePlan.meals || [];
     const mealsForDay = allMeals.filter((meal: any) => {
-      const matchesType = selectedType === "all" || meal.type === selectedType;
+      const matchesType = selectedType === "all" || meal.type === selectedType || meal.category === selectedType;
       const matchesDayOfWeek = meal.pivot?.day_of_week === dayOfWeek;
       return matchesType && matchesDayOfWeek;
     });
@@ -821,11 +828,11 @@ const Planner = () => {
                         
                         {/* Meals Grid */}
                         <div className="p-4">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                          <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
                             {mealsForDay.map((meal: any, mealIndex: number) => (
-                              <div key={`${date.toISOString()}-${meal.id}-${mealIndex}`} className="bg-brand-yellow/5 rounded-lg p-3 border border-brand-yellow/20 hover:shadow-md transition-shadow">
+                              <div key={`${date.toISOString()}-${meal.id}-${mealIndex}`} className="bg-brand-yellow/5 rounded-lg p-2 sm:p-3 border border-brand-yellow/20 hover:shadow-md transition-shadow">
                                 {/* Meal Image Placeholder */}
-                                <div className="w-full h-20 bg-gradient-to-br from-brand-yellow/20 to-brand-orange/20 rounded-lg mb-2 flex items-center justify-center">
+                                <div className="w-full h-16 sm:h-20 bg-gradient-to-br from-brand-yellow/20 to-brand-orange/20 rounded-lg mb-2 flex items-center justify-center">
                                   <span className="text-brand-black/60 text-xs">Meal Image</span>
                                 </div>
                                 
