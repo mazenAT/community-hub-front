@@ -39,7 +39,7 @@ const SignUp = () => {
       authApi.register(data),
     onSuccess: () => {
       toast.success("Account created successfully");
-      navigate("/");
+      navigate("/family-setup");
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to create account");

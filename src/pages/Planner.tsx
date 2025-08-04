@@ -254,6 +254,39 @@ const Planner = () => {
     preOrderMutation.mutate(payload);
   };
 
+  const handleAddOnsClick = (date: Date, meal: any, category: string) => {
+    if (!selectedFamilyMember) {
+      toast.error("Please select a family member before adding items");
+      return;
+    }
+    
+    // Filter add-ons by category
+    const categoryAddOns = filteredAddOns.filter(addon => {
+      const addonText = `${addon.name} ${addon.description || ''}`.toLowerCase();
+      switch (category) {
+        case 'Bakery':
+          return addonText.includes('bread') || addonText.includes('cake') || addonText.includes('pastry') || addonText.includes('bakery');
+        case 'Snacks':
+          return addonText.includes('snack') || addonText.includes('chips') || addonText.includes('crackers') || addonText.includes('nuts');
+        case 'Beverages':
+          return addonText.includes('drink') || addonText.includes('juice') || addonText.includes('soda') || addonText.includes('water') || addonText.includes('milk');
+        case 'Breakfast':
+          return addonText.includes('cereal') || addonText.includes('oatmeal') || addonText.includes('yogurt') || addonText.includes('breakfast');
+        default:
+          return true;
+      }
+    });
+
+    if (categoryAddOns.length === 0) {
+      toast.info(`No ${category} items available`);
+      return;
+    }
+
+    // Show add-ons in a modal or popup
+    toast.success(`${category} items available for ${meal.title || meal.name} on ${format(date, 'EEEE')}`);
+    // TODO: Implement add-ons modal/popup
+  };
+
   // Handle PDF viewing
   const handleViewPdf = async (meal: MealWithPivot) => {
     try {
@@ -753,7 +786,7 @@ const Planner = () => {
           </div>
         )}
 
-        {/* Meal Planner Table */}
+        {/* Meal Planner Cards */}
         {activePlan ? (
           <div className="mb-8">
             {(() => {
@@ -793,117 +826,135 @@ const Planner = () => {
               }
 
               return (
-                <div className="bg-white rounded-lg border border-brand-yellow/30 overflow-hidden">
-                  {/* Table Header */}
-                  <div className="bg-brand-yellow/20 px-6 py-4 border-b border-brand-yellow/30">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-brand-black">Meal Plan Schedule</h3>
-                      <div className="text-sm text-brand-black/70">
-                        {datesWithMeals.length} day{datesWithMeals.length !== 1 ? 's' : ''} with meals
-                        {activePlan && (
-                          <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                            isMonthlyPlan(activePlan)
-                              ? 'bg-brand-blue/20 text-brand-blue'
-                              : 'bg-brand-orange/20 text-brand-orange'
-                          }`}>
-                            {isMonthlyPlan(activePlan) ? 'Monthly Plan' : 'Weekly Plan'}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Table */}
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-brand-yellow/10">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
-                            Date
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
-                            Meal
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
-                            Type
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
-                            Price
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
-                            Calories
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-brand-yellow/20">
-                        {datesWithMeals.map((date) => {
-                          const mealsForDay = getMealsForDay(date, [activePlan]);
-                          
-                          return mealsForDay.map((meal: any, mealIndex: number) => (
-                            <tr key={`${date.toISOString()}-${meal.id}-${mealIndex}`} className="hover:bg-brand-yellow/5">
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-brand-black">
-                                  {format(date, 'EEEE')}
+                <div className="space-y-6">
+                  {datesWithMeals.map((date) => {
+                    const mealsForDay = getMealsForDay(date, [activePlan]);
+                    
+                    return (
+                      <div key={date.toISOString()} className="bg-white rounded-xl border border-brand-yellow/30 overflow-hidden shadow-sm">
+                        {/* Day Header */}
+                        <div className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-6 py-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="text-lg font-bold text-white">
+                                {format(date, 'EEEE')}
+                              </h3>
+                              <p className="text-white/90 text-sm">
+                                {format(date, 'MMMM dd, yyyy')}
+                              </p>
+                            </div>
+                            <div className="text-white/80 text-sm">
+                              {mealsForDay.length} meal{mealsForDay.length !== 1 ? 's' : ''}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Meals Grid */}
+                        <div className="p-6">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {mealsForDay.map((meal: any, mealIndex: number) => (
+                              <div key={`${date.toISOString()}-${meal.id}-${mealIndex}`} className="bg-brand-yellow/5 rounded-lg p-4 border border-brand-yellow/20">
+                                {/* Meal Image Placeholder */}
+                                <div className="w-full h-32 bg-gradient-to-br from-brand-yellow/20 to-brand-orange/20 rounded-lg mb-3 flex items-center justify-center">
+                                  <span className="text-brand-black/60 text-sm">Meal Image</span>
                                 </div>
-                                <div className="text-sm text-brand-black/60">
-                                  {format(date, 'MMM dd, yyyy')}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div>
-                                  <div className="text-sm font-medium text-brand-black">
+                                
+                                {/* Meal Info */}
+                                <div className="space-y-2">
+                                  <h4 className="font-semibold text-brand-black text-lg">
                                     {meal.title || meal.name}
-                                  </div>
-                                  <div className="text-sm text-brand-black/60 max-w-xs truncate">
+                                  </h4>
+                                  <p className="text-brand-black/70 text-sm line-clamp-2">
                                     {meal.description || 'No description available'}
+                                  </p>
+                                  
+                                  {/* Meal Type Badge */}
+                                  <div className="flex items-center justify-between">
+                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-brand-orange/20 text-brand-orange">
+                                      {meal.type || meal.category || 'N/A'}
+                                    </span>
+                                    <span className="text-sm font-medium text-brand-black">
+                                      ${meal.price ? meal.price.toFixed(2) : 'N/A'}
+                                    </span>
                                   </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-brand-orange/20 text-brand-orange">
-                                  {meal.type || meal.category || 'N/A'}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-brand-black">
-                                ${meal.price ? meal.price.toFixed(2) : 'N/A'}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black/60">
-                                {meal.calories ? `${meal.calories} cal` : 'N/A'}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div className="flex space-x-2">
-                                  {meal.pdf_path && (
+                                  
+                                  {/* Calories */}
+                                  {meal.calories && (
+                                    <p className="text-brand-black/60 text-xs">
+                                      {meal.calories} calories
+                                    </p>
+                                  )}
+                                  
+                                  {/* Action Buttons */}
+                                  <div className="flex space-x-2 mt-3">
+                                    {meal.pdf_path && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="flex-1 border-brand-blue text-brand-blue hover:bg-brand-blue/10"
+                                        onClick={() => handleViewPdf(meal)}
+                                        disabled={loadingPdf}
+                                      >
+                                        <FileText className="w-3 h-3 mr-1" />
+                                        PDF
+                                      </Button>
+                                    )}
                                     <Button
                                       size="sm"
-                                      variant="outline"
-                                      className="border-brand-blue text-brand-blue hover:bg-brand-blue/10 rounded-full px-3 py-1 text-xs"
-                                      onClick={() => handleViewPdf(meal)}
-                                      disabled={loadingPdf}
+                                      className="flex-1 bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white"
+                                      onClick={() => handlePreOrder(meal, date)}
+                                      disabled={preOrderMutation.isPending}
                                     >
-                                      <FileText className="w-3 h-3 mr-1" />
-                                      PDF
+                                      Add
                                     </Button>
-                                  )}
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="border-brand-red text-brand-red hover:bg-brand-red/10 rounded-full px-3 py-1 text-xs"
-                                    onClick={() => handlePreOrder(meal, date)}
-                                    disabled={preOrderMutation.isPending}
-                                  >
-                                    Order
-                                  </Button>
+                                  </div>
+                                  
+                                  {/* Add-ons Section */}
+                                  <div className="mt-4 pt-3 border-t border-brand-yellow/20">
+                                    <h5 className="text-sm font-medium text-brand-black mb-2">Add-ons</h5>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-xs border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10"
+                                        onClick={() => handleAddOnsClick(date, meal, 'Bakery')}
+                                      >
+                                        Bakery
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-xs border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10"
+                                        onClick={() => handleAddOnsClick(date, meal, 'Snacks')}
+                                      >
+                                        Snacks
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-xs border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10"
+                                        onClick={() => handleAddOnsClick(date, meal, 'Beverages')}
+                                      >
+                                        Beverages
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-xs border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10"
+                                        onClick={() => handleAddOnsClick(date, meal, 'Breakfast')}
+                                      >
+                                        Breakfast
+                                      </Button>
+                                    </div>
+                                  </div>
                                 </div>
-                              </td>
-                            </tr>
-                          ));
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })()}
@@ -912,155 +963,7 @@ const Planner = () => {
           <EmptyState message="No active weekly plan found for your school." />
         )}
 
-        {/* Available Add-ons Section */}
-        <div className="mt-8">
-          <h2 className="text-lg font-bold text-brand-black mb-4">Available Add-ons</h2>
-          
-          {/* Add-ons Filters */}
-          <div className="mb-6 space-y-4">
-            {/* Add-on Search */}
-            <div>
-              <h3 className="text-sm font-semibold text-brand-black mb-2">Search Add-ons</h3>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search by name or description..."
-                  value={addOnSearchTerm}
-                  onChange={(e) => setAddOnSearchTerm(e.target.value)}
-                  className="w-full px-4 py-2 border border-brand-yellow/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-yellow/50 focus:border-brand-yellow"
-                />
-                {addOnSearchTerm && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setAddOnSearchTerm("")}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    ✕
-                  </Button>
-                )}
-              </div>
-            </div>
 
-            {/* Add-on Type Filter */}
-            <div>
-              <h3 className="text-sm font-semibold text-brand-black mb-2">Add-on Type</h3>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { key: 'all', label: 'All Types' },
-                  { key: 'drinks', label: 'Drinks' },
-                  { key: 'sides', label: 'Sides' },
-                  { key: 'condiments', label: 'Condiments' },
-                  { key: 'desserts', label: 'Desserts' }
-                ].map(({ key, label }) => (
-                  <Button
-                    key={key}
-                    variant={selectedAddOnType === key ? 'default' : 'outline'}
-                    size="sm"
-                    className={`${
-                      selectedAddOnType === key 
-                        ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
-                        : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
-                    } rounded-full px-3 py-1 text-xs font-medium`}
-                    onClick={() => setSelectedAddOnType(key as "all" | "drinks" | "sides" | "condiments" | "desserts")}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Add-on Price Range Filter */}
-            <div>
-              <h3 className="text-sm font-semibold text-brand-black mb-2">Price Range</h3>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { key: 'all', label: 'All Prices' },
-                  { key: 'low', label: 'Under $1.00' },
-                  { key: 'medium', label: '$1.00 - $3.00' },
-                  { key: 'high', label: 'Over $3.00' }
-                ].map(({ key, label }) => (
-                  <Button
-                    key={key}
-                    variant={selectedAddOnPriceRange === key ? 'default' : 'outline'}
-                    size="sm"
-                    className={`${
-                      selectedAddOnPriceRange === key 
-                        ? 'bg-brand-orange text-white border-brand-orange hover:bg-brand-orange/90' 
-                        : 'bg-white text-brand-black border-brand-orange hover:bg-brand-orange/10'
-                    } rounded-full px-3 py-1 text-xs font-medium`}
-                    onClick={() => setSelectedAddOnPriceRange(key as "all" | "low" | "medium" | "high")}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b-2 border-brand-red">
-                  <th className="text-left py-3 px-4 font-bold text-brand-black">Item</th>
-                  <th className="text-left py-3 px-4 font-bold text-brand-black">Description</th>
-                  <th className="text-left py-3 px-4 font-bold text-brand-black">Price</th>
-                  <th className="text-left py-3 px-4 font-bold text-brand-black">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAddOns.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="py-8 text-center text-brand-black/50">
-                      <div className="flex flex-col items-center">
-                        <AlertCircle className="w-8 h-8 mb-2" />
-                        <p>No add-ons match the selected filters.</p>
-                        <Button 
-                          size="sm" 
-                          onClick={() => {
-                            setSelectedAddOnType("all");
-                            setSelectedAddOnPriceRange("all");
-                            setAddOnSearchTerm("");
-                          }}
-                          className="mt-2 bg-brand-yellow text-brand-black border-brand-yellow hover:bg-brand-yellow/90"
-                        >
-                          Clear Filters
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredAddOns.map((addon) => (
-                    <tr key={addon.id} className="border-b border-brand-yellow/30">
-                      <td className="py-4 px-4 text-sm font-medium text-brand-black">
-                        {addon.name}
-                      </td>
-                      <td className="py-4 px-4 text-sm text-brand-black/70">
-                        {addon.description || 'Additional item'}
-                      </td>
-                      <td className="py-4 px-4 text-sm font-medium text-brand-black">
-                        ${addon.price.toFixed(2)}
-                      </td>
-                      <td className="py-4 px-4">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-brand-red text-brand-red hover:bg-brand-red/10 rounded-full px-3 py-1 text-xs"
-                          onClick={() => {
-                            // Handle add-on ordering directly here
-                            toast.success(`${addon.name} added to order!`);
-                          }}
-                        >
-                          Order
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
         </div>
 
       {/* PDF Viewer Modal */}

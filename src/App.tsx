@@ -8,6 +8,7 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import FamilyMemberSetup from "./pages/FamilyMemberSetup";
 import Wallet from "./pages/Wallet";
 import Planner from "./pages/Planner";
 import Recharge from "./pages/Recharge";
@@ -34,6 +35,13 @@ const App = () => (
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/fawry-callback" element={<FawryCallback />} />
+
+          {/* Protected Routes */}
+          <Route path="/family-setup" element={
+            <ProtectedRoute>
+              <FamilyMemberSetup />
+            </ProtectedRoute>
+          } />
 
           {/* Protected User Routes */}
           <Route path="/wallet" element={
