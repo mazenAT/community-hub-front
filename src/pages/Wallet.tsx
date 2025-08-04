@@ -132,6 +132,10 @@ const Wallet = () => {
     created_at: t.created_at,
     note: t.description || t.note || '',
     refunded_at: t.refunded_at || null,
+    details: t.details || {},
+    familyMemberName: t.details?.family_member_name || null,
+    familyMemberId: t.details?.family_member_id || null,
+    isFamilyMemberOrder: !!(t.details?.family_member_id),
   }));
 
   if (error) {
@@ -266,9 +270,17 @@ const Wallet = () => {
                     <div>
                       <div className="text-xs text-gray-400">{new Date(transaction.created_at).toLocaleDateString()}</div>
                       <div className="font-semibold text-base">{transaction.note || '-'}</div>
+                      {transaction.isFamilyMemberOrder && transaction.familyMemberName && (
+                        <div className="text-sm text-blue-600 font-medium mt-1">
+                          👤 Ordered by: {transaction.familyMemberName}
+                        </div>
+                      )}
                       <div className="text-sm mt-1 flex flex-wrap items-center gap-2">
                         <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${transaction.type === 'credit' ? 'bg-green-100 text-green-800' : transaction.type === 'debit' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>{transaction.type.replace('_', ' ').toUpperCase()}</span>
                         <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${transaction.status === 'completed' ? 'bg-green-100 text-green-800' : transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{transaction.status.toUpperCase()}</span>
+                        {transaction.isFamilyMemberOrder && (
+                          <span className="inline-block rounded px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800">FAMILY ORDER</span>
+                        )}
                         {isRefundable ? (
                           <button
                             className="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded disabled:opacity-50 text-xs"
