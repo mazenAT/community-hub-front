@@ -309,13 +309,18 @@ const Planner = () => {
     try {
       setLoadingPdf(true);
       const response = await plannerApi.getGeneralPdf();
-      if (response.data.pdf_url) {
-        setSelectedPdfUrl(response.data.pdf_url);
+      console.log('General PDF Response:', response);
+      
+      // Handle nested data structure from backend
+      const pdfData = response.data?.data || response.data;
+      if (pdfData?.pdf_url) {
+        setSelectedPdfUrl(pdfData.pdf_url);
         setShowPdfModal(true);
       } else {
         toast.error('No general PDF available');
       }
     } catch (error) {
+      console.error('Failed to load general PDF:', error);
       toast.error('Failed to load general PDF');
     } finally {
       setLoadingPdf(false);
