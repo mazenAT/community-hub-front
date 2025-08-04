@@ -367,11 +367,11 @@ const Planner = () => {
     const activePlan = plans.find(plan => plan.is_active);
     if (!activePlan) return [];
     
-    // Debug: Log available meal types and categories
+    // Debug: Log available meal categories
     if (activePlan.meals && activePlan.meals.length > 0) {
-      const mealTypes = [...new Set(activePlan.meals.map((meal: any) => meal.type || meal.category))];
-      console.log('Available meal types/categories:', mealTypes);
-      console.log('Selected type:', selectedType);
+      const mealCategories = [...new Set(activePlan.meals.map((meal: any) => meal.category))];
+      console.log('Available meal categories:', mealCategories);
+      console.log('Selected filter:', selectedType);
     }
     
     // Format date as YYYY-MM-DD to match the API structure
@@ -380,7 +380,7 @@ const Planner = () => {
     // Check if we have meals_by_day structure (for monthly plans)
     if (activePlan.meals_by_day && activePlan.meals_by_day[dateKey]) {
       const mealsForDay = activePlan.meals_by_day[dateKey].filter((meal: any) => {
-        const matchesType = selectedType === "all" || meal.type === selectedType || meal.category === selectedType;
+        const matchesType = selectedType === "all" || meal.category === selectedType;
         return matchesType;
       });
       return mealsForDay;
@@ -391,7 +391,7 @@ const Planner = () => {
     
     const allMeals = activePlan.meals || [];
     const mealsForDay = allMeals.filter((meal: any) => {
-      const matchesType = selectedType === "all" || meal.type === selectedType || meal.category === selectedType;
+      const matchesType = selectedType === "all" || meal.category === selectedType;
       const matchesDayOfWeek = meal.pivot?.day_of_week === dayOfWeek;
       return matchesType && matchesDayOfWeek;
     });
@@ -848,7 +848,7 @@ const Planner = () => {
                                   {/* Meal Type Badge */}
                                   <div className="flex items-center justify-between mt-2">
                                     <span className="px-2 py-1 rounded-full text-xs font-medium bg-brand-orange/20 text-brand-orange">
-                                      {meal.type || meal.category || 'N/A'}
+                                      {meal.category || 'N/A'}
                                     </span>
                                     <span className="text-xs font-medium text-brand-black">
                                       ${meal.price ? meal.price.toFixed(2) : 'N/A'}
