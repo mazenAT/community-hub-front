@@ -123,8 +123,7 @@ const MyOrders: React.FC = () => {
         return <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-semibold">Delivered</span>;
       case 'confirmed':
         return <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-semibold">Confirmed</span>;
-      case 'pending':
-        return <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-semibold">Pending</span>;
+
       case 'cancelled':
         return <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-semibold">Cancelled</span>;
       case 'refunded':

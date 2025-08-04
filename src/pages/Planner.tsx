@@ -224,11 +224,11 @@ const Planner = () => {
   const preOrderMutation = useMutation({
     mutationFn: (payload: any) => plannerApi.preOrderMeal(payload),
     onSuccess: () => {
-      toast.success("Meal pre-ordered successfully");
+      toast.success("Meal ordered and confirmed successfully");
       refetch(); // Update the UI after pre-order
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to pre-order meal");
+      toast.error(error.response?.data?.message || "Failed to order meal");
     },
   });
 

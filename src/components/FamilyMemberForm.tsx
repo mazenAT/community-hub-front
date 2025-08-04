@@ -64,9 +64,7 @@ export const FamilyMemberForm: React.FC<FamilyMemberFormProps> = ({
       newErrors.class = 'Class is required';
     }
 
-    if (formData.allergies.length === 0) {
-      newErrors.allergies = 'At least one allergy selection is required';
-    }
+    // Allergies are now optional - no validation needed
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -172,7 +170,7 @@ export const FamilyMemberForm: React.FC<FamilyMemberFormProps> = ({
           {/* Allergies */}
           <div>
             <Label className="text-brand-black font-medium">
-              Allergies (Select all that apply) *
+              Allergies (Select all that apply)
             </Label>
             <div className="mt-2 bg-brand-yellow/10 rounded-lg p-4 border border-brand-yellow/30 max-h-48 overflow-y-auto">
               <div className="grid grid-cols-2 gap-2">
@@ -191,9 +189,7 @@ export const FamilyMemberForm: React.FC<FamilyMemberFormProps> = ({
                 ))}
               </div>
             </div>
-            {errors.allergies && (
-              <p className="text-brand-red text-xs mt-1">{errors.allergies}</p>
-            )}
+
           </div>
 
           {/* Buttons */}
