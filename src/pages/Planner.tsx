@@ -819,107 +819,82 @@ const Planner = () => {
                           </div>
                         </div>
                         
-                        {/* Meals Grid */}
-                        <div className="p-6">
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {mealsForDay.map((meal: any, mealIndex: number) => (
-                              <div key={`${date.toISOString()}-${meal.id}-${mealIndex}`} className="bg-brand-yellow/5 rounded-lg p-4 border border-brand-yellow/20">
-                                {/* Meal Image Placeholder */}
-                                <div className="w-full h-32 bg-gradient-to-br from-brand-yellow/20 to-brand-orange/20 rounded-lg mb-3 flex items-center justify-center">
-                                  <span className="text-brand-black/60 text-sm">Meal Image</span>
-                                </div>
-                                
-                                {/* Meal Info */}
-                                <div className="space-y-2">
-                                  <h4 className="font-semibold text-brand-black text-lg">
-                                    {meal.title || meal.name}
-                                  </h4>
-                                  <p className="text-brand-black/70 text-sm line-clamp-2">
-                                    {meal.description || 'No description available'}
-                                  </p>
-                                  
-                                  {/* Meal Type Badge */}
-                                  <div className="flex items-center justify-between">
-                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-brand-orange/20 text-brand-orange">
-                                      {meal.type || meal.category || 'N/A'}
-                                    </span>
-                                    <span className="text-sm font-medium text-brand-black">
-                                      ${meal.price ? meal.price.toFixed(2) : 'N/A'}
-                                    </span>
-                                  </div>
-                                  
-                                  {/* Calories */}
-                                  {meal.calories && (
-                                    <p className="text-brand-black/60 text-xs">
-                                      {meal.calories} calories
-                                    </p>
-                                  )}
-                                  
-                                  {/* Action Buttons */}
-                                  <div className="flex space-x-2 mt-3">
-                                    {meal.pdf_path && (
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="flex-1 border-brand-blue text-brand-blue hover:bg-brand-blue/10"
-                                        onClick={() => handleViewPdf(meal)}
-                                        disabled={loadingPdf}
-                                      >
-                                        <FileText className="w-3 h-3 mr-1" />
-                                        PDF
-                                      </Button>
-                                    )}
-                                    <Button
-                                      size="sm"
-                                      className="flex-1 bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white"
-                                      onClick={() => handlePreOrder(meal, date)}
-                                      disabled={preOrderMutation.isPending}
-                                    >
-                                      Add
-                                    </Button>
-                                  </div>
-                                  
-                                  {/* Add-ons Section */}
-                                  <div className="mt-4 pt-3 border-t border-brand-yellow/20">
-                                    <h5 className="text-sm font-medium text-brand-black mb-2">Add-ons</h5>
-                                    <div className="grid grid-cols-2 gap-2">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="text-xs border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10"
-                                        onClick={() => handleAddOnsClick(date, meal, 'Bakery')}
-                                      >
-                                        Bakery
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="text-xs border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10"
-                                        onClick={() => handleAddOnsClick(date, meal, 'Snacks')}
-                                      >
-                                        Snacks
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="text-xs border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10"
-                                        onClick={() => handleAddOnsClick(date, meal, 'Beverages')}
-                                      >
-                                        Beverages
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="text-xs border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10"
-                                        onClick={() => handleAddOnsClick(date, meal, 'Breakfast')}
-                                      >
-                                        Breakfast
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
+                        {/* Meals Table */}
+                        <div className="p-4">
+                          <div className="overflow-x-auto">
+                            <table className="w-full">
+                              <thead>
+                                <tr className="border-b border-brand-yellow/20">
+                                  <th className="text-left py-2 px-3 text-sm font-medium text-brand-black">Meal</th>
+                                  <th className="text-left py-2 px-3 text-sm font-medium text-brand-black">Type</th>
+                                  <th className="text-left py-2 px-3 text-sm font-medium text-brand-black">Price</th>
+                                  <th className="text-left py-2 px-3 text-sm font-medium text-brand-black">Calories</th>
+                                  <th className="text-left py-2 px-3 text-sm font-medium text-brand-black">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {mealsForDay.map((meal: any, mealIndex: number) => (
+                                  <tr key={`${date.toISOString()}-${meal.id}-${mealIndex}`} className="border-b border-brand-yellow/10 hover:bg-brand-yellow/5">
+                                    <td className="py-3 px-3">
+                                      <div>
+                                        <h4 className="font-medium text-brand-black text-sm">
+                                          {meal.title || meal.name}
+                                        </h4>
+                                        <p className="text-brand-black/60 text-xs line-clamp-1">
+                                          {meal.description || 'No description'}
+                                        </p>
+                                      </div>
+                                    </td>
+                                    <td className="py-3 px-3">
+                                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-brand-orange/20 text-brand-orange">
+                                        {meal.type || meal.category || 'N/A'}
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-3">
+                                      <span className="text-sm font-medium text-brand-black">
+                                        ${meal.price ? meal.price.toFixed(2) : 'N/A'}
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-3">
+                                      <span className="text-xs text-brand-black/60">
+                                        {meal.calories || 'N/A'}
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-3">
+                                      <div className="flex space-x-1">
+                                        {meal.pdf_path && (
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-7 px-2 border-brand-blue text-brand-blue hover:bg-brand-blue/10"
+                                            onClick={() => handleViewPdf(meal)}
+                                            disabled={loadingPdf}
+                                          >
+                                            <FileText className="w-3 h-3" />
+                                          </Button>
+                                        )}
+                                        <Button
+                                          size="sm"
+                                          className="h-7 px-3 bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white text-xs"
+                                          onClick={() => handlePreOrder(meal, date)}
+                                          disabled={preOrderMutation.isPending}
+                                        >
+                                          Add
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="h-7 px-2 border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10 text-xs"
+                                          onClick={() => handleAddOnsClick(date, meal, 'Bakery')}
+                                        >
+                                          +
+                                        </Button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
                         </div>
                       </div>
