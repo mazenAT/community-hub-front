@@ -256,7 +256,7 @@ const Recharge = () => {
   const finalAmount = selectedAmount || parseFloat(customAmount) || 0;
 
   return (
-    <div className="min-h-screen bg-brand-yellow/5 pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-24">
       <div className="bg-white px-4 sm:px-6 py-4 border-b-2 border-brand-red flex items-center space-x-3">
         <button 
           onClick={() => navigate("/wallet")}

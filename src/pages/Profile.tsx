@@ -207,7 +207,7 @@ const Profile = () => {
 
   if (isLoadingProfile || isLoadingTransactions) {
     return (
-      <div className="min-h-screen bg-brand-yellow/5 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-brand-red border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -215,7 +215,7 @@ const Profile = () => {
 
   if (profileError || transactionsError) {
     return (
-      <div className="min-h-screen bg-brand-yellow/5 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center">
         <div className="text-center p-6">
           <AlertCircle className="w-12 h-12 text-brand-red mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-brand-black mb-2">Error Loading Data</h2>
@@ -235,7 +235,7 @@ const Profile = () => {
   const totalTransactions = transactionsData?.length || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-yellow/10 via-brand-orange/5 to-brand-red/5 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-20">
       {/* Header */}
       <div className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 sm:px-6 py-4 border-b-2 border-brand-red">
         <div className="flex items-center justify-between">

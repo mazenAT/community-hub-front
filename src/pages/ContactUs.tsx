@@ -67,7 +67,7 @@ const ContactUs = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-yellow/10 via-brand-orange/5 to-brand-red/5 p-4 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 p-4 pb-20">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
