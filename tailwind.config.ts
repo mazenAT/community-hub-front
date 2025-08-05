@@ -65,12 +65,12 @@ export default {
 				},
 				// Lite Bite brand colors
 				brand: {
-					red: '#FF0000',      // Vibrant red from logo border
-					yellow: '#FFD700',    // Bright yellow from logo center
-					orange: '#FF6B35',    // Orange-red from logo text
-					black: '#000000',     // Black from logo text band
-					white: '#FFFFFF',     // White from logo text
-				}
+					red: '#808080',
+					yellow: '#808080',
+					orange: '#808080',
+					black: '#000000',
+					white: '#FFFFFF',
+				  }
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
