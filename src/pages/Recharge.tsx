@@ -11,6 +11,7 @@ import SavedCards from "../components/SavedCards";
 
 interface SavedCard {
   id: number;
+  card_token: string; // <-- added
   card_alias: string;
   last_four_digits: string;
   first_six_digits: string;
@@ -118,7 +119,7 @@ const Recharge = () => {
 
   const processPaymentWithSavedCard = async (savedCard: SavedCard, amount: number) => {
     // Use saved card token for payment
-    await processPaymentWithToken(savedCard.card_alias, amount); // card_alias contains the token
+    await processPaymentWithToken(savedCard.card_token, amount); // use the real token
   };
 
   const saveCardToken = async (tokenData: any) => {
@@ -336,7 +337,7 @@ const Recharge = () => {
             {paymentMode === 'saved' ? (
               <div className="space-y-4">
                 <SavedCards
-                  onCardSelect={setSelectedCard}
+                  onCardSelect={(card: SavedCard) => setSelectedCard(card)}
                   selectedCardId={selectedCard?.id}
                 />
                 {selectedCard && (

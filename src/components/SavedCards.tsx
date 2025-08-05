@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 
 interface SavedCard {
   id: number;
+  card_token: string; // <-- added
   card_alias: string;
   last_four_digits: string;
   first_six_digits: string;
