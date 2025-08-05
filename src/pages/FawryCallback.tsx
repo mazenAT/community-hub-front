@@ -26,78 +26,86 @@ const FawryCallback = () => {
 
   useEffect(() => {
     // Handle the callback from 3DS
-    const params = new URLSearchParams(location.search);
-    const merchantRefNum = params.get('merchantRefNum');
-    const chargeAmount = params.get('amount');
-    const callbackStep = params.get('step');
-    const status = params.get('status') || params.get('statusCode'); // Check both status and statusCode
-    const message = params.get('message') || params.get('statusDescription'); // Check both message and statusDescription
-    const token = params.get('cardToken') || params.get('token'); // Check both cardToken and token
-    
-    // Get profile data from URL parameters
-    const customerProfileId = params.get('customerProfileId');
-    const customerName = params.get('customerName');
-    const customerMobile = params.get('customerMobile');
-    const customerEmail = params.get('customerEmail');
-    
-    if (merchantRefNum && chargeAmount) {
-      setStep(callbackStep);
-      setAmount(chargeAmount);
+    const handleCallback = async () => {
+      const params = new URLSearchParams(location.search);
+      const merchantRefNum = params.get('merchantRefNum');
+      const chargeAmount = params.get('amount');
+      const callbackStep = params.get('step');
+      const status = params.get('status') || params.get('statusCode'); // Check both status and statusCode
+      const message = params.get('message') || params.get('statusDescription'); // Check both message and statusDescription
+      const token = params.get('cardToken') || params.get('token'); // Check both cardToken and token
       
-      // Store profile data in state for later use
-      if (customerProfileId) {
-        setProfileData({
-          id: customerProfileId,
-          name: customerName || 'Ahmed Ali',
-          mobile: customerMobile || '01234567891',
-          email: customerEmail || 'example@gmail.com'
-        });
-      }
+      // Get profile data from URL parameters
+      const customerProfileId = params.get('customerProfileId');
+      const customerName = params.get('customerName');
+      const customerMobile = params.get('customerMobile');
+      const customerEmail = params.get('customerEmail');
       
-      if (callbackStep === 'token') {
-        // This is callback from token creation step
-        if (status === '200' || status === 'success') {
-          // Token created successfully, now need CVV for payment
-          if (token) {
-            setCardToken(token);
-            setShowCvvForm(true);
-            toast.success('Card token created successfully. Please enter CVV to complete payment.');
-            
-            // Save the card token to backend
-            saveCardTokenToBackend(token);
+      if (merchantRefNum && chargeAmount) {
+        setStep(callbackStep);
+        setAmount(chargeAmount);
+        
+        // Store profile data in state for later use
+        if (customerProfileId) {
+          setProfileData({
+            id: customerProfileId,
+            name: customerName || 'Ahmed Ali',
+            mobile: customerMobile || '01234567891',
+            email: customerEmail || 'example@gmail.com'
+          });
+        }
+        
+        if (callbackStep === 'token') {
+          // This is callback from token creation step
+          if (status === '200' || status === 'success') {
+            // Token created successfully, now need CVV for payment
+            if (token) {
+              setCardToken(token);
+              setShowCvvForm(true);
+              toast.success('Card token created successfully. Please enter CVV to complete payment.');
+              
+              // Save the card token to backend
+              saveCardTokenToBackend(token);
+            } else {
+              setError('Card token not received. Please try again.');
+              toast.error('Card token not received. Please try again.');
+            }
           } else {
-            setError('Card token not received. Please try again.');
-            toast.error('Card token not received. Please try again.');
+            setError(message || 'Card token creation failed. Please try again.');
+            toast.error(message || 'Card token creation failed. Please try again.');
+          }
+        } else if (callbackStep === 'payment') {
+          // This is callback from payment step
+          if (status === '200' || status === 'success') {
+            setSuccess(true);
+            toast.success('Payment successful! Your wallet has been recharged.');
+            // Update wallet balance after successful payment
+            await updateWalletBalance(parseFloat(chargeAmount || '0'));
+          } else {
+            setError(message || 'Payment failed. Please try again.');
+            toast.error(message || 'Payment failed. Please try again.');
           }
         } else {
-          setError(message || 'Card token creation failed. Please try again.');
-          toast.error(message || 'Card token creation failed. Please try again.');
-        }
-      } else if (callbackStep === 'payment') {
-        // This is callback from payment step
-        if (status === '200' || status === 'success') {
-          setSuccess(true);
-          toast.success('Payment successful! Your wallet has been recharged.');
-        } else {
-          setError(message || 'Payment failed. Please try again.');
-          toast.error(message || 'Payment failed. Please try again.');
+          // Legacy callback handling
+          if (status === '200' || status === 'success') {
+            setSuccess(true);
+            toast.success('Payment successful! Your wallet has been recharged.');
+            // Update wallet balance after successful payment
+            await updateWalletBalance(parseFloat(chargeAmount || '0'));
+          } else {
+            setError(message || 'Payment failed. Please try again.');
+            toast.error(message || 'Payment failed. Please try again.');
+          }
         }
       } else {
-        // Legacy callback handling
-        if (status === '200' || status === 'success') {
-          setSuccess(true);
-          toast.success('Payment successful! Your wallet has been recharged.');
-        } else {
-          setError(message || 'Payment failed. Please try again.');
-          toast.error(message || 'Payment failed. Please try again.');
-        }
+        setError('Invalid callback from Fawry. Please try again.');
+        toast.error('Invalid callback from Fawry. Please try again.');
       }
-    } else {
-      setError('Invalid callback from Fawry. Please try again.');
-      toast.error('Invalid callback from Fawry. Please try again.');
-    }
-    
-    setLoading(false);
+      
+      setLoading(false);
+    };
+
+    handleCallback();
   }, [location]);
 
   const handleCvvSubmit = async (e: React.FormEvent) => {
