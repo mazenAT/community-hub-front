@@ -1,5 +1,6 @@
 
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
 	darkMode: ["class"],
@@ -63,11 +64,11 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Lite Bite brand colors
+				// Lite Bite brand colors - Light Warm Orange Gradient
 				brand: {
-					red: '#4b4b4b',
-					yellow: '#808080',
-					orange: '#d3d3d3',
+					red: '#ff8a50',      // Light warm orange (lightest)
+					yellow: '#ff7043',   // Medium warm orange 
+					orange: '#ff5722',   // Deeper warm orange
 					black: '#000000',
 					white: '#FFFFFF',
 				  }
@@ -151,5 +152,5 @@ export default {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [tailwindcssAnimate],
 } satisfies Config;
