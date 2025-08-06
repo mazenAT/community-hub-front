@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, ChevronRight, Calendar, DollarSign, AlertCircle, ShoppingBag } from "lucide-react";
+import { User, ChevronRight, Calendar, AlertCircle, ShoppingBag } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Input } from "@/components/ui/input";
 import { profileApi, walletApi } from "@/services/api";
@@ -243,22 +243,13 @@ const Profile = () => {
             <h1 className="text-lg sm:text-xl font-semibold text-white">Profile</h1>
             <p className="text-xs sm:text-sm text-white/90">Manage your account</p>
           </div>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => navigate("/orders/my-orders")}
-              className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-yellow/20 rounded-full flex items-center justify-center border border-brand-yellow/30 hover:bg-brand-yellow/30 transition-colors"
-              title="My Orders"
-            >
-              <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-brand-red" />
-            </button>
-            <button 
-              onClick={() => navigate("/wallet")}
-              className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-yellow/20 rounded-full flex items-center justify-center border border-brand-yellow/30 hover:bg-brand-yellow/30 transition-colors"
-              title="Wallet"
-            >
-              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-brand-red" />
-            </button>
-          </div>
+          <button 
+            onClick={() => navigate("/orders/my-orders")}
+            className="bg-white/20 hover:bg-white/30 text-white px-3 sm:px-4 py-2 rounded-xl border border-white/30 flex items-center gap-2 transition-all duration-200 hover:scale-105"
+          >
+            <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-sm sm:text-base font-medium">My Orders</span>
+          </button>
         </div>
       </div>
 
@@ -396,7 +387,9 @@ const Profile = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-brand-red text-white">
             <div className="flex items-center space-x-3 sm:space-x-4">
-              <DollarSign className="w-6 h-6 sm:w-8 sm:h-8" />
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white/20 rounded-full flex items-center justify-center">
+                💰
+              </div>
               <div>
                 <p className="text-sm sm:text-base text-white/80">Wallet Balance</p>
                 <p className="text-lg sm:text-xl font-bold">{formatAmount(balance, 'credit')}</p>
