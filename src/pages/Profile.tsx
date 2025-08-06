@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, ChevronRight, Calendar, DollarSign, AlertCircle } from "lucide-react";
+import { User, ChevronRight, Calendar, DollarSign, AlertCircle, ShoppingBag } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Input } from "@/components/ui/input";
 import { profileApi, walletApi } from "@/services/api";
@@ -243,12 +243,22 @@ const Profile = () => {
             <h1 className="text-lg sm:text-xl font-semibold text-white">Profile</h1>
             <p className="text-xs sm:text-sm text-white/90">Manage your account</p>
           </div>
-          <button 
-            onClick={() => navigate("/wallet")}
-            className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-yellow/20 rounded-full flex items-center justify-center border border-brand-yellow/30"
-          >
-            <User className="w-4 h-4 sm:w-5 sm:h-5 text-brand-red" />
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => navigate("/orders/my-orders")}
+              className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-yellow/20 rounded-full flex items-center justify-center border border-brand-yellow/30 hover:bg-brand-yellow/30 transition-colors"
+              title="My Orders"
+            >
+              <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-brand-red" />
+            </button>
+            <button 
+              onClick={() => navigate("/wallet")}
+              className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-yellow/20 rounded-full flex items-center justify-center border border-brand-yellow/30 hover:bg-brand-yellow/30 transition-colors"
+              title="Wallet"
+            >
+              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-brand-red" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -296,12 +306,7 @@ const Profile = () => {
                     </span>
                   ))}
                 </div>
-                <Button
-                  className="bg-brand-red hover:bg-brand-red/90 text-white mb-4"
-                  onClick={() => navigate('/orders/my-orders')}
-                >
-                  My Orders
-                </Button>
+
               </div>
             )}
           </div>
