@@ -27,7 +27,6 @@ const PaymentMethods: React.FC = () => {
       setError(null);
     } catch (err) {
       setError('Failed to fetch payment methods');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -38,7 +37,6 @@ const PaymentMethods: React.FC = () => {
       await api.put(`/wallet/payment-methods/${id}/default`);
       fetchPaymentMethods();
     } catch (err) {
-      console.error('Failed to set default payment method');
     }
   };
 
@@ -51,7 +49,6 @@ const PaymentMethods: React.FC = () => {
       await api.delete(`/wallet/payment-methods/${id}`);
       fetchPaymentMethods();
     } catch (err) {
-      console.error('Failed to delete payment method');
     }
   };
 

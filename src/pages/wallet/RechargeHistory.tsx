@@ -22,7 +22,6 @@ const RechargeHistory: React.FC = () => {
       } else if (Array.isArray(response.data?.data)) {
         transactionsData = response.data.data;
       } else {
-        console.error('Transactions API did not return an array:', response.data);
       }
       // Map and filter for credit type only
       const mapped = transactionsData.map((t: any) => ({
@@ -37,7 +36,6 @@ const RechargeHistory: React.FC = () => {
       setTransactions(mapped);
     } catch (err) {
       setError('Failed to fetch recharge history');
-      console.error(err);
     } finally {
       setLoading(false);
     }

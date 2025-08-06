@@ -309,7 +309,7 @@ const Planner = () => {
     try {
       setLoadingPdf(true);
       const response = await plannerApi.getGeneralPdf();
-      console.log('General PDF Response:', response);
+      // PDF response handled
       
       // Handle nested data structure from backend
       const pdfData = response.data?.data || response.data;
@@ -320,7 +320,7 @@ const Planner = () => {
         toast.error('No general PDF available');
       }
     } catch (error) {
-      console.error('Failed to load general PDF:', error);
+      // Handle PDF load error
       toast.error('Failed to load general PDF');
     } finally {
       setLoadingPdf(false);
@@ -348,7 +348,7 @@ const Planner = () => {
 
   const normalizedPlans = (() => {
     if (!weeklyPlans?.data) {
-      console.log('No weekly plans data available');
+      // No weekly plans available
       return [];
     }
     
@@ -375,8 +375,7 @@ const Planner = () => {
     // Debug: Log available meal categories
     if (activePlan.meals && activePlan.meals.length > 0) {
       const mealCategories = [...new Set(activePlan.meals.map((meal: any) => meal.category))];
-      console.log('Available meal categories:', mealCategories);
-      console.log('Selected filter:', selectedType);
+      // Filter meals by category
     }
     
     // Format date as YYYY-MM-DD to match the API structure
@@ -479,7 +478,7 @@ const Planner = () => {
         setAddOns(res.data.filter((addon: AddOn) => addon.is_active));
       })
       .catch((error) => {
-        console.warn('Failed to load add-ons:', error);
+        // Failed to load add-ons
         setAddOns([]);
       });
   }, []);

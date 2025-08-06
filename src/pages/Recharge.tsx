@@ -67,7 +67,7 @@ const Recharge = () => {
         await createNewCardToken(finalAmount);
       }
     } catch (error) {
-      console.error('Error in recharge:', error);
+      // Recharge error handled
       toast.error("An unexpected error occurred. Please try again.");
       setIsSubmitting(false);
     }
@@ -90,7 +90,7 @@ const Recharge = () => {
       returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${Date.now()}&amount=${amount}&step=token&customerProfileId=${profile.id}&customerName=${encodeURIComponent(profile.name)}&customerMobile=${mobile}&customerEmail=${encodeURIComponent(profile.email)}`,
     };
 
-    console.log('Calling Fawry card token endpoint directly:', tokenPayload);
+    // Generating card token
     
     const tokenResponse = await fetch('https://atfawry.fawrystaging.com/fawrypay-api/api/cards/cardToken', {
       method: 'POST',
@@ -101,7 +101,7 @@ const Recharge = () => {
     });
 
     const tokenData = await tokenResponse.json();
-    console.log('Fawry token response:', tokenData);
+    // Card token generated
 
     if (tokenData.statusCode === 200 && tokenData.nextAction?.redirectUrl) {
       // Token creation requires 3DS, redirect to Fawry
@@ -144,12 +144,9 @@ const Recharge = () => {
       });
 
       if (response.ok) {
-        console.log('Card token saved successfully');
       } else {
-        console.error('Failed to save card token');
       }
     } catch (error) {
-      console.error('Error saving card token:', error);
     }
   };
 
@@ -172,8 +169,6 @@ const Recharge = () => {
         securityKey;
       
       const signature = await generateSHA256(signatureString);
-      console.log('Payment signature string:', signatureString);
-      console.log('Payment signature:', signature);
 
       const paymentPayload = {
         merchantCode: merchantCode,
@@ -202,7 +197,6 @@ const Recharge = () => {
         signature: signature
       };
 
-      console.log('Calling Fawry payment endpoint directly:', paymentPayload);
 
       const paymentResponse = await fetch('https://atfawry.fawrystaging.com/ECommerceWeb/Fawry/payments/charge', {
         method: 'POST',
@@ -213,7 +207,6 @@ const Recharge = () => {
       });
 
       const paymentData = await paymentResponse.json();
-      console.log('Fawry payment response:', paymentData);
 
       if (paymentData.statusCode === 200 && paymentData.nextAction?.redirectUrl) {
         // Payment requires 3DS, redirect to Fawry
@@ -228,7 +221,6 @@ const Recharge = () => {
         setIsSubmitting(false);
       }
     } catch (error) {
-      console.error('Error processing payment:', error);
       toast.error("An error occurred while completing payment. Please try again.");
       setIsSubmitting(false);
     }

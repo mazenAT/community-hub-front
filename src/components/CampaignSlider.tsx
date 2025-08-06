@@ -34,7 +34,6 @@ const CampaignSlider: React.FC = () => {
         const response = await campaignApi.getFeatured();
         setCampaigns(response.data.data || []);
       } catch (error) {
-        console.error('Failed to fetch campaigns:', error);
       } finally {
         setLoading(false);
       }

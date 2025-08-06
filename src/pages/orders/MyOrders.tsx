@@ -114,7 +114,7 @@ const MyOrders: React.FC = () => {
         description: 'Failed to fetch pre-orders',
         variant: 'destructive',
       });
-      console.error(err);
+      // Handle error silently
     } finally {
       setLoading(false);
     }
@@ -125,7 +125,7 @@ const MyOrders: React.FC = () => {
       const response = await familyMembersApi.getFamilyMembers();
       setFamilyMembers(response.data);
     } catch (err) {
-      console.error('Failed to fetch family members:', err);
+      // Handle error silently
     }
   };
 
@@ -134,7 +134,7 @@ const MyOrders: React.FC = () => {
       const response = await addOnOrderApi.getMyOrders();
       setAddOnOrders(response.data);
     } catch (err) {
-      console.error('Failed to fetch add-on orders:', err);
+      // Handle error silently
     }
   };
 

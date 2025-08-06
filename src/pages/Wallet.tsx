@@ -75,12 +75,11 @@ const Wallet = () => {
       } else if (Array.isArray(transactionsResponse.data?.data)) {
         transactionsData = transactionsResponse.data.data;
       } else {
-        console.error("Transactions API did not return an array:", transactionsResponse.data);
+        // Handle unexpected response format
       }
       setTransactions(transactionsData);
 
     } catch (err) {
-      console.error('Wallet data fetch error:', err);
       setError('Failed to load wallet data');
       showToast('Failed to load wallet data');
     } finally {

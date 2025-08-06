@@ -44,7 +44,6 @@ const SavedCards: React.FC<SavedCardsProps> = ({ onCardSelect, selectedCardId })
         setCards(data.data || []);
       }
     } catch (error) {
-      console.error('Error fetching saved cards:', error);
     } finally {
       setLoading(false);
     }

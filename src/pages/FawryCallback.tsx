@@ -140,8 +140,7 @@ const FawryCallback = () => {
         securityKey;
       
       const signature = await generateSHA256(signatureString);
-      console.log('Payment signature string:', signatureString);
-      console.log('Payment signature:', signature);
+      // Payment signature generated
 
       const paymentPayload = {
         merchantCode: merchantCode,
@@ -170,7 +169,7 @@ const FawryCallback = () => {
         signature: signature
       };
 
-      console.log('Calling Fawry payment endpoint directly:', paymentPayload);
+      // Processing Fawry payment
 
       const paymentResponse = await fetch('https://atfawry.fawrystaging.com/ECommerceWeb/Fawry/payments/charge', {
         method: 'POST',
@@ -181,7 +180,7 @@ const FawryCallback = () => {
       });
 
       const paymentData = await paymentResponse.json();
-      console.log('Fawry payment response:', paymentData);
+      // Payment processed
 
       if (paymentData.statusCode === 200) {
         // Payment successful - update wallet balance
@@ -197,7 +196,7 @@ const FawryCallback = () => {
         toast.error(paymentData.statusDescription || 'Failed to complete payment.');
       }
     } catch (error) {
-      console.error('Error processing payment:', error);
+      // Payment processing error
       setError('An error occurred while completing payment.');
       toast.error('An error occurred while completing payment.');
     } finally {
@@ -232,12 +231,12 @@ const FawryCallback = () => {
       });
 
       if (response.ok) {
-        console.log('Card token saved successfully');
-      } else {
-        console.error('Failed to save card token');
-      }
+        // Card token saved
+              } else {
+          // Failed to save card token
+        }
     } catch (error) {
-      console.error('Error saving card token:', error);
+      // Error saving card token
     }
   };
 
@@ -253,7 +252,7 @@ const FawryCallback = () => {
   // Helper function to update wallet balance via backend
   const updateWalletBalance = async (amount: number) => {
     try {
-      console.log('Updating wallet balance with amount:', amount);
+      // Updating wallet balance
       
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/wallet/update-balance`, {
         method: 'POST',
@@ -268,20 +267,20 @@ const FawryCallback = () => {
         }),
       });
 
-      console.log('Update balance response status:', response.status);
+      // Balance update response received
       
       if (response.ok) {
         const data = await response.json();
-        console.log('Update balance success:', data);
+                  // Balance updated successfully
         toast.success('Wallet balance updated successfully!');
         navigate('/wallet');
       } else {
         const errorText = await response.text();
-        console.error('Failed to update wallet balance:', response.status, errorText);
+                  // Failed to update wallet balance
         toast.error(`Failed to update wallet balance: ${response.status}`);
       }
     } catch (error) {
-      console.error('Error updating wallet balance:', error);
+      // Error updating wallet balance
       toast.error('Error updating wallet balance. Please contact support.');
     }
   };

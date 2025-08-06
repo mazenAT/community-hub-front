@@ -2,15 +2,16 @@ import React from 'react';
 
 interface LoadingSpinnerProps {
   size?: number;
+  className?: string;
 }
 
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = 48 }) => {
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = 24, className = '' }) => {
   return (
-    <div className="flex justify-center items-center h-32">
+    <div className={`flex items-center justify-center ${className}`}>
       <div
-        className="animate-spin rounded-full border-t-2 border-b-2 border-brand-red"
-        style={{ height: size, width: size }}
-      ></div>
+        className="animate-spin rounded-full border-2 border-gray-300 border-t-brand-red"
+        style={{ width: size, height: size }}
+      />
     </div>
   );
 };

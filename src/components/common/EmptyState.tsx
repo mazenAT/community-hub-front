@@ -4,14 +4,21 @@ interface EmptyStateProps {
   icon?: React.ReactNode;
   message: string;
   action?: React.ReactNode;
+  className?: string;
 }
 
-const EmptyState: React.FC<EmptyStateProps> = ({ icon, message, action }) => (
-  <div className="flex flex-col items-center justify-center py-12 text-center text-brand-black/70">
-    {icon && <div className="mb-4 text-5xl text-brand-red">{icon}</div>}
-    <div className="mb-2 text-lg font-medium">{message}</div>
-    {action && <div className="mt-4">{action}</div>}
-  </div>
-);
+const EmptyState: React.FC<EmptyStateProps> = ({ icon, message, action, className = '' }) => {
+  return (
+    <div className={`flex flex-col items-center justify-center p-8 text-center ${className}`}>
+      {icon && (
+        <div className="text-gray-400 mb-4">
+          {icon}
+        </div>
+      )}
+      <p className="text-gray-600 mb-4">{message}</p>
+      {action && action}
+    </div>
+  );
+};
 
 export default EmptyState; 
