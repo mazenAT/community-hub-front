@@ -544,6 +544,17 @@ const Planner = () => {
     return format(selectedDate, 'MMMM dd, yyyy');
   };
 
+  const isBeforeYesterdayMidnight = (inputDate: Date) => {
+    const now = new Date();
+    const yesterdayMidnight = new Date();
+    yesterdayMidnight.setDate(now.getDate() - 1);
+    yesterdayMidnight.setHours(0, 0, 0, 0);
+  
+    const input = new Date(inputDate);
+    return input < yesterdayMidnight;
+  };
+  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-20">
       {/* Header */}
@@ -855,13 +866,6 @@ const Planner = () => {
                                     </span>
                                   </div>
                                   
-                                  {/* Calories */}
-                                  {meal.calories && (
-                                    <p className="text-brand-black/60 text-xs">
-                                      {meal.calories} calories
-                                    </p>
-                                  )}
-                                  
                                   {/* Action Buttons */}
                                   <div className="flex space-x-1 mt-2">
                                     {meal.pdf_path && (
@@ -880,9 +884,9 @@ const Planner = () => {
                                       size="sm"
                                       className="flex-1 h-6 px-2 bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white text-xs"
                                       onClick={() => handlePreOrder(meal, date)}
-                                      disabled={preOrderMutation.isPending}
+                                      disabled={isBeforeYesterdayMidnight(date)}
                                     >
-                                      Add
+                                      {isBeforeYesterdayMidnight(date) ? "Order Closed" : "Add"}
                                     </Button>
                                   </div>
                                   
