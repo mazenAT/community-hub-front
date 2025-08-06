@@ -65,9 +65,9 @@ export default {
 				},
 				// Lite Bite brand colors
 				brand: {
-					red: '#808080',
+					red: '#4b4b4b',
 					yellow: '#808080',
-					orange: '#808080',
+					orange: '#d3d3d3',
 					black: '#000000',
 					white: '#FFFFFF',
 				  }
