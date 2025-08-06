@@ -331,7 +331,7 @@ const Planner = () => {
   const normalizeMeal = (meal: any) => ({
     ...meal,
     title: meal.title || meal.name || "Meal",
-    type: meal.type || meal.category || "hot meal", // Use category as type if type is not available
+    type: meal.category || "Hot meal", // Use category as type if type is not available
     category: meal.category || "",
     subcategory: meal.subcategory || "",
     calories: meal.calories || 0,
@@ -885,13 +885,13 @@ const Planner = () => {
                                       onClick={() => handlePreOrder(meal, date)}
                                       disabled={isBeforeTodayMidnight(date)}
                                     >
-                                      {isBeforeTodayMidnight(date) ? "Order Closed" : "Add"}
+                                      {isBeforeTodayMidnight(date) ? "Order Closed" : "Order now"}
                                     </Button>
                                   </div>
                                   
                                   {/* Add-ons Section */}
                                   <div className="mt-2 pt-2 border-t border-brand-yellow/20">
-                                    <h5 className="text-xs font-medium text-brand-black mb-1">Add-ons</h5>
+                                    <h5 className="text-xs font-medium text-brand-black mb-1">Daily Items</h5>
                                     <div className="grid grid-cols-2 gap-1">
                                       <Button
                                         size="sm"
