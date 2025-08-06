@@ -12,11 +12,11 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import NotificationBell from "@/components/NotificationBell";
-import LoadingSpinner from '@/components/common/LoadingSpinner';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
 import { AlertCircle } from 'lucide-react';
-import { TransactionList } from '@/components/Wallet/TransactionList';
-import CampaignSlider from '../components/CampaignSlider';
+
+import CampaignSlider from '@/components/CampaignSlider';
 
 interface UserProfile {
   id: number;
