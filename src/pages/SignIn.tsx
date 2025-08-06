@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { secureStorage } from "@/services/native";
-import { authApi } from "@/services/api";
+import { authApi, familyMembersApi } from "@/services/api";
 
 const shakeClass = "animate-shake border-brand-red";
 
@@ -22,7 +22,23 @@ const SignIn = () => {
     onSuccess: async (response) => {
       localStorage.setItem('token', response.data.token);
       toast.success("Signed in successfully");
-      navigate("/wallet");
+      
+      // Check if user has family members
+      try {
+        const familyMembersResponse = await familyMembersApi.getFamilyMembers();
+        const familyMembers = familyMembersResponse.data;
+        
+        if (familyMembers && familyMembers.length > 0) {
+          // User has family members, go to wallet
+          navigate("/wallet");
+        } else {
+          // User has no family members, go to family setup
+          navigate("/family-setup");
+        }
+      } catch (error) {
+        // If there's an error checking family members, default to family setup
+        navigate("/family-setup");
+      }
     },
     onError: (error: any) => {
       const apiMsg = error.response?.data?.message || "Failed to sign in";

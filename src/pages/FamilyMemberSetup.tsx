@@ -65,7 +65,7 @@ const FamilyMemberSetup = () => {
 
   const handleSkip = () => {
     toast.success("You can add family members later from your profile");
-    navigate("/planner");
+    navigate("/wallet");
   };
 
   const handleComplete = async () => {
@@ -91,7 +91,7 @@ const FamilyMemberSetup = () => {
       }
       
       toast.success("Family members added successfully!");
-      navigate("/planner");
+      navigate("/wallet");
     } catch (error) {
       toast.error("Failed to add some family members");
     }
@@ -107,7 +107,7 @@ const FamilyMemberSetup = () => {
           </div>
           <h1 className="text-3xl font-bold text-brand-black mb-2">Add Your Family Members</h1>
           <p className="text-brand-black/70">
-            Add your children or family members who will be ordering meals
+            Add your children or family members who will be ordering meals from your selected school
           </p>
         </div>
 
