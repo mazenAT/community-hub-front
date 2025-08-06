@@ -544,15 +544,14 @@ const Planner = () => {
     return format(selectedDate, 'MMMM dd, yyyy');
   };
 
-  const isBeforeYesterdayMidnight = (inputDate: Date) => {
-    const now = new Date();
-    const yesterdayMidnight = new Date();
-    yesterdayMidnight.setDate(now.getDate() - 1);
-    yesterdayMidnight.setHours(0, 0, 0, 0);
-  
+  const isBeforeTodayMidnight = (inputDate: Date) => {
     const input = new Date(inputDate);
-    return input < yesterdayMidnight;
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0); // today at 12AM
+  
+    return input < todayMidnight;
   };
+  
   
 
   return (
@@ -884,9 +883,9 @@ const Planner = () => {
                                       size="sm"
                                       className="flex-1 h-6 px-2 bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white text-xs"
                                       onClick={() => handlePreOrder(meal, date)}
-                                      disabled={isBeforeYesterdayMidnight(date)}
+                                      disabled={isBeforeTodayMidnight(date)}
                                     >
-                                      {isBeforeYesterdayMidnight(date) ? "Order Closed" : "Add"}
+                                      {isBeforeTodayMidnight(date) ? "Order Closed" : "Add"}
                                     </Button>
                                   </div>
                                   
