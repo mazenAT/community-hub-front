@@ -64,11 +64,11 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Lite Bite brand colors - Light Warm Orange Gradient
+				// Lite Bite brand colors - Light Warm Orange Gradient (Updated to lighter tones)
 				brand: {
-					red: '#ff8a50',      // Light warm orange (lightest)
-					yellow: '#ff7043',   // Medium warm orange 
-					orange: '#ff5722',   // Deeper warm orange
+					red: '#ffb380',      // Much lighter warm orange (softer)
+					yellow: '#ffa366',   // Lighter medium warm orange 
+					orange: '#ff8a65',   // Lighter deeper warm orange
 					black: '#000000',
 					white: '#FFFFFF',
 				  }
