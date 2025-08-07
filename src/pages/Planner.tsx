@@ -12,6 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import NotificationBell from "@/components/NotificationBell";
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
+import { formatCurrency } from "@/utils/format";
 import {
   Dialog,
   DialogContent,
@@ -866,7 +867,7 @@ const Planner = () => {
                                       {meal.category || 'N/A'}
                                     </span>
                                     <span className="text-xs font-medium text-brand-black">
-                                      ${meal.price ? meal.price.toFixed(2) : 'N/A'}
+                                      {meal.price ? formatCurrency(meal.price) : 'N/A'}
                                     </span>
                                   </div>
                                   
