@@ -1,19 +1,22 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Bell, CheckCircle, Loader2 } from "lucide-react";
+import { Bell, CheckCircle, Loader2, ArrowRight } from "lucide-react";
 import { notificationApi } from "@/services/api";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
-// import echo from "@/lib/echo"; // Removed
 import { useToast } from "@/hooks/use-toast";
 import { profileApi } from "@/services/api";
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
+import { useNavigate } from "react-router-dom";
 
 interface Notification {
   id: number;
+  type: string;
   title: string;
-  body: string;
-  read_at: string | null;
+  message: string;
+  data?: any;
+  is_read: boolean;
+  read_at?: string;
   created_at: string;
 }
 
@@ -25,6 +28,7 @@ const NotificationBell: React.FC = () => {
   const [userId, setUserId] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Fetch user ID on mount
   useEffect(() => {
@@ -67,13 +71,31 @@ const NotificationBell: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  const unreadCount = notifications.filter(n => !n.read_at).length;
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   const handleMarkAsRead = async (id: number) => {
     try {
       await notificationApi.markAsRead(id);
-      setNotifications(notifications => notifications.map(n => n.id === id ? { ...n, read_at: new Date().toISOString() } : n));
+      setNotifications(notifications => notifications.map(n => n.id === id ? { ...n, is_read: true, read_at: new Date().toISOString() } : n));
     } catch {}
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    // Mark as read if unread
+    if (!notification.is_read) {
+      handleMarkAsRead(notification.id);
+    }
+    
+    // Close dropdown
+    setOpen(false);
+    
+    // Navigate to notifications page
+    navigate('/notifications');
+  };
+
+  const handleViewAllClick = () => {
+    setOpen(false);
+    navigate('/notifications');
   };
 
   return (
@@ -115,21 +137,34 @@ const NotificationBell: React.FC = () => {
               notifications.map(n => (
                 <div
                   key={n.id}
-                  className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 ${!n.read_at ? 'bg-blue-50' : ''}`}
-                  onClick={() => handleMarkAsRead(n.id)}
+                  className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 ${!n.is_read ? 'bg-blue-50' : ''}`}
+                  onClick={() => handleNotificationClick(n)}
                 >
                   <div className="mt-1">
-                    {!n.read_at ? <span className="inline-block w-2 h-2 bg-blue-500 rounded-full" /> : <CheckCircle className="w-4 h-4 text-gray-300" />}
+                    {!n.is_read ? <span className="inline-block w-2 h-2 bg-blue-500 rounded-full" /> : <CheckCircle className="w-4 h-4 text-gray-300" />}
                   </div>
                   <div className="flex-1">
                     <div className="font-medium text-gray-900 text-sm line-clamp-1">{n.title}</div>
-                    <div className="text-xs text-gray-600 line-clamp-2">{n.body}</div>
+                    <div className="text-xs text-gray-600 line-clamp-2">{n.message}</div>
                     <div className="text-xs text-gray-400 mt-1">{formatDistanceToNow(parseISO(n.created_at), { addSuffix: true })}</div>
                   </div>
                 </div>
               ))
             )}
           </div>
+          {notifications.length > 0 && (
+            <div className="p-3 border-t border-gray-100">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleViewAllClick}
+                className="w-full text-brand-orange hover:bg-brand-orange hover:text-white"
+              >
+                View All Notifications
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -104,8 +104,12 @@ export const walletApi = {
 
 // Notifications API
 export const notificationApi = {
-  getNotifications: () => api.get('/notifications'),
+  getNotifications: (params?: { type?: string; is_read?: boolean }) => api.get('/notifications', { params }),
+  getNotification: (id: number) => api.get(`/notifications/${id}`),
   markAsRead: (id: number) => api.post(`/notifications/${id}/read`),
+  markAllAsRead: () => api.post('/notifications/mark-all-read'),
+  getUnreadCount: () => api.get('/notifications/unread-count'),
+  deleteNotification: (id: number) => api.delete(`/notifications/${id}`),
 };
 
 // Orders API

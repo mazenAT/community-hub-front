@@ -19,6 +19,7 @@ import OrderDetails from "./pages/orders/OrderDetails";
 import MyOrders from "./pages/orders/MyOrders";
 import FawryCallback from "./pages/FawryCallback";
 import ContactUs from "./pages/ContactUs";
+import Notifications from "./pages/Notifications";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,11 @@ const App = () => (
           <Route path="/contact" element={
             <ProtectedRoute>
               <ContactUs />
+            </ProtectedRoute>
+          } />
+          <Route path="/notifications" element={
+            <ProtectedRoute>
+              <Notifications />
             </ProtectedRoute>
           } />
 
