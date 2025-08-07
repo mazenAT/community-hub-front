@@ -71,6 +71,7 @@ interface AddOn {
   name: string;
   description?: string;
   price: number;
+  category: string;
   is_active: boolean;
 }
 
@@ -263,18 +264,18 @@ const Planner = () => {
       return;
     }
     
-    // Filter add-ons by category
+    // Filter add-ons by their actual category field
     const categoryAddOns = filteredAddOns.filter(addon => {
-      const addonText = `${addon.name} ${addon.description || ''}`.toLowerCase();
+      // Direct category matching for more accurate filtering
       switch (category) {
         case 'Bakery':
-          return addonText.includes('bread') || addonText.includes('cake') || addonText.includes('pastry') || addonText.includes('bakery');
+          return addon.category === 'bakery';
         case 'Snacks':
-          return addonText.includes('snack') || addonText.includes('chips') || addonText.includes('crackers') || addonText.includes('nuts');
+          return addon.category === 'snacks';
         case 'Beverages':
-          return addonText.includes('drink') || addonText.includes('juice') || addonText.includes('soda') || addonText.includes('water') || addonText.includes('milk');
+          return addon.category === 'beverages';
         case 'Breakfast':
-          return addonText.includes('cereal') || addonText.includes('oatmeal') || addonText.includes('yogurt') || addonText.includes('breakfast');
+          return addon.category === 'breakfast';
         default:
           return true;
       }
@@ -286,8 +287,8 @@ const Planner = () => {
     }
 
     // Show add-ons in a modal or popup
-    toast.success(`${category} items available for ${meal.title || meal.name} on ${format(date, 'EEEE')}`);
-    // TODO: Implement add-ons modal/popup
+    toast.success(`${categoryAddOns.length} ${category} items available for ${meal.title || meal.name} on ${format(date, 'EEEE')}: ${categoryAddOns.map(addon => addon.name).join(', ')}`);
+    // TODO: Implement add-ons modal/popup for actual ordering
   };
 
   // Handle PDF viewing
