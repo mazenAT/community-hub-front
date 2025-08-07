@@ -41,6 +41,7 @@ api.interceptors.response.use(
   }
 );
 
+// Auth API
 export const authApi = {
   login: (data: { email: string; password: string }) =>
     api.post('/auth/login', data),
@@ -50,9 +51,11 @@ export const authApi = {
     password: string;
     password_confirmation: string;
     role: string;
-    school_id?: number;
+    school_id: number;
     phone?: string;
   }) => api.post('/auth/register', data),
+  logout: () => api.post('/auth/logout'),
+  me: () => api.get('/auth/me'),
   forgotPassword: (data: { email: string }) =>
     api.post('/auth/forgot-password', data),
   resetPassword: (data: {
@@ -61,6 +64,17 @@ export const authApi = {
     password_confirmation: string;
     token: string;
   }) => api.post('/auth/reset-password', data),
+};
+
+// Utility function to get user data from localStorage
+export const getCurrentUser = () => {
+  try {
+    const userStr = localStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
+  } catch (error) {
+    console.error('Error parsing user data from localStorage:', error);
+    return null;
+  }
 };
 
 export const walletApi = {
@@ -180,6 +194,21 @@ export const contactApi = {
     message: string;
   }) => api.post('/contact', data),
   getUserNotes: () => api.get('/contact/notes'),
+};
+
+// PDF API
+export const pdfApi = {
+  getGeneralPdf: (schoolId?: number) => {
+    // If no schoolId provided, try to get it from the logged-in user
+    let finalSchoolId = schoolId;
+    if (!finalSchoolId) {
+      const user = getCurrentUser();
+      finalSchoolId = user?.school_id;
+    }
+    
+    const params = finalSchoolId ? { school_id: finalSchoolId } : {};
+    return api.get('/general-pdfs', { params });
+  },
 };
 
 export { api }; 

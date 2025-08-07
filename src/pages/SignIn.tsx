@@ -20,7 +20,9 @@ const SignIn = () => {
     mutationFn: (data: { email: string; password: string }) =>
       authApi.login(data),
     onSuccess: async (response) => {
-      localStorage.setItem('token', response.data.token);
+      const { user, token } = response.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
       toast.success("Signed in successfully");
       
       // Check if user has family members
