@@ -84,10 +84,13 @@ interface FamilyMember {
 }
 
 const isOrderingWindowOpen = (mealDate: Date): boolean => {
-  // Rule: Orders must be placed before midnight of the day BEFORE the meal.
-  // For a meal on Wednesday, the deadline is the start of Tuesday (Tuesday 00:00).
-  const cutoffDate = startOfDay(subDays(mealDate, 1));
-  return isBefore(new Date(), cutoffDate);
+  // Rule: Orders must be placed before 12:00 AM (midnight) of the meal date.
+  // For a meal on Wednesday, users can order until Tuesday 11:59 PM (Wednesday 00:00 is the deadline).
+  const orderingDeadline = startOfDay(mealDate); // 12:00 AM of the meal date
+  const now = new Date();
+  
+  // Check if the current time is before the deadline
+  return isBefore(now, orderingDeadline);
 };
 
 // Helper to check if a meal has been pre-ordered on a specific date
@@ -543,14 +546,8 @@ const Planner = () => {
     return format(selectedDate, 'MMMM dd, yyyy');
   };
 
-  const isBeforeTodayMidnight = (inputDate: Date) => {
-    const input = new Date(inputDate);
-    const todayMidnight = new Date();
-    todayMidnight.setHours(0, 0, 0, 0); // today at 12AM
-  
-    return input < todayMidnight;
-  };
-  
+  // Note: Removed the incorrect isBeforeTodayMidnight function
+  // We use isOrderingWindowOpen instead for proper deadline checking
   
 
   return (
@@ -836,6 +833,16 @@ const Planner = () => {
                             </div>
                             <div className="text-white/80 text-sm">
                               {mealsForDay.length} meal{mealsForDay.length !== 1 ? 's' : ''}
+                              {!isOrderingWindowOpen(date) && (
+                                <div className="text-red-200 text-xs mt-1">
+                                  Ordering closed
+                                </div>
+                              )}
+                              {isOrderingWindowOpen(date) && (
+                                <div className="text-green-200 text-xs mt-1">
+                                  Order until {format(startOfDay(date), 'MMM dd')} 12:00 AM
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -882,9 +889,9 @@ const Planner = () => {
                                       size="sm"
                                       className="flex-1 h-6 px-2 bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white text-xs"
                                       onClick={() => handlePreOrder(meal, date)}
-                                      disabled={isBeforeTodayMidnight(date)}
+                                      disabled={!isOrderingWindowOpen(date)}
                                     >
-                                      {isBeforeTodayMidnight(date) ? "Order Closed" : "Order now"}
+                                      {!isOrderingWindowOpen(date) ? "Order Closed" : "Order now"}
                                     </Button>
                                   </div>
                                   
