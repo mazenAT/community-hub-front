@@ -135,6 +135,13 @@ const Planner = () => {
   const [selectedFamilyMember, setSelectedFamilyMember] = useState<string>("");
   const [selectedWeek, setSelectedWeek] = useState<string>("1");
 
+  // Add-ons modal state
+  const [showAddOnsModal, setShowAddOnsModal] = useState(false);
+  const [selectedAddOnCategory, setSelectedAddOnCategory] = useState<string>("");
+  const [selectedMealForAddOns, setSelectedMealForAddOns] = useState<any>(null);
+  const [selectedDateForAddOns, setSelectedDateForAddOns] = useState<Date | null>(null);
+  const [selectedAddOns, setSelectedAddOns] = useState<{[key: number]: number}>({});
+
   const { data: profile, isLoading: isLoadingProfile, error: profileError } = useQuery({
     queryKey: ["profile"],
     queryFn: profileApi.getProfile,
@@ -285,9 +292,12 @@ const Planner = () => {
       return;
     }
 
-    // Show add-ons in a modal or popup
-    toast.success(`${categoryAddOns.length} ${category} items available for ${meal.title || meal.name} on ${format(date, 'EEEE')}: ${categoryAddOns.map(addon => addon.name).join(', ')}`);
-    // TODO: Implement add-ons modal/popup for actual ordering
+    // Set modal state and open modal
+    setSelectedAddOnCategory(category);
+    setSelectedMealForAddOns(meal);
+    setSelectedDateForAddOns(date);
+    setSelectedAddOns({});
+    setShowAddOnsModal(true);
   };
 
   // Handle PDF viewing
@@ -958,6 +968,121 @@ const Planner = () => {
                 title="Meal PDF"
               />
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add-ons Modal */}
+      <Dialog open={showAddOnsModal} onOpenChange={setShowAddOnsModal}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedAddOnCategory} Items for {selectedMealForAddOns?.title || selectedMealForAddOns?.name}
+            </DialogTitle>
+            <p className="text-sm text-gray-600">
+              {selectedDateForAddOns && format(selectedDateForAddOns, 'EEEE, MMMM dd, yyyy')}
+            </p>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {(() => {
+              const categoryAddOns = filteredAddOns.filter(addon => {
+                switch (selectedAddOnCategory) {
+                  case 'Bakery':
+                    return addon.category === 'bakery';
+                  case 'Snacks':
+                    return addon.category === 'snacks';
+                  case 'Beverages':
+                    return addon.category === 'beverages';
+                  default:
+                    return true;
+                }
+              });
+
+              return categoryAddOns.map((addon) => (
+                <div key={addon.id} className="flex items-center justify-between p-4 border border-brand-yellow/30 rounded-lg bg-brand-yellow/5">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-brand-black">{addon.name}</h4>
+                    <p className="text-sm text-brand-black/70">{addon.description}</p>
+                    <p className="text-sm font-medium text-brand-orange mt-1">
+                      {formatCurrency(addon.price)}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-8 h-8 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
+                      onClick={() => {
+                        setSelectedAddOns(prev => ({
+                          ...prev,
+                          [addon.id]: Math.max(0, (prev[addon.id] || 0) - 1)
+                        }));
+                      }}
+                      disabled={!selectedAddOns[addon.id] || selectedAddOns[addon.id] === 0}
+                    >
+                      -
+                    </Button>
+                    <span className="w-8 text-center text-sm font-medium">
+                      {selectedAddOns[addon.id] || 0}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-8 h-8 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
+                      onClick={() => {
+                        setSelectedAddOns(prev => ({
+                          ...prev,
+                          [addon.id]: (prev[addon.id] || 0) + 1
+                        }));
+                      }}
+                    >
+                      +
+                    </Button>
+                  </div>
+                </div>
+              ));
+            })()}
+          </div>
+
+          <div className="flex justify-between items-center pt-4 border-t">
+            <div className="text-sm text-gray-600">
+              Total: {formatCurrency(
+                Object.entries(selectedAddOns).reduce((total, [addonId, quantity]) => {
+                  const addon = addOns.find(a => a.id === parseInt(addonId));
+                  return total + (addon ? addon.price * quantity : 0);
+                }, 0)
+              )}
+            </div>
+            <div className="space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddOnsModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white"
+                onClick={() => {
+                  // Handle add-ons order
+                  const selectedItems = Object.entries(selectedAddOns)
+                    .filter(([_, quantity]) => quantity > 0)
+                    .map(([addonId, quantity]) => ({
+                      addon_id: parseInt(addonId),
+                      quantity
+                    }));
+                  
+                  if (selectedItems.length > 0) {
+                    toast.success(`Added ${selectedItems.length} ${selectedAddOnCategory.toLowerCase()} item(s) to your order`);
+                    // TODO: Implement actual add-ons ordering API call
+                  }
+                  setShowAddOnsModal(false);
+                }}
+                disabled={Object.values(selectedAddOns).every(qty => qty === 0)}
+              >
+                Add to Order
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
