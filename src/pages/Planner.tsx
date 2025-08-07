@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { plannerApi, profileApi, addOnApi, familyMembersApi } from "@/services/api";
+import { plannerApi, profileApi, addOnApi, familyMembersApi, addOnOrderApi } from "@/services/api";
 import { format, parseISO, getDay, isBefore, startOfDay, subDays, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameDay } from "date-fns";
 import { CalendarIcon, AlertCircle, Filter, FileText, ChevronDown, Users } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -141,6 +141,9 @@ const Planner = () => {
   const [selectedMealForAddOns, setSelectedMealForAddOns] = useState<any>(null);
   const [selectedDateForAddOns, setSelectedDateForAddOns] = useState<Date | null>(null);
   const [selectedAddOns, setSelectedAddOns] = useState<{[key: number]: number}>({});
+  
+  // Store add-ons for each meal (key: mealId_date, value: array of add-ons)
+  const [mealAddOns, setMealAddOns] = useState<{[key: string]: {add_on_id: number, quantity: number}[]}>({});
 
   const { data: profile, isLoading: isLoadingProfile, error: profileError } = useQuery({
     queryKey: ["profile"],
@@ -252,6 +255,10 @@ const Planner = () => {
       return;
     }
     
+    // Check if there are selected add-ons for this meal and date
+    const mealKey = `${meal.id}_${format(date, 'yyyy-MM-dd')}`;
+    const selectedMealAddOns = mealAddOns[mealKey] || [];
+    
     const payload = {
       weekly_plan_id: activePlan.id,
       family_member_id: parseInt(selectedFamilyMember),
@@ -260,9 +267,20 @@ const Planner = () => {
           meal_id: meal.id,
           meal_date: format(date, 'yyyy-MM-dd'),
           quantity: 1,
+          add_ons: selectedMealAddOns.length > 0 ? selectedMealAddOns : undefined,
         },
       ],
     };
+    
+    // Clear the selected add-ons for this meal after ordering
+    if (selectedMealAddOns.length > 0) {
+      setMealAddOns(prev => {
+        const newState = { ...prev };
+        delete newState[mealKey];
+        return newState;
+      });
+    }
+    
     preOrderMutation.mutate(payload);
   };
 
@@ -881,6 +899,19 @@ const Planner = () => {
                                     </span>
                                   </div>
                                   
+                                  {/* Add-ons Selected Indicator */}
+                                  {(() => {
+                                    const mealKey = `${meal.id}_${format(date, 'yyyy-MM-dd')}`;
+                                    const selectedMealAddOns = mealAddOns[mealKey] || [];
+                                    return selectedMealAddOns.length > 0 && (
+                                      <div className="mt-1">
+                                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                          {selectedMealAddOns.length} add-on{selectedMealAddOns.length !== 1 ? 's' : ''} selected
+                                        </span>
+                                      </div>
+                                    );
+                                  })()}
+                                  
                                   {/* Action Buttons */}
                                   <div className="flex space-x-1 mt-2">
                                     {meal.pdf_path && (
@@ -1064,23 +1095,33 @@ const Planner = () => {
               <Button
                 className="bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white"
                 onClick={() => {
-                  // Handle add-ons order
+                  // Store selected add-ons for this meal
                   const selectedItems = Object.entries(selectedAddOns)
                     .filter(([_, quantity]) => quantity > 0)
                     .map(([addonId, quantity]) => ({
-                      addon_id: parseInt(addonId),
+                      add_on_id: parseInt(addonId),
                       quantity
                     }));
                   
-                  if (selectedItems.length > 0) {
-                    toast.success(`Added ${selectedItems.length} ${selectedAddOnCategory.toLowerCase()} item(s) to your order`);
-                    // TODO: Implement actual add-ons ordering API call
+                  if (selectedItems.length > 0 && selectedMealForAddOns && selectedDateForAddOns) {
+                    // Create a unique key for this meal and date
+                    const mealKey = `${selectedMealForAddOns.id}_${format(selectedDateForAddOns, 'yyyy-MM-dd')}`;
+                    
+                    // Store add-ons for this specific meal and date
+                    setMealAddOns(prev => ({
+                      ...prev,
+                      [mealKey]: selectedItems
+                    }));
+                    
+                    toast.success(`Selected ${selectedItems.length} ${selectedAddOnCategory.toLowerCase()} item(s) for ${selectedMealForAddOns?.title || selectedMealForAddOns?.name}. They will be included when you order this meal.`);
+                  } else {
+                    toast.info("No add-ons selected");
                   }
                   setShowAddOnsModal(false);
                 }}
                 disabled={Object.values(selectedAddOns).every(qty => qty === 0)}
               >
-                Add to Order
+                Select Add-ons
               </Button>
             </div>
           </div>
