@@ -128,7 +128,15 @@ export const plannerApi = {
   getMeals: (params: { date?: string; type?: string; category?: string; subcategory?: string }) =>
     api.get('/meals', { params }),
   preOrderMeal: (payload: any) => api.post('/student/pre-orders', payload),
-  getWeeklyPlansBySchool: (schoolId: number) => api.get(`/schools/${schoolId}/weekly-plans`),
+  getWeeklyPlansBySchool: (schoolId?: number) => {
+    // If no schoolId provided, use the user's school_id
+    const user = getCurrentUser();
+    const finalSchoolId = schoolId || user?.school_id;
+    if (!finalSchoolId) {
+      throw new Error('No school ID available for fetching weekly plans');
+    }
+    return api.get(`/schools/${finalSchoolId}/weekly-plans`);
+  },
   getMealCategories: () => api.get('/meals/categories'),
   getMealSubcategories: () => api.get('/meals/subcategories'),
   getMealPdf: (mealId: number) => api.get(`/meals/${mealId}/pdf`),
