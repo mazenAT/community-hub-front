@@ -274,8 +274,6 @@ const Planner = () => {
           return addon.category === 'snacks';
         case 'Beverages':
           return addon.category === 'beverages';
-        case 'Breakfast':
-          return addon.category === 'breakfast';
         default:
           return true;
       }
@@ -899,7 +897,7 @@ const Planner = () => {
                                   {/* Add-ons Section */}
                                   <div className="mt-2 pt-2 border-t border-brand-yellow/20">
                                     <h5 className="text-xs font-medium text-brand-black mb-1">Daily Items</h5>
-                                    <div className="grid grid-cols-2 gap-1">
+                                    <div className="grid grid-cols-3 gap-1">
                                       <Button
                                         size="sm"
                                         variant="outline"
@@ -923,14 +921,6 @@ const Planner = () => {
                                         onClick={() => handleAddOnsClick(date, meal, 'Beverages')}
                                       >
                                         Drinks
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-5 px-1 border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10 text-xs"
-                                        onClick={() => handleAddOnsClick(date, meal, 'Breakfast')}
-                                      >
-                                        Breakfast
                                       </Button>
                                     </div>
                                   </div>
