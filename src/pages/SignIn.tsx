@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { secureStorage } from "@/services/native";
 import { authApi, familyMembersApi } from "@/services/api";
+import { useTutorial } from "@/contexts/TutorialContext";
 
 const shakeClass = "animate-shake border-brand-red";
 
@@ -15,6 +16,7 @@ const SignIn = () => {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [shake, setShake] = useState<{ email: boolean; password: boolean }>({ email: false, password: false });
   const navigate = useNavigate();
+  const { checkTutorialStatus } = useTutorial();
 
   const signInMutation = useMutation({
     mutationFn: (data: { email: string; password: string }) =>
@@ -30,15 +32,26 @@ const SignIn = () => {
         const familyMembersResponse = await familyMembersApi.getFamilyMembers();
         const familyMembers = familyMembersResponse.data;
         
+        // Store family members status for tutorial
         if (familyMembers && familyMembers.length > 0) {
+          await secureStorage.set('has-family-members', 'true');
           // User has family members, go to wallet
           navigate("/wallet");
         } else {
+          await secureStorage.set('has-family-members', 'false');
           // User has no family members, go to family setup
           navigate("/family-setup");
         }
+        
+        // Check tutorial status after successful authentication
+        // This will only show tutorial if user hasn't seen it and has family members
+        setTimeout(() => {
+          checkTutorialStatus();
+        }, 1000); // Small delay to ensure navigation is complete
+        
       } catch (error) {
         // If there's an error checking family members, default to family setup
+        await secureStorage.set('has-family-members', 'false');
         navigate("/family-setup");
       }
     },

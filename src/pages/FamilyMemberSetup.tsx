@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { familyMembersApi } from "@/services/api";
 import { secureStorage } from "@/services/native";
 import { Plus, X, Users } from "lucide-react";
+import { useTutorial } from "@/contexts/TutorialContext";
 
 interface FamilyMember {
   name: string;
@@ -17,6 +18,7 @@ interface FamilyMember {
 
 const FamilyMemberSetup = () => {
   const navigate = useNavigate();
+  const { checkTutorialStatus } = useTutorial();
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([
     { name: "", grade: "", class: "", allergies: [] }
   ]);
@@ -96,6 +98,12 @@ const FamilyMemberSetup = () => {
       
       toast.success("Family members added successfully!");
       navigate("/wallet");
+      
+      // Check tutorial status after successful family member setup
+      // This will show tutorial if user hasn't seen it and now has family members
+      setTimeout(() => {
+        checkTutorialStatus();
+      }, 1000); // Small delay to ensure navigation is complete
     } catch (error) {
       toast.error("Failed to add some family members");
     }

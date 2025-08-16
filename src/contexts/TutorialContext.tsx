@@ -22,6 +22,7 @@ interface TutorialContextType {
   nextStep: () => void;
   previousStep: () => void;
   resetTutorial: () => void;
+  checkTutorialStatus: () => Promise<void>; // Add this method
 }
 
 const defaultTutorialSteps: TutorialStep[] = [
@@ -100,28 +101,28 @@ const defaultTutorialSteps: TutorialStep[] = [
   {
     id: 'profile-settings',
     title: 'Profile & Settings',
-    description: 'Update your personal information, change passwords, and customize app preferences.',
+    description: 'Manage your account, update preferences, and customize your experience.',
     target: '.profile-section',
     position: 'top',
     order: 9,
     completed: false,
   },
   {
-    id: 'support',
-    title: 'Need Help?',
-    description: 'Contact our support team anytime. We\'re here to help you get the most out of the app!',
-    target: '.contact-support',
-    position: 'bottom',
+    id: 'completion',
+    title: 'You\'re All Set!',
+    description: 'Congratulations! You now know how to use all the key features of Smart Community.',
+    target: 'body',
+    position: 'top',
     order: 10,
     completed: false,
-  },
+  }
 ];
 
 const TutorialContext = createContext<TutorialContextType | undefined>(undefined);
 
 export const useTutorial = () => {
   const context = useContext(TutorialContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useTutorial must be used within a TutorialProvider');
   }
   return context;
@@ -133,8 +134,8 @@ interface TutorialProviderProps {
 
 export const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) => {
   const [isTutorialActive, setIsTutorialActive] = useState(false);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [tutorialSteps, setTutorialSteps] = useState<TutorialStep[]>(defaultTutorialSteps);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   // Load tutorial progress from storage
   useEffect(() => {
@@ -146,7 +147,7 @@ export const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) 
           setTutorialSteps(prev => 
             prev.map(step => ({
               ...step,
-              completed: progress[step.id] || false,
+              completed: progress[step.id] || false
             }))
           );
         }
@@ -158,30 +159,29 @@ export const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) 
     loadTutorialProgress();
   }, []);
 
-  // Check if user should see tutorial
-  useEffect(() => {
-    const checkTutorialStatus = async () => {
-      try {
-        // Check if user has seen the tutorial
-        const hasSeenTutorial = await secureStorage.get('has-seen-tutorial');
-        
-        // Check if user has family members (only show tutorial if they do)
-        const hasFamilyMembers = await secureStorage.get('has-family-members');
-        
-        // Show tutorial if user hasn't seen it and has family members
-        if (!hasSeenTutorial && hasFamilyMembers === 'true') {
-          setIsTutorialActive(true);
-        }
-      } catch (error) {
-        console.error('Failed to check tutorial status:', error);
-        // Don't crash the app if tutorial check fails
-        // Just assume tutorial should not be shown
-        setIsTutorialActive(false);
+  // Check if user should see tutorial - ONLY when explicitly called
+  const checkTutorialStatus = async () => {
+    try {
+      // Check if user has seen the tutorial
+      const hasSeenTutorial = await secureStorage.get('has-seen-tutorial');
+      
+      // Check if user has family members (only show tutorial if they do)
+      const hasFamilyMembers = await secureStorage.get('has-family-members');
+      
+      // Show tutorial if user hasn't seen it and has family members
+      if (!hasSeenTutorial && hasFamilyMembers === 'true') {
+        setIsTutorialActive(true);
       }
-    };
+    } catch (error) {
+      console.error('Failed to check tutorial status:', error);
+      // Don't crash the app if tutorial check fails
+      // Just assume tutorial should not be shown
+      setIsTutorialActive(false);
+    }
+  };
 
-    checkTutorialStatus();
-  }, []);
+  // Don't automatically check tutorial status on mount
+  // It will be called manually after user signs in
 
   const currentStep = tutorialSteps[currentStepIndex] || null;
 
@@ -260,6 +260,7 @@ export const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) 
     nextStep,
     previousStep,
     resetTutorial,
+    checkTutorialStatus,
   };
 
   return (
