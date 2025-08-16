@@ -20,30 +20,47 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [selectedSchool, setSelectedSchool] = useState("");
-  const [selectedRole] = useState("user"); // Always parent - no selection needed
+  const [selectedRole] = useState("user"); // General role for mobile app users
   const [schools, setSchools] = useState<{ id: number; name: string }[]>([]);
   const [loadingSchools, setLoadingSchools] = useState(true);
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [shake, setShake] = useState<{ [key: string]: boolean }>({});
 
-      const signUpMutation = useMutation({
-      mutationFn: (data: {
-        name: string;
-        email: string;
-        password: string;
-        password_confirmation: string;
-        role: string;
-        school_id?: number;
-        phone?: string;
-      }) =>
-        authApi.register(data),
+  const signUpMutation = useMutation({
+    mutationFn: (data: {
+      name: string;
+      email: string;
+      password: string;
+      password_confirmation: string;
+      role: string;
+      school_id?: number;
+      phone?: string;
+    }) =>
+      authApi.register(data),
     onSuccess: () => {
       toast.success("Account created successfully! Please sign in to continue.");
       navigate("/");
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to create account");
+      const apiMsg = error.response?.data?.message || "Failed to create account";
+      toast.error(apiMsg);
+      
+      // Handle backend validation errors
+      if (error.response?.data?.errors) {
+        const backendErrors = error.response.data.errors;
+        setErrors(backendErrors);
+        
+        // Shake fields that have errors
+        const newShake: { [key: string]: boolean } = {};
+        Object.keys(backendErrors).forEach(key => {
+          newShake[key] = true;
+        });
+        setShake(newShake);
+        
+        // Clear shake after animation
+        setTimeout(() => setShake({}), 600);
+      }
     },
   });
 
@@ -170,6 +187,9 @@ const SignUp = () => {
               className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.password ? 'animate-shake border-brand-red' : ''}`}
             />
             {errors.password && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.password}</div>}
+            <div className="text-xs text-brand-black/60 mt-1">
+              Password must be at least 8 characters with uppercase, lowercase, number, and special character
+            </div>
             <Input
               type="password"
               placeholder="Confirm Password"
