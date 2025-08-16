@@ -15,6 +15,7 @@ import NotificationBell from "@/components/NotificationBell";
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
 import { AlertCircle } from 'lucide-react';
+import TutorialTrigger from "@/components/TutorialTrigger";
 
 import CampaignSlider from '@/components/CampaignSlider';
 
@@ -194,14 +195,14 @@ const Wallet = () => {
 
       <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Balance Card */}
-        <Card className="bg-brand-red text-white p-4 rounded-2xl border-0 w-full mb-4">
+        <Card className="wallet-balance bg-brand-red text-white p-4 rounded-2xl border-0 w-full mb-4">
           <div className="space-y-2">
             <p className="text-white/80 text-xs">Total Balance</p>
             <h2 className="text-3xl font-bold">{loading ? <LoadingSpinner size={24} /> : formatCurrency(balance)}</h2>
             <div className="flex flex-col xs:flex-row gap-2 mt-2">
               <Button
                 onClick={() => navigate("/recharge")}
-                className="bg-brand-orange hover:bg-brand-orange/90 text-white border-0 rounded-xl text-base w-full xs:w-auto"
+                className="add-money-btn bg-brand-orange hover:bg-brand-orange/90 text-white border-0 rounded-xl text-base w-full xs:w-auto"
                 disabled={loading}
               >
                 + Recharge
@@ -248,7 +249,7 @@ const Wallet = () => {
         </Dialog>
 
         {/* Recent Transactions */}
-        <div className="space-y-3 sm:space-y-4">
+        <div className="transactions-section space-y-3 sm:space-y-4">
           <h3 className="text-base sm:text-lg font-semibold text-brand-black">Recent Transactions</h3>
           {loading && transactions.length === 0 ? (
             <div className="text-center py-4">
@@ -308,6 +309,9 @@ const Wallet = () => {
       </div>
 
       <BottomNavigation activeTab="wallet" />
+      
+      {/* Floating Tutorial Button */}
+      <TutorialTrigger variant="floating" />
     </div>
   );
 };

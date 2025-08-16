@@ -109,3 +109,41 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  /* Ensure minimum touch targets */
+  button, a, input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Optimize for mobile scrolling */
+  body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  /* Prevent zoom on input focus */
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
+
+/* Safe area support for notched devices */
+@supports (padding: max(0px)) {
+  .safe-area-top {
+    padding-top: max(env(safe-area-inset-top), 1rem);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  }
+}
+
+/* Touch-friendly hover states */
+@media (hover: none) and (pointer: coarse) {
+  .hover\:bg-gray-100:hover {
+    background-color: transparent;
+  }
+}

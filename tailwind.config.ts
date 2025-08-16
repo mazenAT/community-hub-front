@@ -14,12 +14,47 @@ export default {
 	theme: {
 		container: {
 			center: true,
-			padding: '2rem',
+			padding: {
+				DEFAULT: '1rem',
+				sm: '1.5rem',
+				md: '2rem',
+				lg: '2rem'
+			},
 			screens: {
+				'xs': '475px',
+				'sm': '640px',
+				'md': '768px',
+				'lg': '1024px',
+				'xl': '1280px',
 				'2xl': '1400px'
 			}
 		},
 		extend: {
+			// Mobile-first responsive breakpoints
+			screens: {
+				'xs': '475px',
+				'sm': '640px',
+				'md': '768px',
+				'lg': '1024px',
+				'xl': '1280px',
+				'2xl': '1400px',
+			},
+			
+			// Mobile-optimized spacing
+			spacing: {
+				'18': '4.5rem',
+				'88': '22rem',
+				'128': '32rem',
+			},
+			
+			// Touch-friendly sizing
+			minHeight: {
+				'touch': '44px', // Minimum touch target size
+			},
+			minWidth: {
+				'touch': '44px',
+			},
+			
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

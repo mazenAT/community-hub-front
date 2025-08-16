@@ -20,7 +20,7 @@ interface UserProfile {
   phone: string | null;
   profile_image: string | null;
   is_active: boolean;
-  role: 'admin' | 'student';
+  role: 'student';
   school?: {
     id: number;
     name: string;
@@ -109,9 +109,9 @@ const Profile = () => {
   const transactionsData = transactionsResponse?.data;
 
   const updateProfileMutation = useMutation({
-    mutationFn: (data: { name?: string; phone?: string | null; allergies?: string[]; }) => profileApi.updateProfile(data).then(response => response.data),
+    mutationFn: profileApi.updateProfile,
     onSuccess: () => {
-      toast.success("Profile updated successfully");
+      toast.success("Profile updated successfully!");
       refetchProfile();
     },
     onError: (error: any) => {
@@ -119,38 +119,45 @@ const Profile = () => {
     },
   });
 
-  const handleChangePasswordMutation = useMutation({
-    mutationFn: (data: { current_password: string; password: string; password_confirmation: string; }) => profileApi.updatePassword(data).then(response => response.data),
+  const updatePasswordMutation = useMutation({
+    mutationFn: profileApi.updatePassword,
     onSuccess: () => {
-      toast.success("Password changed successfully");
+      toast.success("Password updated successfully!");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to change password");
+      toast.error(error.response?.data?.message || "Failed to update password");
     },
   });
 
-  const handleAllergyChange = (allergy: string, checked: boolean) => {
-    if (checked) {
-      if (allergy === "None") {
-        setSelectedAllergies(["None"]);
-      } else {
-        setSelectedAllergies(prev => prev.filter(a => a !== "None").concat(allergy));
-      }
-    } else {
-      setSelectedAllergies(prev => prev.filter(a => a !== allergy));
-    }
-  };
-
   const handleUpdateProfile = () => {
-    updateProfileMutation.mutate({ name, phone, allergies: allergiesInput.split(",").map(a => a.trim()).filter(Boolean) });
+    if (!name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+
+    const updateData: any = { name: name.trim() };
+    
+    if (phone !== profileData?.phone) {
+      updateData.phone = phone || null;
+    }
+
+    if (allergiesInput !== (profileData?.allergies?.join(", ") || "")) {
+      const allergiesArray = allergiesInput
+        .split(",")
+        .map(a => a.trim())
+        .filter(Boolean);
+      updateData.allergies = allergiesArray;
+    }
+
+    updateProfileMutation.mutate(updateData);
   };
 
-  const handleChangePassword = () => {
+  const handleUpdatePassword = () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      toast.error("Please fill in all password fields");
+      toast.error("All password fields are required");
       return;
     }
 
@@ -160,42 +167,18 @@ const Profile = () => {
     }
 
     if (newPassword.length < 8) {
-      toast.error("New password must be at least 8 characters long");
+      toast.error("Password must be at least 8 characters long");
       return;
     }
 
-    handleChangePasswordMutation.mutate({
+    updatePasswordMutation.mutate({
       current_password: currentPassword,
       password: newPassword,
       password_confirmation: confirmPassword,
     });
   };
 
-  const [selectedFilter, setSelectedFilter] = useState<"all" | "credit" | "debit">("all");
-
-  const filteredTransactions = transactionsData?.filter((transaction: Transaction) => {
-    if (selectedFilter === "all") return true;
-    return transaction.type === selectedFilter;
-  }) || [];
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "";
-    const date = parseISO(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) {
-      return "Today";
-    } else if (format(date, 'yyyy-MM-dd') === format(yesterday, 'yyyy-MM-dd')) {
-      return "Yesterday";
-    } else {
-      return format(date, 'MMM d, yyyy');
-    }
-  };
-
   const formatTime = (dateString: string) => {
-    if (!dateString) return "";
     const date = parseISO(dateString);
     return format(date, 'hh:mm a');
   };
@@ -297,85 +280,96 @@ const Profile = () => {
                     </span>
                   ))}
                 </div>
-
               </div>
             )}
           </div>
         </Card>
 
-        {/* Update Profile */}
-        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white border border-brand-yellow/30">
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-brand-black">Update Profile</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-brand-black">Full Name</label>
-                <Input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="h-12 bg-white border-2 border-brand-yellow/30 focus:border-brand-red"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-brand-black">Phone</label>
-                <Input
-                  type="tel"
-                  value={phone || ''}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="h-12 bg-white border-2 border-brand-yellow/30 focus:border-brand-red"
-                />
-              </div>
+        {/* Edit Profile Section */}
+        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white">
+          <h3 className="text-lg sm:text-xl font-semibold text-brand-black mb-4 sm:mb-6">Edit Profile</h3>
+          <div className="space-y-4 sm:space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-brand-black mb-2">Name</label>
+              <Input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your name"
+                className="w-full"
+              />
             </div>
-            <Button
+            <div>
+              <label className="block text-sm font-medium text-brand-black mb-2">Phone</label>
+              <Input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Enter your phone number"
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-brand-black mb-2">Allergies</label>
+              <Input
+                type="text"
+                value={allergiesInput}
+                onChange={(e) => setAllergiesInput(e.target.value)}
+                placeholder="Enter allergies separated by commas"
+                className="w-full"
+              />
+              <p className="text-xs text-brand-black/60 mt-1">Separate multiple allergies with commas</p>
+            </div>
+            <Button 
               onClick={handleUpdateProfile}
               disabled={updateProfileMutation.isPending}
-              className="w-full md:w-auto bg-brand-red hover:bg-brand-red/90 text-white"
+              className="w-full bg-brand-red hover:bg-brand-red/90 text-white"
             >
-              {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+              {updateProfileMutation.isPending ? "Updating..." : "Update Profile"}
             </Button>
           </div>
         </Card>
 
-        {/* Change Password */}
-        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white border border-brand-yellow/30">
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-brand-black">Change Password</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-brand-black">Current Password</label>
-                <Input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="h-12 bg-white border-2 border-brand-yellow/30 focus:border-brand-red"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-brand-black">New Password</label>
-                <Input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="h-12 bg-white border-2 border-brand-yellow/30 focus:border-brand-red"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-brand-black">Confirm New Password</label>
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="h-12 bg-white border-2 border-brand-yellow/30 focus:border-brand-red"
-                />
-              </div>
+        {/* Change Password Section */}
+        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white">
+          <h3 className="text-lg sm:text-xl font-semibold text-brand-black mb-4 sm:mb-6">Change Password</h3>
+          <div className="space-y-4 sm:space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-brand-black mb-2">Current Password</label>
+              <Input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+                className="w-full"
+              />
             </div>
-            <Button
-              onClick={handleChangePassword}
-              disabled={handleChangePasswordMutation.isPending}
-              className="w-full md:w-auto bg-brand-red hover:bg-brand-red/90 text-white"
+            <div>
+              <label className="block text-sm font-medium text-brand-black mb-2">New Password</label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-brand-black mb-2">Confirm New Password</label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                className="w-full"
+              />
+            </div>
+            <Button 
+              onClick={handleUpdatePassword}
+              disabled={updatePasswordMutation.isPending}
+              className="w-full bg-brand-red hover:bg-brand-red/90 text-white"
             >
-              {handleChangePasswordMutation.isPending ? "Changing..." : "Change Password"}
+              {updatePasswordMutation.isPending ? "Updating..." : "Update Password"}
             </Button>
           </div>
         </Card>
@@ -383,97 +377,58 @@ const Profile = () => {
         {/* Family Members Section */}
         <FamilyMembersSection />
 
-        {/* Financial Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-          <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-brand-red text-white">
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white/20 rounded-full flex items-center justify-center">
-                💰
-              </div>
-              <div>
-                <p className="text-sm sm:text-base text-white/80">Wallet Balance</p>
-                <p className="text-lg sm:text-xl font-bold">{formatAmount(balance, 'credit')}</p>
-              </div>
-            </div>
-          </Card>
-          
-          <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-brand-orange text-white">
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <Calendar className="w-6 h-6 sm:w-8 sm:h-8" />
-              <div>
-                <p className="text-sm sm:text-base text-white/80">Total Transactions</p>
-                <p className="text-lg sm:text-xl font-bold">{totalTransactions}</p>
-              </div>
-            </div>
-          </Card>
-        </div>
-
         {/* Transaction History */}
-        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white border border-brand-yellow/30">
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base sm:text-lg font-semibold text-brand-black">Transaction History</h3>
-              <button className="flex items-center text-brand-red text-sm font-medium hover:text-brand-red/80">
-                View All
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </button>
-            </div>
-
-            {/* Filter Buttons */}
-            <div className="flex space-x-2">
-              {["all", "credit", "debit"].map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setSelectedFilter(filter as "all" | "credit" | "debit")}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-                    selectedFilter === filter
-                      ? "bg-brand-red text-white"
-                      : "bg-brand-yellow/20 text-brand-black hover:bg-brand-yellow/30 border border-brand-yellow/30"
-                  }`}
-                >
-                  {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                </button>
-              ))}
-            </div>
-
-            {/* Transactions List */}
-            <div className="space-y-2 sm:space-y-3 max-h-64 sm:max-h-80 overflow-y-auto">
-              {filteredTransactions.map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-3 rounded-xl bg-brand-yellow/10 border border-brand-yellow/30">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center ${
-                      transaction.type === 'credit' ? 'bg-brand-orange/20' : 'bg-brand-red/20'
-                    }`}>
-                      {transaction.type === 'credit' ? (
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-brand-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                        </svg>
-                      ) : (
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                        </svg>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm sm:text-base font-medium text-brand-black">{transaction.note || transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}</p>
-                      <p className="text-xs sm:text-sm text-brand-black/70">
-                        {formatDate(transaction.created_at)}, {formatTime(transaction.created_at)}
-                      </p>
-                    </div>
-                  </div>
-                  <p className={`text-sm sm:text-base font-semibold ${
-                    transaction.type === 'credit' ? 'text-brand-orange' : 'text-brand-red'
-                  }`}>
-                    {formatAmount(transaction.amount, transaction.type)}
-                  </p>
-                </div>
-              ))}
+        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h3 className="text-lg sm:text-xl font-semibold text-brand-black">Transaction History</h3>
+            <div className="text-sm text-brand-black/70">
+              Total: {totalTransactions} transactions
             </div>
           </div>
+          
+          {transactionsData && transactionsData.length > 0 ? (
+            <div className="space-y-3">
+              {transactionsData.slice(0, 5).map((transaction) => (
+                <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-3 h-3 rounded-full ${transaction.type === 'credit' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <div>
+                      <p className="font-medium text-brand-black">{transaction.note || 'Transaction'}</p>
+                      <p className="text-sm text-brand-black/60">{formatTime(transaction.created_at)}</p>
+                    </div>
+                  </div>
+                  <div className={`font-semibold ${transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatAmount(transaction.amount, transaction.type)}
+                  </div>
+                </div>
+              ))}
+              {transactionsData.length > 5 && (
+                <Button 
+                  onClick={() => navigate("/wallet")}
+                  variant="outline" 
+                  className="w-full mt-4 border-brand-red text-brand-red hover:bg-brand-red hover:text-white"
+                >
+                  View All Transactions
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Calendar className="w-12 h-12 text-brand-black/30 mx-auto mb-3" />
+              <p className="text-brand-black/60">No transactions yet</p>
+              <Button 
+                onClick={() => navigate("/wallet")}
+                variant="outline" 
+                className="mt-3 border-brand-red text-brand-red hover:bg-brand-red hover:text-white"
+              >
+                Go to Wallet
+              </Button>
+            </div>
+          )}
         </Card>
       </div>
 
-      <BottomNavigation activeTab="profile" />
+      <BottomNavigation />
     </div>
   );
 };

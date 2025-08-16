@@ -4,6 +4,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import MobileErrorBoundary from "@/components/MobileErrorBoundary";
+import MobileNetworkStatus from "@/components/MobileNetworkStatus";
+import { TutorialProvider } from "@/contexts/TutorialContext";
+import TutorialOverlay from "@/components/TutorialOverlay";
+import { useDeepLinking } from "@/hooks/useDeepLinking";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -23,13 +28,13 @@ import Notifications from "./pages/Notifications";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
+const AppContent = () => {
+  // Initialize deep linking for mobile app
+  useDeepLinking();
+
+  return (
+    <BrowserRouter>
+      <Routes>
           {/* Public Routes */}
           <Route path="/" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
@@ -90,7 +95,22 @@ const App = () => (
           {/* 404 Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
+    </BrowserRouter>
+  );
+};
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <MobileErrorBoundary>
+        <MobileNetworkStatus />
+        <TutorialProvider>
+          <AppContent />
+          <TutorialOverlay />
+        </TutorialProvider>
+      </MobileErrorBoundary>
     </TooltipProvider>
   </QueryClientProvider>
 );

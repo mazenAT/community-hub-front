@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,21 @@ import { authApi } from "@/services/api";
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [token, setToken] = useState("");
   const [email, setEmail] = useState("");
 
   useEffect(() => {
+    // First check if we have data from deep linking (mobile app)
+    if (location.state?.token && location.state?.email) {
+      setToken(location.state.token);
+      setEmail(location.state.email);
+      return;
+    }
+
+    // Fallback to URL parameters (web or email link)
     const tokenParam = searchParams.get("token");
     const emailParam = searchParams.get("email");
     
@@ -25,7 +34,7 @@ const ResetPassword = () => {
       toast.error("Invalid reset link. Please request a new password reset.");
       navigate("/forgot-password");
     }
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, location.state]);
 
   const resetPasswordMutation = useMutation({
     mutationFn: (data: {
@@ -72,9 +81,9 @@ const ResetPassword = () => {
       <div className="w-full max-w-sm space-y-8">
         {/* App Icon */}
         <div className="flex justify-center">
-          <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center">
+          <div className="w-16 h-16 bg-gradient-to-r from-brand-red to-brand-orange rounded-2xl flex items-center justify-center">
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 0 1121 9z" />
             </svg>
           </div>
         </div>
@@ -83,6 +92,9 @@ const ResetPassword = () => {
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-semibold text-gray-900">Reset Password</h1>
           <p className="text-gray-500">Enter your new password</p>
+          {email && (
+            <p className="text-sm text-gray-400">Resetting password for: {email}</p>
+          )}
         </div>
 
         {/* Reset Form */}
@@ -107,7 +119,7 @@ const ResetPassword = () => {
           <Button 
             onClick={handleSubmit}
             disabled={resetPasswordMutation.isPending}
-            className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl"
+            className="w-full h-12 bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-orange hover:to-brand-red text-white font-medium rounded-xl"
           >
             {resetPasswordMutation.isPending ? (
               <div className="flex items-center space-x-2">
@@ -124,7 +136,7 @@ const ResetPassword = () => {
         <div className="text-center">
           <button 
             onClick={() => navigate("/signin")}
-            className="text-blue-500 text-sm hover:underline"
+            className="text-brand-red text-sm hover:underline"
           >
             Back to Sign In
           </button>

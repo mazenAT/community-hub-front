@@ -67,4 +67,51 @@ export const secureStorage = {
       localStorage.clear();
     }
   },
+};
+
+// Mobile-specific utilities
+export const mobileUtils = {
+  // Get device information
+  getDeviceInfo: () => {
+    if (isNative) {
+      return {
+        platform: Capacitor.getPlatform(),
+        isNative: true,
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+    }
+    return {
+      platform: 'web',
+      isNative: false,
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    };
+  },
+  
+  // Handle app state changes
+  onAppStateChange: (callback: (state: 'active' | 'inactive' | 'background') => void) => {
+    if (isNative) {
+      // Add app state change listener for mobile
+      document.addEventListener('visibilitychange', () => {
+        const state = document.hidden ? 'background' : 'active';
+        callback(state);
+      });
+    }
+  },
+  
+  // Check network connectivity
+  checkNetworkStatus: async () => {
+    if (isNative) {
+      try {
+        // You can add Capacitor Network plugin here
+        return { isOnline: navigator.onLine };
+      } catch (error) {
+        return { isOnline: navigator.onLine };
+      }
+    }
+    return { isOnline: navigator.onLine };
+  },
 }; 

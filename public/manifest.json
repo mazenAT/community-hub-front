@@ -1,25 +1,48 @@
 {
   "short_name": "Smart Community",
   "name": "Smart Community App",
+  "description": "Smart Community Mobile App for managing meals, wallet, and family members",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
-    },
-    {
-      "src": "logo192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "src": "Logo.jpg",
+      "sizes": "192x192 512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "orientation": "portrait",
+  "theme_color": "#ff8a65",
+  "background_color": "#ffffff",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["food", "education", "lifestyle"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Wallet",
+      "short_name": "Wallet",
+      "description": "Check wallet balance and transactions",
+      "url": "/wallet",
+      "icons": [
+        {
+          "src": "Logo.jpg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Planner",
+      "short_name": "Planner",
+      "description": "View meal plans and order meals",
+      "url": "/planner",
+      "icons": [
+        {
+          "src": "Logo.jpg",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
 } 

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { familyMembersApi } from "@/services/api";
+import { secureStorage } from "@/services/native";
 import { Plus, X, Users } from "lucide-react";
 
 interface FamilyMember {
@@ -89,6 +90,9 @@ const FamilyMemberSetup = () => {
           });
         }
       }
+      
+      // Mark that user has family members (this will trigger tutorial)
+      await secureStorage.set('has-family-members', 'true');
       
       toast.success("Family members added successfully!");
       navigate("/wallet");

@@ -8,7 +8,8 @@ const config: CapacitorConfig = {
     androidScheme: 'https',
     iosScheme: 'https',
     hostname: 'app',
-    cleartext: true
+    cleartext: true,
+    allowNavigation: ['*']
   },
   plugins: {
     SplashScreen: {
@@ -21,6 +22,19 @@ const config: CapacitorConfig = {
     },
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"]
+    },
+    // Add deep linking plugin configuration
+    DeepLinks: {
+      appLinks: {
+        android: {
+          scheme: 'smartcommunity',
+          host: 'smartcommunity.com'
+        },
+        ios: {
+          scheme: 'smartcommunity',
+          host: 'smartcommunity.com'
+        }
+      }
     }
   },
   android: {

@@ -1,371 +1,218 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { frontendWebhookHandler } from '../services/frontendWebhookHandler';
+import { frontendTransactionTracker } from '../services/frontendTransactionTracker';
+import { toast } from 'sonner';
 
 const FawryCallback = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [step, setStep] = useState<string | null>(null);
-  const [cardToken, setCardToken] = useState<string | null>(null);
-  const [amount, setAmount] = useState<string | null>(null);
-  const [cvv, setCvv] = useState('');
-  const [showCvvForm, setShowCvvForm] = useState(false);
-  const [profileData, setProfileData] = useState({
-    id: '777777', // Default fallback
-    name: 'Ahmed Ali', // Default fallback
-    mobile: '01234567891', // Default fallback
-    email: 'example@gmail.com' // Default fallback
-  });
+  const [searchParams] = useSearchParams();
+  const [processing, setProcessing] = useState(true);
+  const [transactionStatus, setTransactionStatus] = useState<'processing' | 'completed' | 'failed' | 'unknown'>('processing');
+  const [transactionDetails, setTransactionDetails] = useState<any>(null);
 
   useEffect(() => {
-    // Handle the callback from 3DS
-    const handleCallback = async () => {
-      const params = new URLSearchParams(location.search);
-      const merchantRefNum = params.get('merchantRefNum');
-      const chargeAmount = params.get('amount');
-      const callbackStep = params.get('step');
-      const status = params.get('status') || params.get('statusCode'); // Check both status and statusCode
-      const message = params.get('message') || params.get('statusDescription'); // Check both message and statusDescription
-      const token = params.get('cardToken') || params.get('token'); // Check both cardToken and token
-      
-      // Get profile data from URL parameters
-      const customerProfileId = params.get('customerProfileId');
-      const customerName = params.get('customerName');
-      const customerMobile = params.get('customerMobile');
-      const customerEmail = params.get('customerEmail');
-      
-      if (merchantRefNum && chargeAmount) {
-        setStep(callbackStep);
-        setAmount(chargeAmount);
-        
-        // Store profile data in state for later use
-        if (customerProfileId) {
-          setProfileData({
-            id: customerProfileId,
-            name: customerName || 'Ahmed Ali',
-            mobile: customerMobile || '01234567891',
-            email: customerEmail || 'example@gmail.com'
-          });
-        }
-        
-        if (callbackStep === 'token') {
-          // This is callback from token creation step
-          if (status === '200' || status === 'success') {
-            // Token created successfully, now need CVV for payment
-            if (token) {
-              setCardToken(token);
-              setShowCvvForm(true);
-              toast.success('Card token created successfully. Please enter CVV to complete payment.');
-              
-              // Save the card token to backend
-              saveCardTokenToBackend(token);
-            } else {
-              setError('Card token not received. Please try again.');
-              toast.error('Card token not received. Please try again.');
-            }
-          } else {
-            setError(message || 'Card token creation failed. Please try again.');
-            toast.error(message || 'Card token creation failed. Please try again.');
-          }
-        } else if (callbackStep === 'payment') {
-          // This is callback from payment step
-          if (status === '200' || status === 'success') {
-            setSuccess(true);
-            toast.success('Payment successful! Your wallet has been recharged.');
-            // Update wallet balance after successful payment
-            await updateWalletBalance(parseFloat(chargeAmount || '0'));
-          } else {
-            setError(message || 'Payment failed. Please try again.');
-            toast.error(message || 'Payment failed. Please try again.');
-          }
-        } else {
-          // Legacy callback handling
-          if (status === '200' || status === 'success') {
-            setSuccess(true);
-            toast.success('Payment successful! Your wallet has been recharged.');
-            // Update wallet balance after successful payment
-            await updateWalletBalance(parseFloat(chargeAmount || '0'));
-          } else {
-            setError(message || 'Payment failed. Please try again.');
-            toast.error(message || 'Payment failed. Please try again.');
-          }
-        }
-      } else {
-        setError('Invalid callback from Fawry. Please try again.');
-        toast.error('Invalid callback from Fawry. Please try again.');
-      }
-      
-      setLoading(false);
-    };
+    processCallback();
+  }, []);
 
-    handleCallback();
-  }, [location]);
-
-  const handleCvvSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!cvv || !cardToken || !amount) {
-      toast.error('Please enter CVV to continue.');
-      return;
-    }
-
-    setLoading(true);
+  const processCallback = async () => {
     try {
-      // Use profile data from state (passed via URL parameters)
-      const customerProfileId = profileData.id;
-      const customerName = profileData.name;
-      const customerMobile = profileData.mobile;
-      const customerEmail = profileData.email;
-
-      // Call Fawry directly for payment
-      const merchantRefNum = Date.now().toString();
-      const merchantCode = '770000017341';
-      const securityKey = '02b9d0e3-5088-4b6e-be41-111d4359fe10';
+      setProcessing(true);
       
-      // Generate signature for payment - same format as Recharge.tsx
-      const signatureString = merchantCode + 
-        merchantRefNum + 
-        customerProfileId + 
-        'CARD' + 
-        parseFloat(amount).toFixed(2) + 
-        cardToken + 
-        cvv + 
-        `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}` + // returnUrl
-        securityKey;
-      
-      const signature = await generateSHA256(signatureString);
-      // Payment signature generated
-
-      const paymentPayload = {
-        merchantCode: merchantCode,
-        merchantRefNum: merchantRefNum,
-        customerProfileId: customerProfileId,
-        customerName: customerName,
-        customerMobile: customerMobile,
-        customerEmail: customerEmail,
-        cardToken: cardToken,
-        cvv: cvv,
-        amount: parseFloat(amount),
-        paymentMethod: 'CARD',
-        currencyCode: 'EGP',
-        description: 'Wallet Recharge',
-        language: 'en-gb',
-        chargeItems: [
-          {
-            itemId: 'wallet_recharge',
-            description: 'Wallet Recharge',
-            price: parseFloat(amount),
-            quantity: 1
-          }
-        ],
-        enable3DS: true,
-        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}`,
-        signature: signature
+      // Extract callback data from URL parameters
+      const callbackData = {
+        merchantRefNum: searchParams.get('merchantRefNum'),
+        amount: searchParams.get('amount'),
+        step: searchParams.get('step'),
+        customerProfileId: searchParams.get('customerProfileId'),
+        customerName: searchParams.get('customerName'),
+        customerMobile: searchParams.get('customerMobile'),
+        customerEmail: searchParams.get('customerEmail'),
+        status: searchParams.get('status'),
+        message: searchParams.get('message'),
+        orderStatus: searchParams.get('orderStatus'),
+        paymentAmount: searchParams.get('paymentAmount'),
+        paymentMethod: searchParams.get('paymentMethod'),
+        merchantCode: searchParams.get('merchantCode'),
+        signature: searchParams.get('signature'),
       };
 
-      // Processing Fawry payment
+      console.log('Processing Fawry callback with data:', callbackData);
 
-      const paymentResponse = await fetch('https://atfawry.fawrystaging.com/ECommerceWeb/Fawry/payments/charge', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(paymentPayload),
-      });
+      // Try to process as webhook data first
+      if (callbackData.orderStatus) {
+        const webhookData = {
+          merchantRefNum: callbackData.merchantRefNum || '',
+          orderStatus: callbackData.orderStatus,
+          paymentAmount: callbackData.paymentAmount || '',
+          paymentMethod: callbackData.paymentMethod || '',
+          merchantCode: callbackData.merchantCode || '',
+          orderItems: '',
+          customerMobile: callbackData.customerMobile || '',
+          customerEmail: callbackData.customerEmail || '',
+          signature: callbackData.signature || '',
+        };
 
-      const paymentData = await paymentResponse.json();
-      // Payment processed
+        const success = frontendWebhookHandler.processWebhookData(webhookData);
+        if (success) {
+          // Find the updated transaction
+          const transactions = frontendTransactionTracker.getAllTransactions();
+          const transaction = transactions.find(t => 
+            t.fawry_reference === callbackData.merchantRefNum ||
+            t.amount === parseFloat(callbackData.amount || '0')
+          );
 
-      if (paymentData.statusCode === 200) {
-        // Payment successful - update wallet balance
-        await updateWalletBalance(parseFloat(amount));
-        setSuccess(true);
-        // Don't show duplicate success message - updateWalletBalance will handle it
-      } else if (paymentData.nextAction?.redirectUrl) {
-        // Payment requires 3DS, redirect to Fawry
-        window.location.href = paymentData.nextAction.redirectUrl;
-      } else {
-        // Payment failed
-        setError(paymentData.statusDescription || 'Failed to complete payment.');
-        toast.error(paymentData.statusDescription || 'Failed to complete payment.');
-      }
-    } catch (error) {
-      // Payment processing error
-      setError('An error occurred while completing payment.');
-      toast.error('An error occurred while completing payment.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Helper function to save card token to backend
-  const saveCardTokenToBackend = async (token: string) => {
-    try {
-      // Get card details from URL parameters
-      const params = new URLSearchParams(location.search);
-      const customerName = params.get('customerName') || 'Card';
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/wallet/save-card-token`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          card_token: token,
-          card_alias: customerName,
-          last_four_digits: '****', // We don't have this from callback
-          first_six_digits: '******', // We don't have this from callback
-          brand: 'Card',
-          expiry_year: '**',
-          expiry_month: '**',
-          is_default: true,
-          fawry_response: { token }
-        }),
-      });
-
-      if (response.ok) {
-        // Card token saved
-              } else {
-          // Failed to save card token
+          if (transaction) {
+            setTransactionDetails(transaction);
+            setTransactionStatus(transaction.status === 'completed' ? 'completed' : 'failed');
+          }
         }
-    } catch (error) {
-      // Error saving card token
-    }
-  };
-
-  // Helper function to generate SHA256 hash
-  const generateSHA256 = async (message: string): Promise<string> => {
-    const msgBuffer = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    return hashHex;
-  };
-
-  // Helper function to update wallet balance via backend
-  const updateWalletBalance = async (amount: number) => {
-    try {
-      // Updating wallet balance
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/wallet/update-balance`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          amount: amount,
-          type: 'recharge',
-          note: 'Recharge via Fawry (Direct)'
-        }),
-      });
-
-      // Balance update response received
-      
-      if (response.ok) {
-        const data = await response.json();
-                  // Balance updated successfully
-        toast.success('Wallet balance updated successfully!');
-        navigate('/wallet');
       } else {
-        const errorText = await response.text();
-                  // Failed to update wallet balance
-        toast.error(`Failed to update wallet balance: ${response.status}`);
+        // Process as regular callback data
+        const success = frontendWebhookHandler.processCallbackData(callbackData);
+        if (success) {
+          // Find the updated transaction
+          const transactions = frontendTransactionTracker.getAllTransactions();
+          const transaction = transactions.find(t => 
+            t.fawry_reference === callbackData.merchantRefNum ||
+            t.amount === parseFloat(callbackData.amount || '0')
+          );
+
+          if (transaction) {
+            setTransactionDetails(transaction);
+            setTransactionStatus(transaction.status === 'completed' ? 'completed' : 'failed');
+          }
+        }
       }
+
+      // If no transaction found, mark as unknown
+      if (!transactionDetails) {
+        setTransactionStatus('unknown');
+      }
+
     } catch (error) {
-      // Error updating wallet balance
-      toast.error('Error updating wallet balance. Please contact support.');
+      console.error('Error processing callback:', error);
+      setTransactionStatus('failed');
+    } finally {
+      setProcessing(false);
     }
   };
 
-  const handleContinue = () => {
-    navigate('/wallet');
+  const getStatusIcon = () => {
+    switch (transactionStatus) {
+      case 'completed':
+        return <CheckCircle className="w-16 h-16 text-green-500" />;
+      case 'failed':
+        return <XCircle className="w-16 h-16 text-red-500" />;
+      case 'processing':
+        return <Clock className="w-16 h-16 text-yellow-500" />;
+      default:
+        return <AlertCircle className="w-16 h-16 text-gray-500" />;
+    }
   };
 
-  const handleRetry = () => {
-    navigate('/recharge');
+  const getStatusTitle = () => {
+    switch (transactionStatus) {
+      case 'completed':
+        return 'Payment Successful!';
+      case 'failed':
+        return 'Payment Failed';
+      case 'processing':
+        return 'Processing Payment...';
+      default:
+        return 'Payment Status Unknown';
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
+  const getStatusMessage = () => {
+    switch (transactionStatus) {
+      case 'completed':
+        return 'Your wallet has been recharged successfully. You can now use the funds for meal purchases.';
+      case 'failed':
+        return 'The payment could not be completed. Please try again or contact support if the issue persists.';
+      case 'processing':
+        return 'We are processing your payment. This may take a few moments.';
+      default:
+        return 'We could not determine the status of your payment. Please check your wallet or contact support.';
+    }
+  };
 
-  if (showCvvForm && cardToken) {
+  const getStatusColor = () => {
+    switch (transactionStatus) {
+      case 'completed':
+        return 'text-green-600';
+      case 'failed':
+        return 'text-red-600';
+      case 'processing':
+        return 'text-yellow-600';
+      default:
+        return 'text-gray-600';
+    }
+  };
+
+  if (processing) {
     return (
-      <div className="container mx-auto p-4 max-w-md">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">Complete Payment</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleCvvSubmit} className="space-y-4">
-              <p className="text-gray-600 text-center">
-                Your card has been securely authorized. Please re-enter your CVV to complete the payment of <strong>{amount} EGP</strong>.
-              </p>
-              <div>
-                <label htmlFor="cvv" className="sr-only">CVV</label>
-                <Input
-                  id="cvv"
-                  type="password"
-                  value={cvv}
-                  onChange={(e) => setCvv(e.target.value)}
-                  placeholder="CVV"
-                  required
-                  className="h-12 text-lg"
-                  maxLength={4}
-                />
-              </div>
-              <Button type="submit" disabled={loading} className="w-full h-14 text-xl">
-                {loading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : 'Complete Payment'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-16 h-16 text-brand-red animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Processing Payment</h2>
+          <p className="text-gray-600">Please wait while we verify your payment...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-md">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            {success ? 'Payment Successful!' : 'Payment Failed'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-center">
-          {success ? (
-            <div className="space-y-4">
-              <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
-              <p className="text-gray-600">
-                Your wallet has been successfully recharged. You can now use your balance for purchases.
-              </p>
-              <Button onClick={handleContinue} className="w-full h-14 text-xl">
-                Continue to Wallet
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <XCircle className="h-16 w-16 text-red-500 mx-auto" />
-              <p className="text-gray-600">
-                {error || 'The payment could not be processed. Please try again.'}
-              </p>
-              <Button onClick={handleRetry} variant="outline" className="w-full h-14 text-xl">
-                Try Again
-              </Button>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md border-0 shadow-lg bg-white rounded-2xl">
+        <CardContent className="p-8 text-center">
+          {getStatusIcon()}
+          
+          <h1 className={`text-2xl font-bold mt-4 mb-2 ${getStatusColor()}`}>
+            {getStatusTitle()}
+          </h1>
+          
+          <p className="text-gray-600 mb-6 leading-relaxed">
+            {getStatusMessage()}
+          </p>
+
+          {transactionDetails && (
+            <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left">
+              <h3 className="font-semibold text-gray-900 mb-2">Transaction Details</h3>
+              <div className="space-y-1 text-sm text-gray-600">
+                <div>Amount: <span className="font-medium">{transactionDetails.amount} EGP</span></div>
+                <div>Status: <span className="font-medium capitalize">{transactionDetails.status}</span></div>
+                {transactionDetails.fawry_reference && (
+                  <div>Reference: <span className="font-medium">{transactionDetails.fawry_reference}</span></div>
+                )}
+                <div>Date: <span className="font-medium">
+                  {new Date(transactionDetails.updated_at).toLocaleString()}
+                </span></div>
+              </div>
             </div>
           )}
+
+          <div className="space-y-3">
+            <Button
+              onClick={() => navigate('/wallet')}
+              className="w-full h-12 bg-brand-red hover:bg-brand-red/90 text-white rounded-xl font-medium"
+            >
+              Back to Wallet
+            </Button>
+            
+            {transactionStatus === 'failed' && (
+              <Button
+                onClick={() => navigate('/recharge')}
+                variant="outline"
+                className="w-full h-12 border-2 border-gray-200 hover:border-brand-red hover:bg-brand-red/5 text-gray-700 rounded-xl font-medium"
+              >
+                Try Again
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

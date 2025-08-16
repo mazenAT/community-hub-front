@@ -15,6 +15,7 @@ api.interceptors.request.use(
     // List of public endpoints that should NOT send the Authorization header
     const publicEndpoints = ['/schools', '/auth/login', '/auth/register', '/auth/forgot-password', '/auth/reset-password'];
     const isPublic = publicEndpoints.some((url) => config.url?.includes(url));
+    
     if (token && !isPublic) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {
@@ -66,37 +67,22 @@ export const authApi = {
   }) => api.post('/auth/reset-password', data),
 };
 
-// Utility function to get user data from localStorage
-export const getCurrentUser = () => {
-  try {
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
-  } catch (error) {
-    console.error('Error parsing user data from localStorage:', error);
-    return null;
-  }
+// Wallet API
+export const walletApi = {
+  getBalance: () => api.get('/wallet/balance'),
+  getTransactions: (params?: { type?: string; start_date?: string; end_date?: string }) =>
+    api.get('/wallet/transactions', { params }),
+  addMoney: (data: { amount: number; payment_method: string }) =>
+    api.post('/wallet/add-money', data),
+  requestRefund: (data: { transaction_id: number; reason: string }) =>
+    api.post('/wallet/request-refund', data),
 };
 
-export const walletApi = {
-  getBalance: () => api.get('/wallet'),
-  getTransactions: () => api.get('/transactions'),
-  topUp: (data: { amount: number; payment_method: string }) =>
-    api.post('/wallet/topup', data),
-  // Remove withdraw as it's not implemented in backend
-  // withdraw: (data: { amount: number; bank_details: any }) =>
-  //   api.post('/wallet/withdraw', data),
-  // Remove Fawry specific routes as they're not implemented
-  // rechargeFawry: (data: { cardToken: string; cvv: string }) =>
-  //   api.post('/wallet/recharge-fawry', data),
-  // New: Request refund
-  requestRefund: (data: { amount: number; reason?: string }) =>
-    api.post('/wallet/request-refund', data),
-  // Remove Fawry specific routes as they're not implemented
-  // initiateFawryRecharge: (data: { amount: number }) =>
-  //   api.post('/wallet/initiate-fawry-recharge', data),
-  // Remove history routes as they're not implemented
-  // getRechargeHistory: () => api.get('/wallet/recharge-history'),
-  // getRefunds: () => api.get('/wallet/refunds'),
+// Transaction API
+export const transactionApi = {
+  getTransactions: (params?: { type?: string; start_date?: string; end_date?: string }) =>
+    api.get('/transactions', { params }),
+  getTransaction: (id: number) => api.get(`/transactions/${id}`),
   // Refund a transaction
   refundTransaction: (id: number, data?: { amount?: number; reason?: string }) =>
     api.post(`/transactions/${id}/refund`, data),
@@ -104,7 +90,8 @@ export const walletApi = {
 
 // Notifications API
 export const notificationApi = {
-  getNotifications: (params?: { type?: string; is_read?: boolean }) => api.get('/notifications', { params }),
+  getNotifications: (params?: { type?: string; is_read?: boolean }) =>
+    api.get('/notifications', { params }),
   getNotification: (id: number) => api.get(`/notifications/${id}`),
   markAsRead: (id: number) => api.post(`/notifications/${id}/read`),
   markAllAsRead: () => api.post('/notifications/mark-all-read'),
@@ -162,6 +149,7 @@ export const addOnOrderApi = {
 
 export const schoolApi = {
   getSchools: () => api.get('/schools'),
+  getSchool: (id: number) => api.get(`/schools/${id}`),
 };
 
 export const studentPreOrdersApi = {
@@ -192,7 +180,7 @@ export const familyMembersApi = {
 
 // Campaigns API
 export const campaignApi = {
-  getCampaigns: (params?: any) => api.get('/campaigns', { params }),
+  getCampaigns: (params?: { [key: string]: any }) => api.get('/campaigns', { params }),
   getFeatured: () => api.get('/campaigns/featured'),
   getCampaign: (id: number) => api.get(`/campaigns/${id}`),
 };
@@ -221,6 +209,17 @@ export const pdfApi = {
     const params = finalSchoolId ? { school_id: finalSchoolId } : {};
     return api.get('/general-pdfs', { params });
   },
+};
+
+// Utility function to get user data from localStorage
+export const getCurrentUser = () => {
+  try {
+    const userStr = localStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
+  } catch (error) {
+    console.error('Error parsing user data from localStorage:', error);
+    return null;
+  }
 };
 
 export { api }; 

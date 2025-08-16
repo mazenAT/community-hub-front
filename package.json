@@ -2,13 +2,24 @@
   "name": "smart-community-app",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
   "dependencies": {
     "@capacitor/android": "^5.7.0",
+    "@capacitor/app": "^5.0.8",
     "@capacitor/browser": "^5.2.1",
     "@capacitor/core": "^5.7.0",
+    "@capacitor/device": "^5.0.8",
+    "@capacitor/haptics": "^5.0.8",
     "@capacitor/ios": "^5.7.0",
+    "@capacitor/keyboard": "^5.0.8",
+    "@capacitor/local-notifications": "^5.0.8",
+    "@capacitor/network": "^5.0.8",
     "@capacitor/preferences": "^5.0.8",
     "@capacitor/push-notifications": "^5.1.2",
+    "@capacitor/status-bar": "^5.0.8",
     "@capacitor/toast": "^5.0.8",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-checkbox": "^1.0.4",
@@ -51,10 +62,15 @@
   "scripts": {
     "start": "vite",
     "build": "vite build",
+    "build:mobile": "vite build && npx @capacitor/cli sync",
     "serve": "vite preview",
     "test": "vitest",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css,md,json}\" --config ./.prettierrc"
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,md,json}\" --config ./.prettierrc",
+    "mobile:android": "npx @capacitor/cli open android",
+    "mobile:ios": "npx @capacitor/cli open ios",
+    "mobile:sync": "npx @capacitor/cli sync",
+    "mobile:build": "npm run build && npx @capacitor/cli sync"
   },
   "eslintConfig": {
     "extends": [

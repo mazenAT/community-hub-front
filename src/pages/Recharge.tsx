@@ -1,17 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Loader2, CreditCard, Wallet } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { profileApi } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import SavedCards from "../components/SavedCards";
+import BottomNavigation from "@/components/BottomNavigation";
+import { frontendTransactionTracker } from "../services/frontendTransactionTracker";
+import { secureCredentials } from "../services/secureCredentials";
 
 interface SavedCard {
   id: number;
-  card_token: string; // <-- added
+  card_token: string;
   card_alias: string;
   last_four_digits: string;
   first_six_digits: string;
@@ -36,6 +39,11 @@ const Recharge = () => {
   const [selectedCard, setSelectedCard] = useState<SavedCard | null>(null);
   const [paymentMode, setPaymentMode] = useState<'saved' | 'new'>('saved');
 
+  // Initialize secure credentials
+  useEffect(() => {
+    secureCredentials.initialize().catch(console.error);
+  }, []);
+
   const { data: profileData } = useQuery({
     queryKey: ["profile"],
     queryFn: profileApi.getProfile,
@@ -50,133 +58,307 @@ const Recharge = () => {
   }, [profile]);
 
   const handleRechargeClick = async () => {
-    if (!profile) {
-      toast.error("Could not load user profile. Please try again.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    const finalAmount = selectedAmount || parseFloat(customAmount) || 0;
-
     try {
-      if (paymentMode === 'saved' && selectedCard) {
-        // Use saved card - just need CVV
-        await processPaymentWithSavedCard(selectedCard, finalAmount);
-      } else {
-        // Create new card token
-        await createNewCardToken(finalAmount);
+      // Get secure credentials
+      const credentials = secureCredentials.getCredentials();
+      const endpoints = secureCredentials.getApiEndpoints();
+      
+      // Check rate limit before proceeding
+      await secureCredentials.checkRateLimit();
+
+      const finalAmount = selectedAmount || parseFloat(customAmount) || 0;
+
+      // Frontend validation before calling Fawry
+      if (finalAmount <= 0) {
+        toast.error("Please select a valid amount.");
+        return;
       }
-    } catch (error) {
-      // Recharge error handled
-      toast.error("An unexpected error occurred. Please try again.");
-      setIsSubmitting(false);
-    }
-  };
 
-  const createNewCardToken = async (amount: number) => {
-    // Step 1: Call Fawry directly for card token creation
-    const tokenPayload = {
-      merchantCode: '770000017341', // Your merchant code
-      customerProfileId: profile.id.toString(),
-      customerMobile: mobile,
-      customerEmail: profile.email,
-      cardNumber: cardNumber,
-      cardAlias: cardAlias || profile.name,
-      expiryYear: expiryYear.length === 4 ? expiryYear.slice(-2) : expiryYear, // Convert 4-digit to 2-digit if needed
-      expiryMonth: expiryMonth,
-      cvv: cvv,
-      isDefault: true,
-      enable3ds: true,
-      returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${Date.now()}&amount=${amount}&step=token&customerProfileId=${profile.id}&customerName=${encodeURIComponent(profile.name)}&customerMobile=${mobile}&customerEmail=${encodeURIComponent(profile.email)}`,
-    };
+      if (paymentMode === 'saved') {
+        if (!selectedCard) {
+          toast.error("Please select a saved card.");
+          return;
+        }
+        if (!cvv || cvv.length < 3) {
+          toast.error("Please enter a valid CVV.");
+          return;
+        }
+      } else {
+        // New card validation
+        if (!mobile || mobile.length < 11) {
+          toast.error("Please enter a valid mobile number.");
+          return;
+        }
+        if (!cardAlias || cardAlias.trim().length < 2) {
+          toast.error("Please enter the card holder name.");
+          return;
+        }
+        if (!cardNumber || cardNumber.length < 13) {
+          toast.error("Please enter a valid card number.");
+          return;
+        }
+        if (!expiryMonth || !expiryYear) {
+          toast.error("Please enter card expiry date.");
+          return;
+        }
+        if (!cvv || cvv.length < 3) {
+          toast.error("Please enter a valid CVV.");
+          return;
+        }
+      }
 
-    // Generating card token
-    
-    const tokenResponse = await fetch('https://atfawry.fawrystaging.com/fawrypay-api/api/cards/cardToken', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(tokenPayload),
-    });
+      setIsSubmitting(true);
 
-    const tokenData = await tokenResponse.json();
-    // Card token generated
-
-    if (tokenData.statusCode === 200 && tokenData.nextAction?.redirectUrl) {
-      // Token creation requires 3DS, redirect to Fawry
-      window.location.href = tokenData.nextAction.redirectUrl;
-    } else if (tokenData.cardToken) {
-      // Token created successfully without 3DS, save it and proceed with payment
-      await saveCardToken(tokenData);
-      await processPaymentWithToken(tokenData.cardToken, amount);
-    } else {
-      // Token creation failed
-      toast.error(tokenData.statusDescription || "Failed to create card token. Please check card details.");
-      setIsSubmitting(false);
-    }
-  };
-
-  const processPaymentWithSavedCard = async (savedCard: SavedCard, amount: number) => {
-    // Use saved card token for payment
-    await processPaymentWithToken(savedCard.card_token, amount); // use the real token
-  };
-
-  const saveCardToken = async (tokenData: any) => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/wallet/save-card-token`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          card_token: tokenData.token,
-          card_alias: cardAlias || profile.name,
-          last_four_digits: tokenData.lastFourDigits,
-          first_six_digits: tokenData.firstSixDigits,
-          brand: tokenData.brand,
-          expiry_year: expiryYear.length === 4 ? expiryYear.slice(-2) : expiryYear,
-          expiry_month: expiryMonth,
-          is_default: true,
-          fawry_response: tokenData
-        }),
+      // Create transaction record for tracking
+      const transaction = frontendTransactionTracker.createTransaction({
+        amount: finalAmount,
+        user_id: profile.id,
+        card_details: paymentMode === 'saved' && selectedCard ? {
+          last_four_digits: selectedCard.last_four_digits,
+          card_alias: selectedCard.card_alias
+        } : undefined
       });
 
-      if (response.ok) {
-      } else {
+      try {
+        if (paymentMode === 'saved' && selectedCard) {
+          await processPaymentWithSavedCard(selectedCard, finalAmount, transaction.id, credentials, endpoints);
+        } else {
+          await createNewCardToken(finalAmount, transaction.id, credentials, endpoints);
+        }
+      } catch (error) {
+        frontendTransactionTracker.markTransactionFailed(
+          transaction.id, 
+          "An unexpected error occurred during recharge",
+          "UNEXPECTED_ERROR"
+        );
+        toast.error("An unexpected error occurred. Please try again.");
+        setIsSubmitting(false);
       }
     } catch (error) {
+      if (error instanceof Error && error.message.includes('Rate limit exceeded')) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to start recharge process. Please try again.");
+      }
+      setIsSubmitting(false);
     }
   };
 
-  // Helper function to process payment with token directly with Fawry
-  const processPaymentWithToken = async (cardToken: string, amount: number) => {
+  const createNewCardToken = async (amount: number, transactionId: string, credentials: any, endpoints: any) => {
     try {
       const merchantRefNum = Date.now().toString();
-      const merchantCode = '770000017341';
-      const securityKey = '02b9d0e3-5088-4b6e-be41-111d4359fe10'; // Your security key
-      
-      // Generate signature for payment
-      const signatureString = merchantCode + 
+      const customerProfileId = profile.id.toString();
+      const customerName = profile.name || 'Customer';
+      const customerMobile = mobile;
+      const customerEmail = profile.email || 'customer@example.com';
+
+      // Generate signature for card token creation
+      const signatureString = credentials.merchantCode + 
         merchantRefNum + 
-        profile.id.toString() + 
+        customerProfileId + 
         'CARD' + 
         amount.toFixed(2) + 
-        cardToken + 
+        cardNumber + 
+        expiryMonth + 
+        expiryYear + 
+        customerMobile + 
+        customerEmail + 
+        `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=token&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}` + 
+        credentials.securityKey;
+      
+      const signature = await generateSHA256(signatureString);
+
+      const tokenPayload = {
+        merchantCode: credentials.merchantCode,
+        merchantRefNum: merchantRefNum,
+        customerProfileId: customerProfileId,
+        customerName: customerName,
+        customerMobile: customerMobile,
+        customerEmail: customerEmail,
+        cardNumber: cardNumber,
+        expiryMonth: expiryMonth,
+        expiryYear: expiryYear,
+        cvv: cvv,
+        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=token&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}`,
+        signature: signature
+      };
+
+      console.log('Creating Fawry card token...');
+      
+      const tokenResponse = await fetch(endpoints.tokenEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tokenPayload),
+      });
+
+      const tokenData = await tokenResponse.json();
+      console.log('Fawry Token Response:', tokenData);
+
+      if (tokenData.statusCode === 200 && tokenData.cardToken) {
+        // Card token created successfully, now process payment
+        await processPaymentWithToken(tokenData.cardToken, amount, transactionId, credentials, endpoints);
+      } else {
+        const errorMessage = tokenData.statusDescription || tokenData.message || "Failed to create card token";
+        console.error('Fawry Token Creation Error:', tokenData);
+        
+        frontendTransactionTracker.markTransactionFailed(
+          transactionId,
+          errorMessage,
+          `TOKEN_CREATION_${tokenData.statusCode || 'UNKNOWN'}`
+        );
+        
+        if (tokenData.statusCode === 400) {
+          toast.error("Invalid card details. Please check your card information.");
+        } else if (tokenData.statusCode === 401) {
+          toast.error("Authentication failed. Please try again.");
+        } else if (tokenData.statusCode === 500) {
+          toast.error("Payment service temporarily unavailable. Please try again later.");
+        } else {
+          toast.error(errorMessage);
+        }
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error('Error creating card token:', error);
+      frontendTransactionTracker.markTransactionFailed(
+        transactionId,
+        "Failed to create card token",
+        "TOKEN_CREATION_ERROR"
+      );
+      toast.error("Failed to create card token. Please try again.");
+      setIsSubmitting(false);
+    }
+  };
+
+  const processPaymentWithSavedCard = async (card: SavedCard, amount: number, transactionId: string, credentials: any, endpoints: any) => {
+    try {
+      const merchantRefNum = Date.now().toString();
+      const customerProfileId = profile.id.toString();
+      const customerName = profile.name || 'Customer';
+      const customerMobile = profile.mobile || '01234567891';
+      const customerEmail = profile.email || 'customer@example.com';
+
+      // Generate signature for payment with saved card
+      const signatureString = credentials.merchantCode + 
+        merchantRefNum + 
+        customerProfileId + 
+        'CARD' + 
+        amount.toFixed(2) + 
+        card.card_token + 
         cvv + 
-        `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment&customerProfileId=${profile.id}&customerName=${encodeURIComponent(profile.name)}&customerMobile=${profile.phone}&customerEmail=${encodeURIComponent(profile.email)}` + // returnUrl
-        securityKey;
+        `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}` + 
+        credentials.securityKey;
       
       const signature = await generateSHA256(signatureString);
 
       const paymentPayload = {
-        merchantCode: merchantCode,
+        merchantCode: credentials.merchantCode,
         merchantRefNum: merchantRefNum,
-        customerProfileId: profile.id.toString(),
-        customerName: profile.name,
-        customerMobile: profile.phone,
-        customerEmail: profile.email,
+        customerProfileId: customerProfileId,
+        customerName: customerName,
+        customerMobile: customerMobile,
+        customerEmail: customerEmail,
+        cardToken: card.card_token,
+        cvv: cvv,
+        amount: amount,
+        paymentMethod: 'CARD',
+        currencyCode: 'EGP',
+        description: 'Wallet Recharge',
+        language: 'en-gb',
+        chargeItems: [
+          {
+            itemId: 'wallet_recharge',
+            description: 'Wallet Recharge',
+            price: amount,
+            quantity: 1
+          }
+        ],
+        enable3DS: true,
+        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}`,
+        signature: signature
+      };
+
+      console.log('Processing Fawry payment with saved card...');
+      
+      const paymentResponse = await fetch(endpoints.paymentEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(paymentPayload),
+      });
+
+      const paymentData = await paymentResponse.json();
+      console.log('Fawry Payment Response (Saved Card):', paymentData);
+
+      if (paymentData.statusCode === 200) {
+        frontendTransactionTracker.markTransactionCompleted(transactionId, merchantRefNum);
+        toast.success('Payment successful! Your wallet has been recharged.');
+        navigate('/wallet');
+      } else if (paymentData.nextAction?.redirectUrl) {
+        // Payment requires 3DS, redirect to Fawry
+        window.location.href = paymentData.nextAction.redirectUrl;
+      } else {
+        const errorMessage = paymentData.statusDescription || paymentData.message || "Failed to complete payment";
+        console.error('Fawry Payment Error (Saved Card):', paymentData);
+        
+        frontendTransactionTracker.markTransactionFailed(
+          transactionId,
+          errorMessage,
+          `PAYMENT_${paymentData.statusCode || 'UNKNOWN'}`
+        );
+        
+        if (paymentData.statusCode === 400) {
+          toast.error("Invalid payment details. Please check your card information.");
+        } else if (paymentData.statusCode === 401) {
+          toast.error("Authentication failed. Please try again.");
+        } else if (paymentData.statusCode === 402) {
+          toast.error("Payment declined. Please check your card or try a different card.");
+        } else if (paymentData.statusCode === 500) {
+          toast.error("Payment service temporarily unavailable. Please try again later.");
+        } else {
+          toast.error(errorMessage);
+        }
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error('Error processing payment with saved card:', error);
+      frontendTransactionTracker.markTransactionFailed(
+        transactionId,
+        "Failed to process payment with saved card",
+        "PAYMENT_ERROR"
+      );
+      toast.error("Failed to process payment. Please try again.");
+      setIsSubmitting(false);
+    }
+  };
+
+  const processPaymentWithToken = async (cardToken: string, amount: number, transactionId: string, credentials: any, endpoints: any) => {
+    try {
+      const merchantRefNum = Date.now().toString();
+      const customerProfileId = profile.id.toString();
+      const customerName = profile.name || 'Customer';
+      const customerMobile = mobile;
+      const customerEmail = profile.email || 'customer@example.com';
+
+      // Generate signature for payment
+      const signatureString = credentials.merchantCode + 
+        merchantRefNum + 
+        customerProfileId + 
+        'CARD' + 
+        amount.toFixed(2) + 
+        cardToken + 
+        cvv + 
+        `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}` + 
+        credentials.securityKey;
+      
+      const signature = await generateSHA256(signatureString);
+
+      const paymentPayload = {
+        merchantCode: credentials.merchantCode,
+        merchantRefNum: merchantRefNum,
+        customerProfileId: customerProfileId,
+        customerName: customerName,
+        customerMobile: customerMobile,
+        customerEmail: customerEmail,
         cardToken: cardToken,
         cvv: cvv,
         amount: amount,
@@ -193,35 +375,59 @@ const Recharge = () => {
           }
         ],
         enable3DS: true,
-        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment&customerProfileId=${profile.id}&customerName=${encodeURIComponent(profile.name)}&customerMobile=${profile.phone}&customerEmail=${encodeURIComponent(profile.email)}`,
+        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}`,
         signature: signature
       };
 
-
-      const paymentResponse = await fetch('https://atfawry.fawrystaging.com/ECommerceWeb/Fawry/payments/charge', {
+      console.log('Processing Fawry payment...');
+      
+      const paymentResponse = await fetch(endpoints.paymentEndpoint, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(paymentPayload),
       });
 
       const paymentData = await paymentResponse.json();
+      console.log('Fawry Payment Response:', paymentData);
 
-      if (paymentData.statusCode === 200 && paymentData.nextAction?.redirectUrl) {
-        // Payment requires 3DS, redirect to Fawry
-        window.location.href = paymentData.nextAction.redirectUrl;
-      } else if (paymentData.statusCode === 200) {
-        // Payment successful without 3DS
+      if (paymentData.statusCode === 200) {
+        frontendTransactionTracker.markTransactionCompleted(transactionId, merchantRefNum);
         toast.success('Payment successful! Your wallet has been recharged.');
         navigate('/wallet');
+      } else if (paymentData.nextAction?.redirectUrl) {
+        // Payment requires 3DS, redirect to Fawry
+        window.location.href = paymentData.nextAction.redirectUrl;
       } else {
-        // Payment failed
-        toast.error(paymentData.statusDescription || "Failed to complete payment. Please try again.");
+        const errorMessage = paymentData.statusDescription || paymentData.message || "Failed to complete payment";
+        console.error('Fawry Payment Error:', paymentData);
+        
+        frontendTransactionTracker.markTransactionFailed(
+          transactionId,
+          errorMessage,
+          `PAYMENT_${paymentData.statusCode || 'UNKNOWN'}`
+        );
+        
+        if (paymentData.statusCode === 400) {
+          toast.error("Invalid payment details. Please check your card information.");
+        } else if (paymentData.statusCode === 401) {
+          toast.error("Authentication failed. Please try again.");
+        } else if (paymentData.statusCode === 402) {
+          toast.error("Payment declined. Please check your card or try a different card.");
+        } else if (paymentData.statusCode === 500) {
+          toast.error("Payment service temporarily unavailable. Please try again later.");
+        } else {
+          toast.error(errorMessage);
+        }
         setIsSubmitting(false);
       }
     } catch (error) {
-      toast.error("An error occurred while completing payment. Please try again.");
+      console.error('Error processing payment:', error);
+      frontendTransactionTracker.markTransactionFailed(
+        transactionId,
+        "Failed to process payment",
+        "PAYMENT_ERROR"
+      );
+      toast.error("Failed to process payment. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -248,81 +454,119 @@ const Recharge = () => {
   const finalAmount = selectedAmount || parseFloat(customAmount) || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-24">
-      <div className="bg-white px-4 sm:px-6 py-4 border-b-2 border-brand-red flex items-center space-x-3">
-        <button 
-          onClick={() => navigate("/wallet")}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-brand-yellow/20 hover:bg-brand-yellow/30 transition border border-brand-yellow/30"
-        >
-          <svg className="w-5 h-5 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <div>
-          <h1 className="text-lg sm:text-xl font-semibold text-brand-black">Recharge Wallet</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 pb-32">
+      {/* Mobile-Optimized Header */}
+      <div className="bg-white px-4 py-4 border-b border-gray-200 shadow-sm sticky top-0 z-10">
+        <div className="flex items-center space-x-3">
+          <button 
+            onClick={() => navigate("/wallet")}
+            className="w-12 h-12 flex items-center justify-center rounded-full bg-brand-yellow/20 hover:bg-brand-yellow/30 transition-all duration-200 border border-brand-yellow/30 active:scale-95"
+          >
+            <svg className="w-6 h-6 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <div className="flex-1">
+            <h1 className="text-xl font-bold text-brand-black">Recharge Wallet</h1>
+            <p className="text-sm text-gray-600">Add funds to your digital wallet</p>
+          </div>
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 space-y-4">
-        <Card className="border border-brand-yellow/30 bg-brand-yellow/10">
-          <CardHeader><CardTitle className="text-brand-black">Select Amount</CardTitle></CardHeader>
-          <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[50, 100, 200, 500].map((amount) => (
-              <Button 
-                key={amount} 
-                variant={selectedAmount === amount ? "default" : "outline"} 
-                onClick={() => handleAmountSelect(amount)} 
-                className={`h-16 text-lg ${
-                  selectedAmount === amount 
-                    ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
-                    : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
-                }`}
-              >
-                {amount} EGP
-              </Button>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card className="border border-brand-yellow/30 bg-brand-yellow/10">
-          <CardHeader><CardTitle className="text-brand-black">Or Enter Custom Amount</CardTitle></CardHeader>
+      <div className="p-4 space-y-4">
+        {/* Mobile-Optimized Amount Selection */}
+        <Card className="border-0 shadow-sm bg-white rounded-2xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg text-brand-black flex items-center space-x-2">
+              <Wallet className="w-5 h-5 text-brand-red" />
+              <span>Select Amount</span>
+            </CardTitle>
+          </CardHeader>
           <CardContent>
-            <Input 
-              type="number" 
-              placeholder="e.g., 150" 
-              value={customAmount} 
-              onChange={(e) => handleCustomAmountChange(e.target.value)} 
-              className="h-12 text-lg border-brand-yellow/30 focus:border-brand-red"
-            />
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {[50, 100, 200, 500].map((amount) => (
+                <Button 
+                  key={amount} 
+                  variant={selectedAmount === amount ? "default" : "outline"} 
+                  onClick={() => handleAmountSelect(amount)} 
+                  className={`h-16 text-lg font-semibold rounded-xl transition-all duration-200 ${
+                    selectedAmount === amount 
+                      ? 'bg-gradient-to-r from-brand-red to-brand-orange text-white border-0 shadow-lg scale-105' 
+                      : 'bg-white text-brand-black border-2 border-gray-200 hover:border-brand-red hover:bg-brand-red/5 active:scale-95'
+                  }`}
+                >
+                  {amount} EGP
+                </Button>
+              ))}
+            </div>
+            
+            {/* Custom Amount Input */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Custom Amount</label>
+              <Input 
+                type="number" 
+                placeholder="Enter amount in EGP" 
+                value={customAmount} 
+                onChange={(e) => handleCustomAmountChange(e.target.value)} 
+                className="h-14 text-lg border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
+              />
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="border border-brand-yellow/30 bg-brand-yellow/10">
-          <CardHeader><CardTitle className="text-brand-black">Card Information</CardTitle></CardHeader>
+        {/* Payment Method Info */}
+        <Card className="border-0 shadow-sm bg-white rounded-2xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg text-brand-black flex items-center space-x-2">
+              <CreditCard className="w-5 h-5 text-brand-red" />
+              <span>Payment Method</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
+              <div className="flex items-center space-x-3">
+                <CreditCard className="w-8 h-8 text-blue-600" />
+                <div>
+                  <h3 className="font-semibold text-blue-900">Credit/Debit Card</h3>
+                  <p className="text-sm text-blue-700">Pay securely with your card via Fawry</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card Information Section */}
+        <Card className="border-0 shadow-sm bg-white rounded-2xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg text-brand-black flex items-center space-x-2">
+              <CreditCard className="w-5 h-5 text-brand-red" />
+              <span>Card Information</span>
+            </CardTitle>
+          </CardHeader>
           <CardContent className="space-y-4">
             {/* Payment Mode Selection */}
-            <div className="flex space-x-4 mb-4">
+            <div className="flex space-x-2 mb-4">
               <Button
                 variant={paymentMode === 'saved' ? 'default' : 'outline'}
                 onClick={() => setPaymentMode('saved')}
-                className={`${
+                className={`flex-1 h-12 rounded-xl transition-all duration-200 ${
                   paymentMode === 'saved' 
                     ? 'bg-brand-orange text-white border-brand-orange hover:bg-brand-orange/90' 
-                    : 'bg-white text-brand-black border-brand-orange hover:bg-brand-orange/10'
+                    : 'bg-white text-brand-black border-2 border-gray-200 hover:border-brand-orange hover:bg-brand-orange/5'
                 }`}
               >
-                Use Saved Card
+                Saved Card
               </Button>
               <Button
                 variant={paymentMode === 'new' ? 'default' : 'outline'}
                 onClick={() => setPaymentMode('new')}
-                className={`${
+                className={`flex-1 h-12 rounded-xl transition-all duration-200 ${
                   paymentMode === 'new' 
                     ? 'bg-brand-orange text-white border-brand-orange hover:bg-brand-orange/90' 
-                    : 'bg-white text-brand-black border-brand-orange hover:bg-brand-orange/10'
+                    : 'bg-white text-brand-black border-2 border-gray-200 hover:border-brand-orange hover:bg-brand-orange/5'
                 }`}
               >
-                Add New Card
+                New Card
               </Button>
             </div>
 
@@ -333,81 +577,99 @@ const Recharge = () => {
                   selectedCardId={selectedCard?.id}
                 />
                 {selectedCard && (
-                  <div className="p-4 border border-brand-yellow/30 rounded-lg bg-brand-yellow/20">
-                    <p className="text-sm text-brand-black/70 mb-2">Selected card: {selectedCard.card_alias}</p>
+                  <div className="p-4 border-2 border-brand-yellow/30 rounded-xl bg-brand-yellow/10">
+                    <p className="text-sm text-brand-black/70 mb-3">Selected card: {selectedCard.card_alias}</p>
                     <Input
                       placeholder="CVV"
                       value={cvv}
                       onChange={(e) => setCvv(e.target.value)}
                       maxLength={4}
-                      className="w-32 border-brand-yellow/30 focus:border-brand-red"
+                      className="w-32 h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
                     />
                   </div>
                 )}
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Input 
-                  placeholder="Mobile Number (e.g. 01012345678)" 
+                  placeholder="Mobile Number" 
                   value={mobile} 
                   onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, '').slice(0,11))} 
                   maxLength={11} 
-                  className="border-brand-yellow/30 focus:border-brand-red"
+                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
                 />
                 <Input 
                   placeholder="Name on Card" 
                   value={cardAlias} 
                   onChange={(e) => setCardAlias(e.target.value)} 
-                  className="border-brand-yellow/30 focus:border-brand-red"
+                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
                 />
                 <Input 
                   placeholder="Card Number" 
                   value={cardNumber} 
                   onChange={(e) => setCardNumber(e.target.value)} 
-                  className="border-brand-yellow/30 focus:border-brand-red"
+                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
                 />
-                <div className="flex gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   <Input 
                     placeholder="MM" 
                     value={expiryMonth} 
                     onChange={(e) => setExpiryMonth(e.target.value)} 
-                    className="border-brand-yellow/30 focus:border-brand-red"
+                    className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl text-center"
                   />
                   <Input 
                     placeholder="YY" 
                     value={expiryYear} 
                     onChange={(e) => setExpiryYear(e.target.value)} 
-                    className="border-brand-yellow/30 focus:border-brand-red"
+                    className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl text-center"
                   />
                 </div>
                 <Input 
                   placeholder="CVV" 
                   value={cvv} 
                   onChange={(e) => setCvv(e.target.value)} 
-                  className="border-brand-yellow/30 focus:border-brand-red"
+                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
                 />
               </div>
             )}
           </CardContent>
         </Card>
 
-        <div className="bg-brand-red text-white p-4 rounded-lg">
-          <div className="flex justify-between items-center text-lg font-bold">
-            <span>Total</span>
-            <span>{finalAmount.toFixed(2)} EGP</span>
+        {/* Mobile-Optimized Total Display */}
+        <div className="bg-gradient-to-r from-brand-red to-brand-orange text-white p-6 rounded-2xl shadow-lg">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm opacity-90">Total Amount</p>
+              <p className="text-2xl font-bold">{finalAmount.toFixed(2)} EGP</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm opacity-90">Current Balance</p>
+              <p className="text-lg font-semibold">{profile?.wallet?.balance || 0} EGP</p>
+            </div>
           </div>
         </div>
       </div>
       
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-brand-red px-4 sm:px-6 py-4">
+      {/* Mobile-Optimized Fixed Bottom Button */}
+      <div className="fixed bottom-20 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 shadow-lg">
         <Button 
           onClick={handleRechargeClick} 
           disabled={isSubmitting || finalAmount <= 0} 
-          className="w-full h-14 text-xl bg-brand-red hover:bg-brand-red/90 text-white"
+          className="w-full h-16 text-xl font-bold bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-orange hover:to-brand-red text-white rounded-2xl shadow-lg transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : `Pay ${finalAmount.toFixed(2)} EGP`}
+          {isSubmitting ? (
+            <div className="flex items-center space-x-2">
+              <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+              <span>Processing...</span>
+            </div>
+          ) : (
+            `Pay ${finalAmount.toFixed(2)} EGP`
+          )}
         </Button>
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNavigation activeTab="wallet" />
     </div>
   );
 };
