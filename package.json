@@ -63,6 +63,7 @@
     "start": "vite",
     "build": "vite build",
     "build:mobile": "vite build && npx @capacitor/cli sync",
+    "vercel-build": "vite build",
     "serve": "vite preview",
     "test": "vitest",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
