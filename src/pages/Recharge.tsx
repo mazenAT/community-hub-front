@@ -584,6 +584,7 @@ const Recharge = () => {
                       value={cvv}
                       onChange={(e) => setCvv(e.target.value)}
                       maxLength={4}
+                      autoComplete="off"
                       className="w-32 h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
                     />
                   </div>
@@ -596,18 +597,24 @@ const Recharge = () => {
                   value={mobile} 
                   onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, '').slice(0,11))} 
                   maxLength={11} 
+                  autoComplete="off"
                   className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
                 />
                 <Input 
                   placeholder="Name on Card" 
                   value={cardAlias} 
                   onChange={(e) => setCardAlias(e.target.value)} 
+                  autoComplete="off"
                   className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
                 />
                 <Input 
                   placeholder="Card Number" 
                   value={cardNumber} 
                   onChange={(e) => setCardNumber(e.target.value)} 
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                   className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
                 />
                 <div className="grid grid-cols-2 gap-3">
@@ -615,12 +622,14 @@ const Recharge = () => {
                     placeholder="MM" 
                     value={expiryMonth} 
                     onChange={(e) => setExpiryMonth(e.target.value)} 
+                    autoComplete="off"
                     className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl text-center"
                   />
                   <Input 
                     placeholder="YY" 
                     value={expiryYear} 
                     onChange={(e) => setExpiryYear(e.target.value)} 
+                    autoComplete="off"
                     className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl text-center"
                   />
                 </div>
@@ -628,6 +637,10 @@ const Recharge = () => {
                   placeholder="CVV" 
                   value={cvv} 
                   onChange={(e) => setCvv(e.target.value)} 
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                   className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
                 />
               </div>

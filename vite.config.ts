@@ -12,6 +12,8 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    https: true, // Enable HTTPS for local development
+    host: true, // Allow external connections
   },
   build: {
     outDir: 'build',
