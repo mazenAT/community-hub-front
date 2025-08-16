@@ -69,13 +69,13 @@ export const authApi = {
 
 // Wallet API
 export const walletApi = {
-  getBalance: () => api.get('/wallet/balance'),
+  getBalance: () => api.get('/wallet'), // Returns wallet info including balance
   getTransactions: (params?: { type?: string; start_date?: string; end_date?: string }) =>
-    api.get('/wallet/transactions', { params }),
+    api.get('/transactions', { params }), // Returns user's transactions
   addMoney: (data: { amount: number; payment_method: string }) =>
-    api.post('/wallet/add-money', data),
+    api.post('/wallet/topup', data), // Adds money to wallet
   requestRefund: (data: { transaction_id: number; reason: string }) =>
-    api.post('/wallet/request-refund', data),
+    api.post('/wallet/request-refund', data), // Requests refund
 };
 
 // Transaction API
@@ -93,10 +93,10 @@ export const notificationApi = {
   getNotifications: (params?: { type?: string; is_read?: boolean }) =>
     api.get('/notifications', { params }),
   getNotification: (id: number) => api.get(`/notifications/${id}`),
-  markAsRead: (id: number) => api.post(`/notifications/${id}/read`),
-  markAllAsRead: () => api.post('/notifications/mark-all-read'),
-  getUnreadCount: () => api.get('/notifications/unread-count'),
-  deleteNotification: (id: number) => api.delete(`/notifications/${id}`),
+  markAsRead: (id: number) => api.post('/notifications/mark-read', { notification_id: id }), // Use correct endpoint
+  markAllAsRead: () => api.post('/notifications/mark-read'), // Use correct endpoint
+  getUnreadCount: () => api.get('/notifications/stats'), // Use stats endpoint
+  deleteNotification: (id: number) => api.delete('/notifications'), // Use correct endpoint
 };
 
 // Orders API
