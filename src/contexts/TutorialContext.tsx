@@ -162,7 +162,10 @@ export const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) 
   useEffect(() => {
     const checkTutorialStatus = async () => {
       try {
+        // Check if user has seen the tutorial
         const hasSeenTutorial = await secureStorage.get('has-seen-tutorial');
+        
+        // Check if user has family members (only show tutorial if they do)
         const hasFamilyMembers = await secureStorage.get('has-family-members');
         
         // Show tutorial if user hasn't seen it and has family members
@@ -171,6 +174,9 @@ export const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) 
         }
       } catch (error) {
         console.error('Failed to check tutorial status:', error);
+        // Don't crash the app if tutorial check fails
+        // Just assume tutorial should not be shown
+        setIsTutorialActive(false);
       }
     };
 
