@@ -29,11 +29,10 @@ import Notifications from "./pages/Notifications";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  // Initialize deep linking for mobile app
-  useDeepLinking();
-
   return (
     <BrowserRouter>
+      {/* Initialize deep linking for mobile app - now inside Router context */}
+      <DeepLinkingInitializer />
       <Routes>
           {/* Public Routes */}
           <Route path="/" element={<SignIn />} />
@@ -97,6 +96,12 @@ const AppContent = () => {
         </Routes>
     </BrowserRouter>
   );
+};
+
+// Separate component to handle deep linking initialization
+const DeepLinkingInitializer = () => {
+  useDeepLinking();
+  return null; // This component doesn't render anything
 };
 
 const App = () => (
