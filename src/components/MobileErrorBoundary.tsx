@@ -1,6 +1,4 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { mobileApi } from '../services/api';
-import { mobileUtils } from '../services/native';
 
 interface Props {
   children: ReactNode;
@@ -25,26 +23,13 @@ export class MobileErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Mobile Error Boundary caught an error:', error, errorInfo);
     
-    // Report crash to backend for mobile analytics
-    this.reportCrash(error, errorInfo);
-  }
-
-  private async reportCrash(error: Error, errorInfo: ErrorInfo) {
-    try {
-      const deviceInfo = mobileUtils.getDeviceInfo();
-      
-      await mobileApi.reportAppCrash({
-        error: error.message,
-        stack: error.stack,
-        deviceInfo: {
-          ...deviceInfo,
-          errorInfo: errorInfo.componentStack,
-          timestamp: new Date().toISOString(),
-        },
-      });
-    } catch (reportError) {
-      console.error('Failed to report crash:', reportError);
-    }
+    // Log error for debugging (no backend reporting needed for simple error boundary)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   render() {
@@ -61,7 +46,7 @@ export class MobileErrorBoundary extends Component<Props, State> {
               Oops! Something went wrong
             </h1>
             <p className="text-muted-foreground max-w-md">
-              We've encountered an unexpected error. Our team has been notified and is working to fix it.
+              We've encountered an unexpected error. Please try reloading the app.
             </p>
             <button
               onClick={() => window.location.reload()}

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { mobileUtils } from '../services/native';
 
 export interface NetworkStatus {
   isOnline: boolean;
@@ -15,19 +14,6 @@ export const useMobileNetwork = () => {
   });
 
   useEffect(() => {
-    const updateNetworkStatus = async () => {
-      try {
-        const status = await mobileUtils.checkNetworkStatus();
-        setNetworkStatus(prev => ({
-          ...prev,
-          isOnline: status.isOnline,
-          lastSeen: status.isOnline ? new Date() : prev.lastSeen,
-        }));
-      } catch (error) {
-        console.error('Error checking network status:', error);
-      }
-    };
-
     const handleOnline = () => {
       setNetworkStatus(prev => ({
         ...prev,
@@ -43,20 +29,20 @@ export const useMobileNetwork = () => {
       }));
     };
 
-    // Initial check
-    updateNetworkStatus();
-
     // Add event listeners
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Periodic check for mobile devices
-    const interval = setInterval(updateNetworkStatus, 30000); // Check every 30 seconds
+    // Initial check
+    setNetworkStatus(prev => ({
+      ...prev,
+      isOnline: navigator.onLine,
+      lastSeen: navigator.onLine ? new Date() : prev.lastSeen,
+    }));
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      clearInterval(interval);
     };
   }, []);
 
