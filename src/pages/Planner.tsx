@@ -13,6 +13,7 @@ import NotificationBell from "@/components/NotificationBell";
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
 import { formatCurrency } from "@/utils/format";
+import { MealCategory, AddOnCategory, CATEGORY_LABELS, ADDON_CATEGORY_LABELS, getMealPrice, getPriceDisplay } from "@/types/cafeteria";
 import {
   Dialog,
   DialogContent,
@@ -29,17 +30,18 @@ import {
 
 interface Meal {
   id: number;
-  title: string;
+  name: string;
+  title?: string;
   description?: string;
   price: number;
-  calories: number;
-  type: "hot meal" | "sandwich" | "pasta" | "salad";
-  date: string;
-  time: string;
-  status: "available" | "sold_out" | "pre_ordered";
-  category?: string;
+  category: MealCategory;
   subcategory?: string;
+  status: 'active' | 'inactive';
+  image?: string;
   pdf_path?: string;
+  add_ons?: number[];
+  created_at: string;
+  updated_at: string;
 }
 
 // Define a more specific type for meals that come with weekly plan pivot data
@@ -71,9 +73,11 @@ interface AddOn {
   id: number;
   name: string;
   description?: string;
+  category: AddOnCategory;
   price: number;
-  category: string;
   is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 interface FamilyMember {
@@ -115,10 +119,10 @@ const findPreOrderForMeal = (mealId: number, date: Date, plans?: WeeklyPlan[]): 
 };
 
 const Planner = () => {
-  const [selectedType, setSelectedType] = useState<"all" | "hot meal" | "sandwich" | "pasta" | "salad">("all");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<"all" | "hot_meal" | "sandwich" | "sandwich_xl" | "burger" | "crepe" | "nursery">("all");
+  const [selectedCategory, setSelectedCategory] = useState<MealCategory | "all">("all");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<(MealCategory | "all")[]>([]);
   const [subcategories, setSubcategories] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'custom'>('custom');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -172,7 +176,7 @@ const Planner = () => {
         Array.isArray(plan.meals) ? plan.meals : []
       );
       
-      const uniqueCategories = Array.from(new Set(allMealsFromPlans.map((meal: any) => meal.category).filter(Boolean))) as string[];
+      const uniqueCategories = Array.from(new Set(allMealsFromPlans.map((meal: any) => meal.category).filter(Boolean))) as MealCategory[];
       const uniqueSubcategories = Array.from(new Set(allMealsFromPlans.map((meal: any) => meal.subcategory).filter(Boolean))) as string[];
       
       setCategories(["all", ...uniqueCategories]);
@@ -298,8 +302,8 @@ const Planner = () => {
           return addon.category === 'bakery';
         case 'Snacks':
           return addon.category === 'snacks';
-        case 'Beverages':
-          return addon.category === 'beverages';
+        case 'Drinks':
+          return addon.category === 'drinks';
         default:
           return true;
       }
@@ -362,8 +366,7 @@ const Planner = () => {
   const normalizeMeal = (meal: any) => ({
     ...meal,
     title: meal.title || meal.name || "Meal",
-    type: meal.category || "Hot meal", // Use category as type if type is not available
-    category: meal.category || "",
+    category: meal.category || "hot_meal",
     subcategory: meal.subcategory || "",
     calories: meal.calories || 0,
     date: meal.date || "",
@@ -760,10 +763,12 @@ const Planner = () => {
             <div className="flex flex-wrap gap-2">
               {[
                 { key: 'all', label: 'All Meals' },
-                { key: 'hot meal', label: 'Hot Meal' },
+                { key: 'hot_meal', label: 'Hot Meal' },
                 { key: 'sandwich', label: 'Sandwich' },
-                { key: 'pasta', label: 'Pasta' },
-                { key: 'salad', label: 'Salad' }
+                { key: 'sandwich_xl', label: 'Sandwich XL' },
+                { key: 'burger', label: 'Burger' },
+                { key: 'crepe', label: 'Crepe' },
+                { key: 'nursery', label: 'Nursery' }
               ].map(({ key, label }) => (
                 <Button
                   key={key}
@@ -774,7 +779,7 @@ const Planner = () => {
                       ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
                       : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
                   } rounded-full px-3 py-1 text-xs font-medium`}
-                  onClick={() => setSelectedType(key as 'all' | 'hot meal' | 'sandwich' | 'pasta' | 'salad')}
+                  onClick={() => setSelectedType(key as 'all' | 'hot_meal' | 'sandwich' | 'sandwich_xl' | 'burger' | 'crepe' | 'nursery')}
                 >
                   {label}
                 </Button>
@@ -892,7 +897,7 @@ const Planner = () => {
                                   {/* Meal Type Badge */}
                                   <div className="flex items-center justify-between mt-2">
                                     <span className="px-2 py-1 rounded-full text-xs font-medium bg-brand-orange/20 text-brand-orange">
-                                      {meal.category || 'N/A'}
+                                      {CATEGORY_LABELS[meal.category as MealCategory] || meal.category || 'N/A'}
                                     </span>
                                     <span className="text-xs font-medium text-brand-black">
                                       {meal.price ? formatCurrency(meal.price) : 'N/A'}
@@ -960,9 +965,17 @@ const Planner = () => {
                                         size="sm"
                                         variant="outline"
                                         className="h-5 px-1 border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10 text-xs"
-                                        onClick={() => handleAddOnsClick(date, meal, 'Beverages')}
+                                        onClick={() => handleAddOnsClick(date, meal, 'Drinks')}
                                       >
                                         Drinks
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-5 px-1 border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10 text-xs"
+                                        onClick={() => handleAddOnsClick(date, meal, 'Greek Yogurt Popsicle')}
+                                      >
+                                        Greek Yogurt Popsicle
                                       </Button>
                                     </div>
                                   </div>
@@ -1023,8 +1036,10 @@ const Planner = () => {
                     return addon.category === 'bakery';
                   case 'Snacks':
                     return addon.category === 'snacks';
-                  case 'Beverages':
-                    return addon.category === 'beverages';
+                  case 'Drinks':
+                    return addon.category === 'drinks';
+                  case 'Greek Yogurt Popsicle':
+                    return addon.category === 'greek_yoghurt_popsicle';
                   default:
                     return true;
                 }
