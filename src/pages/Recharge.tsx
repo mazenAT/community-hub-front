@@ -202,44 +202,34 @@ const Recharge = () => {
       const customerMobile = mobile;
       const customerEmail = profile.email || 'customer@example.com';
 
-      // Validate that numeric fields can be converted to integers
-      const customerProfileIdInt = parseInt(customerProfileId);
-      const cardNumberInt = parseInt(cardNumber);
-      const expiryMonthInt = parseInt(expiryMonth);
-      const expiryYearInt = parseInt(expiryYear);
+      // Validate that numeric fields can be converted to integers where needed
       const cvvInt = parseInt(cvv);
 
-      if (isNaN(customerProfileIdInt)) {
-        toast.error("Invalid customer profile ID");
-        return;
-      }
-      if (isNaN(cardNumberInt)) {
-        toast.error("Invalid card number");
-        return;
-      }
-      if (isNaN(expiryMonthInt) || expiryMonthInt < 1 || expiryMonthInt > 12) {
-        toast.error("Invalid expiry month");
-        return;
-      }
-      if (isNaN(expiryYearInt) || expiryYearInt < 20 || expiryYearInt > 99) {
-        toast.error("Invalid expiry year");
-        return;
-      }
       if (isNaN(cvvInt) || cvvInt < 100 || cvvInt > 999) {
         toast.error("Invalid CVV");
         return;
       }
 
+      // Validate expiry dates (as strings, but check format)
+      if (!expiryMonth || expiryMonth.length !== 2 || parseInt(expiryMonth) < 1 || parseInt(expiryMonth) > 12) {
+        toast.error("Invalid expiry month (use MM format)");
+        return;
+      }
+      if (!expiryYear || expiryYear.length !== 2 || parseInt(expiryYear) < 20 || parseInt(expiryYear) > 99) {
+        toast.error("Invalid expiry year (use YY format)");
+        return;
+      }
+
       const tokenPayload = {
         merchantCode: credentials.merchantCode,
-        customerProfileId: customerProfileIdInt, // Now guaranteed to be Integer
+        customerProfileId: customerProfileId, // Keep as String as per Fawry sample
         customerMobile: customerMobile,
         customerEmail: customerEmail,
-        cardNumber: cardNumberInt, // Now guaranteed to be Integer
+        cardNumber: cardNumber, // Keep as String as per Fawry sample
         cardAlias: cardAlias, // REQUIRED by Fawry
-        expiryMonth: expiryMonthInt, // Now guaranteed to be Integer
-        expiryYear: expiryYearInt, // Now guaranteed to be Integer
-        cvv: cvvInt, // Now guaranteed to be Integer
+        expiryMonth: expiryMonth, // Keep as String as per Fawry sample
+        expiryYear: expiryYear, // Keep as String as per Fawry sample
+        cvv: cvvInt, // Convert to Integer as per Fawry sample
         isDefault: true, // REQUIRED by Fawry
         enable3ds: true, // REQUIRED by Fawry
         returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=token&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}`
@@ -335,12 +325,12 @@ const Recharge = () => {
       const paymentPayload = {
         merchantCode: credentials.merchantCode,
         merchantRefNum: merchantRefNum,
-        customerProfileId: parseInt(customerProfileId), // Convert to Integer as Fawry expects
+        customerProfileId: customerProfileId, // Keep as String as per Fawry sample
         customerName: customerName,
         customerMobile: customerMobile,
         customerEmail: customerEmail,
         cardToken: card.card_token,
-        cvv: parseInt(cvv), // Convert to Integer as Fawry expects
+        cvv: parseInt(cvv), // Convert to Integer as per Fawry sample
         amount: amount,
         paymentMethod: 'CARD',
         currencyCode: 'EGP',
@@ -467,12 +457,12 @@ const Recharge = () => {
       const paymentPayload = {
         merchantCode: credentials.merchantCode,
         merchantRefNum: merchantRefNum,
-        customerProfileId: parseInt(customerProfileId), // Convert to Integer as Fawry expects
+        customerProfileId: customerProfileId, // Keep as String as per Fawry sample
         customerName: customerName,
         customerMobile: customerMobile,
         customerEmail: customerEmail,
         cardToken: cardToken,
-        cvv: parseInt(cvv), // Convert to Integer as Fawry expects
+        cvv: parseInt(cvv), // Convert to Integer as per Fawry sample
         amount: amount,
         paymentMethod: 'CARD',
         currencyCode: 'EGP',
