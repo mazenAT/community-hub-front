@@ -29,6 +29,9 @@ const NotificationBell: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [retryCount, setRetryCount] = useState(0);
+  const [retryDelay, setRetryDelay] = useState(1000); // Start with 1 second
+  const [notificationsDisabled, setNotificationsDisabled] = useState(false);
 
   // Fetch user ID on mount
   useEffect(() => {
@@ -39,18 +42,38 @@ const NotificationBell: React.FC = () => {
 
   // Removed Echo subscription useEffect
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (isRetry = false) => {
+    if (isRetry) {
+      setRetryCount(prev => prev + 1);
+    }
+    
     setLoading(true);
     setError(null);
     try {
       const res = await notificationApi.getNotifications();
       setNotifications(Array.isArray(res.data) ? res.data : res.data.data || []);
+      // Reset retry count on success
+      setRetryCount(0);
+      setRetryDelay(1000);
+      setNotificationsDisabled(false);
     } catch (err: any) {
       console.error('Failed to fetch notifications:', err);
       
       // Handle different types of errors
       if (err.message?.includes('Network error') || err.message?.includes('CORS')) {
-        setError("Network error - notifications may be temporarily unavailable");
+        if (retryCount < 3) {
+          // Exponential backoff retry for CORS/network issues
+          const nextDelay = retryDelay * 2;
+          setRetryDelay(nextDelay);
+          setError(`Network error - retrying in ${nextDelay/1000}s... (${retryCount + 1}/3)`);
+          
+          setTimeout(() => {
+            fetchNotifications(true);
+          }, nextDelay);
+        } else {
+          setError("Network error - notifications temporarily unavailable. This may be a CORS issue.");
+          setNotificationsDisabled(true);
+        }
       } else if (err.response?.status === 401) {
         setError("Authentication required");
       } else {
@@ -128,7 +151,7 @@ const NotificationBell: React.FC = () => {
         <div className="absolute right-0 mt-2 w-80 max-w-xs bg-white border border-gray-200 rounded-xl shadow-lg z-50">
           <div className="p-4 border-b border-gray-100 flex items-center justify-between">
             <span className="font-semibold text-gray-900">Notifications</span>
-            <Button size="sm" variant="ghost" onClick={fetchNotifications} disabled={loading}>
+            <Button size="sm" variant="ghost" onClick={() => fetchNotifications()} disabled={loading}>
               <Loader2 className={`w-4 h-4 animate-spin ${loading ? '' : 'hidden'}`} />
               Refresh
             </Button>
@@ -141,10 +164,15 @@ const NotificationBell: React.FC = () => {
             ) : error ? (
               <div className="p-6 text-center">
                 <div className="text-red-500 mb-3">{error}</div>
+                {notificationsDisabled ? (
+                  <div className="text-xs text-gray-500 mb-3">
+                    This appears to be a CORS issue. The backend needs to allow requests from this domain.
+                  </div>
+                ) : null}
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  onClick={fetchNotifications}
+                  onClick={() => fetchNotifications()}
                   className="text-brand-orange border-brand-orange hover:bg-brand-orange hover:text-white"
                 >
                   Retry
