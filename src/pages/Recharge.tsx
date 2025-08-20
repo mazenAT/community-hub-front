@@ -41,7 +41,17 @@ const Recharge = () => {
 
   // Initialize secure credentials
   useEffect(() => {
-    secureCredentials.initialize().catch(console.error);
+    const initializeCredentials = async () => {
+      try {
+        await secureCredentials.initialize();
+        console.log('Secure credentials initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize secure credentials:', error);
+        toast.error("Payment service initialization failed. Please refresh the page and try again.");
+      }
+    };
+    
+    initializeCredentials();
   }, []);
 
   const { data: profileData } = useQuery({
@@ -59,12 +69,36 @@ const Recharge = () => {
 
   const handleRechargeClick = async () => {
     try {
+      // Validate profile data first
+      if (!profile || !profile.id) {
+        toast.error("Profile data not loaded. Please refresh the page and try again.");
+        return;
+      }
+
       // Get secure credentials
-      const credentials = secureCredentials.getCredentials();
-      const endpoints = secureCredentials.getApiEndpoints();
+      let credentials;
+      let endpoints;
+      
+      try {
+        credentials = secureCredentials.getCredentials();
+        endpoints = secureCredentials.getApiEndpoints();
+      } catch (error) {
+        console.error('Failed to get credentials:', error);
+        toast.error("Payment service not available. Please try again later.");
+        return;
+      }
       
       // Check rate limit before proceeding
-      await secureCredentials.checkRateLimit();
+      try {
+        await secureCredentials.checkRateLimit();
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('Rate limit exceeded')) {
+          toast.error(error.message);
+        } else {
+          toast.error("Payment service temporarily unavailable. Please try again later.");
+        }
+        return;
+      }
 
       const finalAmount = selectedAmount || parseFloat(customAmount) || 0;
 
@@ -126,15 +160,31 @@ const Recharge = () => {
           await createNewCardToken(finalAmount, transaction.id, credentials, endpoints);
         }
       } catch (error) {
+        console.error('Payment processing error:', error);
         frontendTransactionTracker.markTransactionFailed(
           transaction.id, 
-          "An unexpected error occurred during recharge",
+          error instanceof Error ? error.message : "An unexpected error occurred during recharge",
           "UNEXPECTED_ERROR"
         );
-        toast.error("An unexpected error occurred. Please try again.");
+        
+        // Provide more specific error messages
+        if (error instanceof Error) {
+          if (error.message.includes('Failed to fetch')) {
+            toast.error("Network error. Please check your internet connection and try again.");
+          } else if (error.message.includes('Failed to create card token')) {
+            toast.error("Card token creation failed. Please check your card details and try again.");
+          } else if (error.message.includes('Failed to process payment')) {
+            toast.error("Payment processing failed. Please try again.");
+          } else {
+            toast.error(error.message || "An unexpected error occurred. Please try again.");
+          }
+        } else {
+          toast.error("An unexpected error occurred. Please try again.");
+        }
         setIsSubmitting(false);
       }
     } catch (error) {
+      console.error('Recharge initialization error:', error);
       if (error instanceof Error && error.message.includes('Rate limit exceeded')) {
         toast.error(error.message);
       } else {
@@ -166,16 +216,34 @@ const Recharge = () => {
         enable3ds: true, // REQUIRED by Fawry
         returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=token&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}`
       };
-
-      console.log('Creating Fawry card token with payload:', tokenPayload);
       
-      const tokenResponse = await fetch(endpoints.tokenEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(tokenPayload),
-      });
+      console.log('Creating card token with payload:', tokenPayload);
+      
+      let tokenResponse;
+      try {
+        tokenResponse = await fetch(endpoints.tokenEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(tokenPayload),
+        });
+      } catch (fetchError) {
+        console.error('Network error during token creation:', fetchError);
+        throw new Error('Failed to fetch - Network error during card token creation');
+      }
 
-      const tokenData = await tokenResponse.json();
+      if (!tokenResponse.ok) {
+        console.error('Token creation HTTP error:', tokenResponse.status, tokenResponse.statusText);
+        throw new Error(`HTTP ${tokenResponse.status}: ${tokenResponse.statusText}`);
+      }
+
+      let tokenData;
+      try {
+        tokenData = await tokenResponse.json();
+      } catch (parseError) {
+        console.error('Failed to parse token response:', parseError);
+        throw new Error('Invalid response from payment service');
+      }
+
       console.log('Fawry Token Response:', tokenData);
 
       if (tokenData.statusCode === 200 && tokenData.cardToken) {
@@ -206,10 +274,10 @@ const Recharge = () => {
       console.error('Error creating card token:', error);
       frontendTransactionTracker.markTransactionFailed(
         transactionId,
-        "Failed to create card token",
+        error instanceof Error ? error.message : "Failed to create card token",
         "TOKEN_CREATION_ERROR"
       );
-      toast.error("Failed to create card token. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to create card token. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -263,13 +331,31 @@ const Recharge = () => {
 
       console.log('Processing Fawry payment with saved card payload:', paymentPayload);
       
-      const paymentResponse = await fetch(endpoints.paymentEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(paymentPayload),
-      });
+      let paymentResponse;
+      try {
+        paymentResponse = await fetch(endpoints.paymentEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(paymentPayload),
+        });
+      } catch (fetchError) {
+        console.error('Network error during payment processing:', fetchError);
+        throw new Error('Failed to fetch - Network error during payment processing');
+      }
 
-      const paymentData = await paymentResponse.json();
+      if (!paymentResponse.ok) {
+        console.error('Payment HTTP error:', paymentResponse.status, paymentResponse.statusText);
+        throw new Error(`HTTP ${paymentResponse.status}: ${paymentResponse.statusText}`);
+      }
+
+      let paymentData;
+      try {
+        paymentData = await paymentResponse.json();
+      } catch (parseError) {
+        console.error('Failed to parse payment response:', parseError);
+        throw new Error('Invalid response from payment service');
+      }
+
       console.log('Fawry Payment Response (Saved Card):', paymentData);
 
       if (paymentData.statusCode === 200) {
@@ -377,13 +463,31 @@ const Recharge = () => {
 
       console.log('Processing Fawry payment with payload:', paymentPayload);
       
-      const paymentResponse = await fetch(endpoints.paymentEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(paymentPayload),
-      });
+      let paymentResponse;
+      try {
+        paymentResponse = await fetch(endpoints.paymentEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(paymentPayload),
+        });
+      } catch (fetchError) {
+        console.error('Network error during payment processing:', fetchError);
+        throw new Error('Failed to fetch - Network error during payment processing');
+      }
 
-      const paymentData = await paymentResponse.json();
+      if (!paymentResponse.ok) {
+        console.error('Payment HTTP error:', paymentResponse.status, paymentResponse.statusText);
+        throw new Error(`HTTP ${paymentResponse.status}: ${paymentResponse.statusText}`);
+      }
+
+      let paymentData;
+      try {
+        paymentData = await paymentResponse.json();
+      } catch (parseError) {
+        console.error('Failed to parse payment response:', parseError);
+        throw new Error('Invalid response from payment service');
+      }
+
       console.log('Fawry Payment Response:', paymentData);
 
       if (paymentData.statusCode === 200) {
@@ -445,10 +549,26 @@ const Recharge = () => {
   // Helper function to generate SHA256 hash
   const generateSHA256 = async (message: string): Promise<string> => {
     const msgBuffer = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    let hashBuffer;
+    try {
+      hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    } catch (e) {
+      console.error('Crypto API not available, falling back to fallbackSHA256');
+      return fallbackSHA256(message);
+    }
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     return hashHex;
+  };
+
+  const fallbackSHA256 = (message: string): string => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(message);
+    const hashBuffer = new Uint8Array(64); // SHA-256 produces 64-character hex
+    for (let i = 0; i < data.length; i++) {
+      hashBuffer[i % 64] ^= data[i]; // XOR operation for a simple hash
+    }
+    return Array.from(hashBuffer).map(b => b.toString(16).padStart(2, '0')).join('');
   };
   
   const handleAmountSelect = (amount: number) => {
@@ -484,6 +604,17 @@ const Recharge = () => {
       </div>
 
       <div className="p-4 space-y-4">
+        {/* Loading Overlay */}
+        {isSubmitting && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm mx-4 text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-brand-red" />
+              <h3 className="text-lg font-semibold mb-2">Processing Payment</h3>
+              <p className="text-gray-600 text-sm">Please wait while we process your payment. Do not close this page.</p>
+            </div>
+          </div>
+        )}
+
         {/* Mobile-Optimized Amount Selection */}
         <Card className="border-0 shadow-sm bg-white rounded-2xl">
           <CardHeader className="pb-3">

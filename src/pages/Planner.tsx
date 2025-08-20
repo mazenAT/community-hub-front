@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { plannerApi, profileApi, addOnApi, familyMembersApi, addOnOrderApi } from "@/services/api";
-import { format, parseISO, getDay, isBefore, startOfDay, subDays, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameDay } from "date-fns";
+import { format, parseISO, getDay, isBefore, startOfDay, endOfDay, subDays, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameDay } from "date-fns";
 import { CalendarIcon, AlertCircle, Filter, FileText, ChevronDown, Users } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -119,12 +119,127 @@ const findPreOrderForMeal = (mealId: number, date: Date, plans?: WeeklyPlan[]): 
 };
 
 const Planner = () => {
+  // Add missing function definitions at the top
+  const getCurrentDateRange = () => {
+    if (viewMode === 'custom') {
+      if (customStartDate && customEndDate) {
+        return `${format(customStartDate, 'MMM dd')} to ${format(customEndDate, 'MMM dd')}`;
+      } else if (customStartDate) {
+        return `${format(customStartDate, 'MMM dd')} only`;
+      } else {
+        return 'Select custom date range';
+      }
+    } else {
+      // Week-based view
+      if (!activePlan) return 'No plan available';
+      
+      const startDate = startOfWeek(parseISO(activePlan.start_date));
+      const weekStart = addDays(startDate, (parseInt(selectedWeek) - 1) * 7);
+      const weekEnd = addDays(weekStart, 6);
+      
+      return `${format(weekStart, 'MMM dd')} to ${format(weekEnd, 'MMM dd')}`;
+    }
+  };
+
+  const getDatesForWeek = (plan: WeeklyPlan, weekNumber: number): Date[] => {
+    const startDate = startOfWeek(parseISO(plan.start_date));
+    const weekStart = addDays(startDate, (weekNumber - 1) * 7);
+    const dates: Date[] = [];
+    
+    for (let i = 0; i < 7; i++) {
+      dates.push(addDays(weekStart, i));
+    }
+    
+    return dates;
+  };
+
+  const getDatesForView = (plan: WeeklyPlan): Date[] => {
+    if (viewMode === 'custom') {
+      if (customStartDate && customEndDate) {
+        // Range selection
+        const dates: Date[] = [];
+        let currentDate = startOfDay(customStartDate);
+        const endDate = endOfDay(customEndDate);
+        
+        while (currentDate <= endDate) {
+          dates.push(new Date(currentDate));
+          currentDate = addDays(currentDate, 1);
+        }
+        return dates;
+      } else if (customStartDate) {
+        // Single date selection - return only that date
+        return [startOfDay(customStartDate)];
+      } else {
+        // No dates selected
+        return [];
+      }
+    } else {
+      // Week-based view
+      return getDatesForWeek(plan, parseInt(selectedWeek));
+    }
+  };
+
+  const getMealsForDay = (date: Date, plans: WeeklyPlan[]): any[] => {
+    if (!plans || plans.length === 0) return [];
+    
+    const dateString = format(date, 'yyyy-MM-dd');
+    const allMeals: any[] = [];
+    
+    for (const plan of plans) {
+      if (plan.meals && Array.isArray(plan.meals)) {
+        const mealsForDate = plan.meals.filter((meal: any) => {
+          // Check if meal is assigned to this specific date
+          if (meal.pivot && meal.pivot.meal_date) {
+            return format(parseISO(meal.pivot.meal_date), 'yyyy-MM-dd') === dateString;
+          }
+          
+          // Check if meal is assigned to this day of week
+          if (meal.pivot && meal.pivot.day_of_week) {
+            const dayOfWeek = getDay(date);
+            // Convert from Sunday=0 to Monday=1 format if needed
+            const mealDayOfWeek = meal.pivot.day_of_week;
+            return mealDayOfWeek === dayOfWeek;
+          }
+          
+          return false;
+        });
+        
+        allMeals.push(...mealsForDate);
+      }
+    }
+    
+    // Filter by selected meal type
+    if (selectedType !== 'all') {
+      return allMeals.filter(meal => meal.category === selectedType);
+    }
+    
+    return allMeals;
+  };
+
+  const isMonthlyPlan = (plan: WeeklyPlan): boolean => {
+    if (!plan.start_date || !plan.end_date) return false;
+    
+    const startDate = parseISO(plan.start_date);
+    const endDate = parseISO(plan.end_date);
+    const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Consider it monthly if more than 21 days
+    return daysDiff > 21;
+  };
+
+  const isDateInRange = (date: Date, start: Date, end: Date): boolean => {
+    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const e = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    return d >= s && d <= e;
+  };
+
   const [selectedType, setSelectedType] = useState<"all" | "hot_meal" | "sandwich" | "sandwich_xl" | "burger" | "crepe" | "nursery">("all");
   const [selectedCategory, setSelectedCategory] = useState<MealCategory | "all">("all");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
   const [categories, setCategories] = useState<(MealCategory | "all")[]>([]);
   const [subcategories, setSubcategories] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<'custom'>('custom');
+  const [viewMode, setViewMode] = useState<'custom' | 'week'>('week');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
@@ -401,98 +516,6 @@ const Planner = () => {
     }));
   })();
 
-  const getMealsForDay = (date: Date, plans?: WeeklyPlan[]) => {
-    if (!plans) return [];
-    const activePlan = plans.find(plan => plan.is_active);
-    if (!activePlan) return [];
-    
-    // Debug: Log available meal categories
-    if (activePlan.meals && activePlan.meals.length > 0) {
-      const mealCategories = [...new Set(activePlan.meals.map((meal: any) => meal.category))];
-      // Filter meals by category
-    }
-    
-    // Format date as YYYY-MM-DD to match the API structure
-    const dateKey = format(date, 'yyyy-MM-dd');
-    
-    // Check if we have meals_by_day structure (for monthly plans)
-    if (activePlan.meals_by_day && activePlan.meals_by_day[dateKey]) {
-      const mealsForDay = activePlan.meals_by_day[dateKey].filter((meal: any) => {
-        const matchesType = selectedType === "all" || meal.category === selectedType;
-        return matchesType;
-      });
-      return mealsForDay;
-    }
-    
-    // For weekly plans: map day_of_week to calendar date
-    const dayOfWeek = getDay(date) === 0 ? 7 : getDay(date); // Convert Sunday=0 to Sunday=7
-    
-    const allMeals = activePlan.meals || [];
-    const mealsForDay = allMeals.filter((meal: any) => {
-      const matchesType = selectedType === "all" || meal.category === selectedType;
-      const matchesDayOfWeek = meal.pivot?.day_of_week === dayOfWeek;
-      return matchesType && matchesDayOfWeek;
-    });
-    
-    return mealsForDay;
-  };
-
-
-
-  // Helper to compare only the date part (ignoring time and timezone)
-  const isDateInRange = (date: Date, start: Date, end: Date) => {
-    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-    const e = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-    return d >= s && d <= e;
-  };
-
-  // Helper to get all dates within a plan's range
-  const getDatesForPlan = (plan: WeeklyPlan): Date[] => {
-    const dates = [];
-    let currentDate = parseISO(plan.start_date);
-    const endDate = parseISO(plan.end_date);
-
-    while (startOfDay(currentDate) <= startOfDay(endDate)) {
-      dates.push(new Date(currentDate));
-      currentDate = addDays(currentDate, 1);
-    }
-    return dates;
-  };
-
-  // Helper to determine if a plan is monthly (has specific date assignments) or weekly
-  const isMonthlyPlan = (plan: WeeklyPlan): boolean => {
-    return plan.meals.some(meal => meal.pivot?.meal_date);
-  };
-
-  // Helper to get all dates for the current view mode
-  const getDatesForView = (plan: WeeklyPlan): Date[] => {
-    if (!plan) return [];
-    const allDates = getDatesForPlan(plan);
-    
-    if (viewMode === 'custom' && customStartDate && customEndDate) {
-      return allDates.filter(date => date >= customStartDate && date <= customEndDate);
-    }
-    
-    // Default to week 1 if no custom range is set
-    return getDatesForWeek(plan, 1);
-  };
-
-  // Helper to get dates for specific week (1-4)
-  const getDatesForWeek = (plan: WeeklyPlan, weekNumber: number): Date[] => {
-    if (!plan) return [];
-    const allDates = getDatesForPlan(plan);
-    
-    // Calculate week start based on plan start date
-    const planStart = parseISO(plan.start_date);
-    const weekStart = addDays(planStart, (weekNumber - 1) * 7);
-    const weekEnd = addDays(weekStart, 6);
-    
-    return allDates.filter(date => date >= weekStart && date <= weekEnd);
-  };
-
-
-
   // Find the active plan before using it in summary
   const activePlan = normalizedPlans.find((plan: WeeklyPlan) => {
     const start = parseISO(plan.start_date);
@@ -558,27 +581,7 @@ const Planner = () => {
     );
   }
 
-  // Get current date range for display
-  const getCurrentDateRange = () => {
-    if (viewMode === 'custom' && customStartDate && customEndDate) {
-      return `${format(customStartDate, 'MMMM dd')} - ${format(customEndDate, 'MMMM dd, yyyy')}`;
-    }
-    
-    // Default to week 1 display
-    if (activePlan) {
-      const weekDates = getDatesForWeek(activePlan, parseInt(selectedWeek));
-      if (weekDates.length > 0) {
-        const start = weekDates[0];
-        const end = weekDates[weekDates.length - 1];
-        return `${format(start, 'MMMM dd')} - ${format(end, 'MMMM dd, yyyy')} (Week ${selectedWeek})`;
-      }
-    }
-    
-    return format(selectedDate, 'MMMM dd, yyyy');
-  };
 
-  // Note: Removed the incorrect isBeforeTodayMidnight function
-  // We use isOrderingWindowOpen instead for proper deadline checking
   
 
   return (
@@ -593,8 +596,25 @@ const Planner = () => {
           </div>
         </div>
 
-        {/* Custom Date Range Selection */}
+        {/* Date Range Selection */}
         <div className="mt-4 flex flex-wrap gap-2">
+          <Button
+            variant={viewMode === 'week' ? 'default' : 'outline'}
+            size="sm"
+            className={`${
+              viewMode === 'week' 
+                ? 'bg-white text-brand-red border-white hover:bg-white/90' 
+                : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
+            } rounded-full px-4 py-2 text-sm font-medium`}
+            onClick={() => {
+              setViewMode('week');
+              setCustomStartDate(undefined);
+              setCustomEndDate(undefined);
+            }}
+          >
+            Week View
+          </Button>
+          
           <Button
             variant={viewMode === 'custom' ? 'default' : 'outline'}
             size="sm"
@@ -747,7 +767,10 @@ const Planner = () => {
                     ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
                     : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
                 } rounded-full px-3 py-1 text-xs font-medium`}
-                onClick={() => setSelectedWeek(week.toString())}
+                onClick={() => {
+                  setSelectedWeek(week.toString());
+                  setViewMode('week');
+                }}
               >
                 Week {week}
               </Button>
@@ -811,9 +834,10 @@ const Planner = () => {
               // Get dates based on week filter or custom range
               let datesForView;
               
-              if (viewMode === 'custom' && customStartDate && customEndDate) {
+              if (viewMode === 'custom') {
                 datesForView = getDatesForView(activePlan);
               } else {
+                // Week-based view
                 datesForView = getDatesForWeek(activePlan, parseInt(selectedWeek));
               }
               
