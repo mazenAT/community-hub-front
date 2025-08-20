@@ -186,7 +186,13 @@ const Planner = () => {
     const allMeals: any[] = [];
     
     for (const plan of plans) {
-      if (plan.meals && Array.isArray(plan.meals)) {
+      // Check if we have meals_by_day structure (new API format)
+      if (plan.meals_by_day && plan.meals_by_day[dateString]) {
+        const mealsForDate = plan.meals_by_day[dateString];
+        allMeals.push(...mealsForDate);
+      }
+      // Fallback to old pivot structure if meals_by_day doesn't exist
+      else if (plan.meals && Array.isArray(plan.meals)) {
         const mealsForDate = plan.meals.filter((meal: any) => {
           // Check if meal is assigned to this specific date
           if (meal.pivot && meal.pivot.meal_date) {
@@ -707,6 +713,22 @@ const Planner = () => {
             </span>
           )}
         </div>
+
+        {/* Debug Info - Show available plans */}
+        {weeklyPlans?.data && weeklyPlans.data.length > 0 && (
+          <div className="mt-2 p-2 bg-white/10 rounded text-xs text-white/80">
+            <div>Available Plans: {weeklyPlans.data.length}</div>
+            {weeklyPlans.data.map((plan: any, index: number) => (
+              <div key={plan.id} className="ml-2">
+                Plan {index + 1}: {plan.start_date} to {plan.end_date} 
+                (Active: {plan.is_active ? 'Yes' : 'No'})
+                {plan.meals_by_day && (
+                  <span> - Days with meals: {Object.keys(plan.meals_by_day).length}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Pre-Order Warning Message */}
         {activePlan && (
