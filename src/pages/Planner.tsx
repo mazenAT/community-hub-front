@@ -153,6 +153,13 @@ const Planner = () => {
       currentDate = addDays(currentDate, 1);
     }
     
+    // Sort dates to ensure Sunday is first (Sunday = 0 in JavaScript Date)
+    dates.sort((a, b) => {
+      const dayA = a.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const dayB = b.getDay();
+      return dayA - dayB;
+    });
+    
     return dates;
   };
 
@@ -205,9 +212,10 @@ const Planner = () => {
           // Check if meal is assigned to this day of week
           if (meal.pivot && meal.pivot.day_of_week) {
             const dayOfWeek = getDay(date);
-            // Convert from Sunday=0 to Monday=1 format if needed
+            // Convert from JavaScript Sunday=0 to backend Sunday=1 format
+            const jsDayOfWeek = dayOfWeek === 0 ? 1 : dayOfWeek + 1; // Sunday=0 becomes 1, Monday=1 becomes 2, etc.
             const mealDayOfWeek = meal.pivot.day_of_week;
-            return mealDayOfWeek === dayOfWeek;
+            return mealDayOfWeek === jsDayOfWeek;
           }
           
           return false;
