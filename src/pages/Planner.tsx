@@ -731,22 +731,6 @@ const Planner = () => {
           )}
         </div>
 
-        {/* Debug Info - Show available plans */}
-        {weeklyPlans?.data && weeklyPlans.data.length > 0 && (
-          <div className="mt-2 p-2 bg-white/10 rounded text-xs text-white/80">
-            <div>Available Plans: {weeklyPlans.data.length}</div>
-            {weeklyPlans.data.map((plan: any, index: number) => (
-              <div key={plan.id} className="ml-2">
-                Plan {index + 1}: {plan.start_date} to {plan.end_date} 
-                (Active: {plan.is_active ? 'Yes' : 'No'})
-                {plan.meals_by_day && (
-                  <span> - Days with meals: {Object.keys(plan.meals_by_day).length}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* Pre-Order Warning Message */}
         {activePlan && (
           <div className="mt-4 p-3 bg-white/20 border border-white/30 rounded-lg">

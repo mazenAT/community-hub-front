@@ -45,8 +45,17 @@ const NotificationBell: React.FC = () => {
     try {
       const res = await notificationApi.getNotifications();
       setNotifications(Array.isArray(res.data) ? res.data : res.data.data || []);
-    } catch (err) {
-      setError("Failed to load notifications");
+    } catch (err: any) {
+      console.error('Failed to fetch notifications:', err);
+      
+      // Handle different types of errors
+      if (err.message?.includes('Network error') || err.message?.includes('CORS')) {
+        setError("Network error - notifications may be temporarily unavailable");
+      } else if (err.response?.status === 401) {
+        setError("Authentication required");
+      } else {
+        setError("Failed to load notifications");
+      }
     } finally {
       setLoading(false);
     }
@@ -130,7 +139,17 @@ const NotificationBell: React.FC = () => {
                 <LoadingSpinner size={24} />
               </div>
             ) : error ? (
-              <div className="p-6 text-center text-red-500">{error}</div>
+              <div className="p-6 text-center">
+                <div className="text-red-500 mb-3">{error}</div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={fetchNotifications}
+                  className="text-brand-orange border-brand-orange hover:bg-brand-orange hover:text-white"
+                >
+                  Retry
+                </Button>
+              </div>
             ) : notifications.length === 0 ? (
               <EmptyState message="No notifications" />
             ) : (

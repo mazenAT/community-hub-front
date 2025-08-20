@@ -32,12 +32,26 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle CORS errors specifically
+    if (error.message === 'Network Error' || error.code === 'ERR_NETWORK') {
+      console.error('Network/CORS Error:', error);
+      // This could be a CORS issue or network connectivity problem
+      return Promise.reject(new Error('Network error - please check your connection or try again later.'));
+    }
+    
     if (error.response?.status === 401) {
       // Don't redirect immediately, let components handle it
       if (error.response?.data?.message === 'Unauthenticated') {
         localStorage.removeItem('token');
       }
     }
+    
+    // Handle CORS preflight failures
+    if (error.response?.status === 0) {
+      console.error('CORS Error - Request blocked:', error);
+      return Promise.reject(new Error('Request blocked - this may be a CORS issue.'));
+    }
+    
     return Promise.reject(error);
   }
 );
