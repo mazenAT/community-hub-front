@@ -202,16 +202,44 @@ const Recharge = () => {
       const customerMobile = mobile;
       const customerEmail = profile.email || 'customer@example.com';
 
+      // Validate that numeric fields can be converted to integers
+      const customerProfileIdInt = parseInt(customerProfileId);
+      const cardNumberInt = parseInt(cardNumber);
+      const expiryMonthInt = parseInt(expiryMonth);
+      const expiryYearInt = parseInt(expiryYear);
+      const cvvInt = parseInt(cvv);
+
+      if (isNaN(customerProfileIdInt)) {
+        toast.error("Invalid customer profile ID");
+        return;
+      }
+      if (isNaN(cardNumberInt)) {
+        toast.error("Invalid card number");
+        return;
+      }
+      if (isNaN(expiryMonthInt) || expiryMonthInt < 1 || expiryMonthInt > 12) {
+        toast.error("Invalid expiry month");
+        return;
+      }
+      if (isNaN(expiryYearInt) || expiryYearInt < 20 || expiryYearInt > 99) {
+        toast.error("Invalid expiry year");
+        return;
+      }
+      if (isNaN(cvvInt) || cvvInt < 100 || cvvInt > 999) {
+        toast.error("Invalid CVV");
+        return;
+      }
+
       const tokenPayload = {
         merchantCode: credentials.merchantCode,
-        customerProfileId: customerProfileId,
+        customerProfileId: customerProfileIdInt, // Now guaranteed to be Integer
         customerMobile: customerMobile,
         customerEmail: customerEmail,
-        cardNumber: cardNumber,
+        cardNumber: cardNumberInt, // Now guaranteed to be Integer
         cardAlias: cardAlias, // REQUIRED by Fawry
-        expiryMonth: expiryMonth,
-        expiryYear: expiryYear,
-        cvv: cvv,
+        expiryMonth: expiryMonthInt, // Now guaranteed to be Integer
+        expiryYear: expiryYearInt, // Now guaranteed to be Integer
+        cvv: cvvInt, // Now guaranteed to be Integer
         isDefault: true, // REQUIRED by Fawry
         enable3ds: true, // REQUIRED by Fawry
         returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=token&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}`
@@ -307,12 +335,12 @@ const Recharge = () => {
       const paymentPayload = {
         merchantCode: credentials.merchantCode,
         merchantRefNum: merchantRefNum,
-        customerProfileId: customerProfileId,
+        customerProfileId: parseInt(customerProfileId), // Convert to Integer as Fawry expects
         customerName: customerName,
         customerMobile: customerMobile,
         customerEmail: customerEmail,
         cardToken: card.card_token,
-        cvv: cvv,
+        cvv: parseInt(cvv), // Convert to Integer as Fawry expects
         amount: amount,
         paymentMethod: 'CARD',
         currencyCode: 'EGP',
@@ -439,12 +467,12 @@ const Recharge = () => {
       const paymentPayload = {
         merchantCode: credentials.merchantCode,
         merchantRefNum: merchantRefNum,
-        customerProfileId: customerProfileId,
+        customerProfileId: parseInt(customerProfileId), // Convert to Integer as Fawry expects
         customerName: customerName,
         customerMobile: customerMobile,
         customerEmail: customerEmail,
         cardToken: cardToken,
-        cvv: cvv,
+        cvv: parseInt(cvv), // Convert to Integer as Fawry expects
         amount: amount,
         paymentMethod: 'CARD',
         currencyCode: 'EGP',
