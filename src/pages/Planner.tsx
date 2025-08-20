@@ -130,24 +130,27 @@ const Planner = () => {
         return 'Select custom date range';
       }
     } else {
-      // Week-based view
+      // Week-based view - show actual plan dates
       if (!activePlan) return 'No plan available';
       
-      const startDate = startOfWeek(parseISO(activePlan.start_date));
-      const weekStart = addDays(startDate, (parseInt(selectedWeek) - 1) * 7);
-      const weekEnd = addDays(weekStart, 6);
+      const startDate = parseISO(activePlan.start_date);
+      const endDate = parseISO(activePlan.end_date);
       
-      return `${format(weekStart, 'MMM dd')} to ${format(weekEnd, 'MMM dd')}`;
+      return `${format(startDate, 'MMM dd')} to ${format(endDate, 'MMM dd')}`;
     }
   };
 
   const getDatesForWeek = (plan: WeeklyPlan, weekNumber: number): Date[] => {
-    const startDate = startOfWeek(parseISO(plan.start_date));
-    const weekStart = addDays(startDate, (weekNumber - 1) * 7);
+    if (!plan) return [];
+    
+    const startDate = parseISO(plan.start_date);
+    const endDate = parseISO(plan.end_date);
     const dates: Date[] = [];
     
-    for (let i = 0; i < 7; i++) {
-      dates.push(addDays(weekStart, i));
+    let currentDate = startDate;
+    while (currentDate <= endDate) {
+      dates.push(new Date(currentDate));
+      currentDate = addDays(currentDate, 1);
     }
     
     return dates;
@@ -522,13 +525,19 @@ const Planner = () => {
     }));
   })();
 
-  // Find the active plan before using it in summary
-  const activePlan = normalizedPlans.find((plan: WeeklyPlan) => {
-    const start = parseISO(plan.start_date);
-    const end = parseISO(plan.end_date);
-    const today = new Date();
-    return isDateInRange(today, start, end) && plan.is_active;
-  });
+  // Find the active plan based on selected week instead of today's date
+  const activePlan = (() => {
+    if (normalizedPlans.length === 0) return null;
+    
+    // If we have plans, use the one corresponding to the selected week
+    const weekIndex = parseInt(selectedWeek) - 1;
+    if (weekIndex >= 0 && weekIndex < normalizedPlans.length) {
+      return normalizedPlans[weekIndex];
+    }
+    
+    // Fallback to first available plan
+    return normalizedPlans[0];
+  })();
 
 
 
@@ -779,22 +788,22 @@ const Planner = () => {
         <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
           <h3 className="text-sm font-semibold text-brand-black mb-3">Week Selection</h3>
           <div className="flex flex-wrap gap-2">
-            {[1, 2, 3, 4].map((week) => (
+            {normalizedPlans.map((plan: WeeklyPlan, index: number) => (
               <Button
-                key={week}
-                variant={selectedWeek === week.toString() ? 'default' : 'outline'}
+                key={plan.id}
+                variant={selectedWeek === (index + 1).toString() ? 'default' : 'outline'}
                 size="sm"
                 className={`${
-                  selectedWeek === week.toString()
+                  selectedWeek === (index + 1).toString()
                     ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
                     : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
                 } rounded-full px-3 py-1 text-xs font-medium`}
                 onClick={() => {
-                  setSelectedWeek(week.toString());
+                  setSelectedWeek((index + 1).toString());
                   setViewMode('week');
                 }}
               >
-                Week {week}
+                Week {index + 1}
               </Button>
             ))}
           </div>
