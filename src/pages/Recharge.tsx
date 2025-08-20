@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, CreditCard, Wallet } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { profileApi } from "../services/api";
+import { profileApi, api } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import SavedCards from "../components/SavedCards";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -152,38 +152,22 @@ const Recharge = () => {
       const customerMobile = mobile;
       const customerEmail = profile.email || 'customer@example.com';
 
-      // Generate signature for card token creation
-      const signatureString = credentials.merchantCode + 
-        merchantRefNum + 
-        customerProfileId + 
-        'CARD' + 
-        amount.toFixed(2) + 
-        cardNumber + 
-        expiryMonth + 
-        expiryYear + 
-        customerMobile + 
-        customerEmail + 
-        `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=token&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}` + 
-        credentials.securityKey;
-      
-      const signature = await generateSHA256(signatureString);
-
       const tokenPayload = {
         merchantCode: credentials.merchantCode,
-        merchantRefNum: merchantRefNum,
         customerProfileId: customerProfileId,
-        customerName: customerName,
         customerMobile: customerMobile,
         customerEmail: customerEmail,
         cardNumber: cardNumber,
+        cardAlias: cardAlias, // REQUIRED by Fawry
         expiryMonth: expiryMonth,
         expiryYear: expiryYear,
         cvv: cvv,
-        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=token&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}`,
-        signature: signature
+        isDefault: true, // REQUIRED by Fawry
+        enable3ds: true, // REQUIRED by Fawry
+        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=token&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}`
       };
 
-      console.log('Creating Fawry card token...');
+      console.log('Creating Fawry card token with payload:', tokenPayload);
       
       const tokenResponse = await fetch(endpoints.tokenEndpoint, {
         method: 'POST',
@@ -238,10 +222,11 @@ const Recharge = () => {
       const customerMobile = profile.mobile || '01234567891';
       const customerEmail = profile.email || 'customer@example.com';
 
-      // Generate signature for payment with saved card
+      // Generate signature for payment with saved card (Fawry format)
+      // According to Fawry docs: merchantCode + merchantRefNum + customerProfileId (if exists, otherwise "") + paymentMethod + amount + cardToken + cvv + returnUrl + secureKey
       const signatureString = credentials.merchantCode + 
         merchantRefNum + 
-        customerProfileId + 
+        (customerProfileId || "") + 
         'CARD' + 
         amount.toFixed(2) + 
         card.card_token + 
@@ -273,12 +258,10 @@ const Recharge = () => {
             quantity: 1
           }
         ],
-        enable3DS: true,
-        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}`,
         signature: signature
       };
 
-      console.log('Processing Fawry payment with saved card...');
+      console.log('Processing Fawry payment with saved card payload:', paymentPayload);
       
       const paymentResponse = await fetch(endpoints.paymentEndpoint, {
         method: 'POST',
@@ -291,6 +274,20 @@ const Recharge = () => {
 
       if (paymentData.statusCode === 200) {
         frontendTransactionTracker.markTransactionCompleted(transactionId, merchantRefNum);
+        
+        // Update wallet balance in backend
+        try {
+          await api.post('/wallet/update-balance', {
+            amount: amount,
+            type: 'top_up',
+            note: `Fawry recharge - Reference: ${merchantRefNum}`
+          });
+          console.log('Wallet balance updated in backend');
+        } catch (error) {
+          console.error('Failed to update wallet balance in backend:', error);
+          // Don't prevent success flow - admin can reconcile later
+        }
+        
         toast.success('Payment successful! Your wallet has been recharged.');
         navigate('/wallet');
       } else if (paymentData.nextAction?.redirectUrl) {
@@ -339,10 +336,11 @@ const Recharge = () => {
       const customerMobile = mobile;
       const customerEmail = profile.email || 'customer@example.com';
 
-      // Generate signature for payment
+      // Generate signature for payment (Fawry format)
+      // According to Fawry docs: merchantCode + merchantRefNum + customerProfileId (if exists, otherwise "") + paymentMethod + amount + cardToken + cvv + returnUrl + secureKey
       const signatureString = credentials.merchantCode + 
         merchantRefNum + 
-        customerProfileId + 
+        (customerProfileId || "") + 
         'CARD' + 
         amount.toFixed(2) + 
         cardToken + 
@@ -374,12 +372,10 @@ const Recharge = () => {
             quantity: 1
           }
         ],
-        enable3DS: true,
-        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}`,
         signature: signature
       };
 
-      console.log('Processing Fawry payment...');
+      console.log('Processing Fawry payment with payload:', paymentPayload);
       
       const paymentResponse = await fetch(endpoints.paymentEndpoint, {
         method: 'POST',
@@ -392,6 +388,20 @@ const Recharge = () => {
 
       if (paymentData.statusCode === 200) {
         frontendTransactionTracker.markTransactionCompleted(transactionId, merchantRefNum);
+        
+        // Update wallet balance in backend
+        try {
+          await api.post('/wallet/update-balance', {
+            amount: amount,
+            type: 'top_up',
+            note: `Fawry recharge - Reference: ${merchantRefNum}`
+          });
+          console.log('Wallet balance updated in backend');
+        } catch (error) {
+          console.error('Failed to update wallet balance in backend:', error);
+          // Don't prevent success flow - admin can reconcile later
+        }
+        
         toast.success('Payment successful! Your wallet has been recharged.');
         navigate('/wallet');
       } else if (paymentData.nextAction?.redirectUrl) {

@@ -3,6 +3,7 @@
 // Aligned with Fawry Server Notification V2 API documentation
 
 import { frontendTransactionTracker, FrontendTransaction } from './frontendTransactionTracker';
+import { api } from './api'; // Add API import for backend calls
 
 // Fawry Server Notification V2 parameters (from official documentation)
 export interface FawryWebhookData {
@@ -140,6 +141,10 @@ export const frontendWebhookHandler = {
               transaction.id,
               fawryRefNumber || merchantRefNumber
             );
+            
+            // **CRITICAL FIX**: Update wallet balance in backend
+            frontendWebhookHandler.updateWalletBalance(transaction.amount, transaction.user_id, fawryRefNumber || merchantRefNumber);
+            
             console.log('Transaction marked as completed (Fawry status: paid/delivered):', transaction.id);
             break;
 
@@ -261,6 +266,10 @@ export const frontendWebhookHandler = {
               transaction.id,
               merchantRefNum
             );
+            
+            // **CRITICAL FIX**: Update wallet balance in backend
+            frontendWebhookHandler.updateWalletBalance(transaction.amount, transaction.user_id, merchantRefNum || undefined);
+            
             console.log('Payment completed via callback:', transaction.id);
             return true;
           }
@@ -288,6 +297,30 @@ export const frontendWebhookHandler = {
     } catch (error) {
       console.error('Error processing callback data:', error);
       return false;
+    }
+  },
+
+  // **NEW METHOD**: Update wallet balance in backend after successful recharge
+  updateWalletBalance: async (amount: number, userId: number, fawryReference?: string): Promise<void> => {
+    try {
+      console.log('Updating wallet balance in backend:', { amount, userId, fawryReference });
+      
+      const response = await api.post('/wallet/update-balance', {
+        amount: amount,
+        type: 'top_up',
+        note: `Fawry recharge - Reference: ${fawryReference || 'N/A'}`
+      });
+
+      if (response.status === 200) {
+        console.log('Wallet balance updated successfully in backend');
+      } else {
+        console.error('Failed to update wallet balance in backend:', response);
+      }
+    } catch (error) {
+      console.error('Error updating wallet balance in backend:', error);
+      // Don't throw error to prevent breaking the callback flow
+      // The frontend transaction is already marked as completed
+      // Admin can manually reconcile failed balance updates
     }
   },
 
