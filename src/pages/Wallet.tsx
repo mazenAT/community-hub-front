@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/BottomNavigation";
-import { walletApi, profileApi } from "@/services/api";
+import { walletApi, profileApi, transactionApi } from "@/services/api";
 import { showToast } from "@/services/native";
 import { formatCurrency } from "@/utils/format";
 import { User } from "lucide-react";
@@ -68,20 +68,35 @@ const Wallet = () => {
       const newBalance = Number(profile?.wallet?.balance) || 0;
       setBalance(newBalance);
 
-      // Fetch transactions
-      const transactionsResponse = await walletApi.getTransactions();
-      let transactionsData = [];
-      if (Array.isArray(transactionsResponse.data)) {
-        transactionsData = transactionsResponse.data;
-      } else if (Array.isArray(transactionsResponse.data?.data)) {
-        transactionsData = transactionsResponse.data.data;
-      } else {
-        // Handle unexpected response format
+      // Fetch transactions - handle empty state gracefully
+      try {
+        const transactionsResponse = await walletApi.getTransactions();
+        let transactionsData = [];
+        if (Array.isArray(transactionsResponse.data)) {
+          transactionsData = transactionsResponse.data;
+        } else if (Array.isArray(transactionsResponse.data?.data)) {
+          transactionsData = transactionsResponse.data.data;
+        } else {
+          // Handle unexpected response format - set empty array instead of error
+          transactionsData = [];
+        }
+        setTransactions(transactionsData);
+      } catch (transactionErr) {
+        // If transactions fail, just set empty array instead of showing error
+        console.warn('Failed to fetch transactions:', transactionErr);
+        setTransactions([]);
       }
-      setTransactions(transactionsData);
 
-    } catch (err) {
-      setError('Failed to load wallet data');
+    } catch (err: any) {
+      console.error('Failed to load wallet data:', err);
+      // Only show error for critical failures (like profile loading)
+      if (err.response?.status === 401) {
+        setError('Authentication failed. Please login again.');
+      } else if (err.response?.status === 404) {
+        setError('Wallet not found. Please contact support.');
+      } else {
+        setError('Failed to load wallet data. Please try again.');
+      }
       showToast('Failed to load wallet data');
     } finally {
       setLoading(false);
@@ -99,7 +114,9 @@ const Wallet = () => {
     }
     setRefundLoading(0);
     try {
-      await walletApi.requestRefund({ amount: Number(refundAmount), reason: refundReason });
+      // For now, we'll use a placeholder transaction_id since this is a general refund request
+      // In the future, this should be tied to a specific transaction
+      await walletApi.requestRefund({ transaction_id: 0, reason: refundReason });
       toast({ title: "Refund Requested", description: `Refund request for ${formatCurrency(Number(refundAmount))} has been submitted. It will be processed within 3-5 business days.` });
       setRefundModalOpen(false);
       setRefundAmount("");
@@ -115,7 +132,7 @@ const Wallet = () => {
   const handleRefundTransaction = async (id: number) => {
     setRefundLoading(id);
     try {
-      await walletApi.refundTransaction(id);
+      await transactionApi.refundTransaction(id);
       fetchWalletData();
     } catch (e) {
       showToast('Refund failed.');
