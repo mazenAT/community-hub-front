@@ -20,7 +20,7 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [selectedSchool, setSelectedSchool] = useState("");
-  const [selectedRole] = useState("user"); // General role for mobile app users
+  const [selectedRole] = useState("user"); // Mobile app users are always assigned 'user' role (parents)
   const [schools, setSchools] = useState<{ id: number; name: string }[]>([]);
   const [loadingSchools, setLoadingSchools] = useState(true);
   const [phone, setPhone] = useState("");
@@ -34,7 +34,7 @@ const SignUp = () => {
       password: string;
       password_confirmation: string;
       role: string;
-      school_id?: number;
+      school_id: number;
       phone?: string;
     }) =>
       authApi.register(data),
@@ -128,7 +128,7 @@ const SignUp = () => {
       password,
       password_confirmation: confirmPassword,
       role: selectedRole,
-      school_id: Number(selectedSchool),
+      school_id: Number(selectedSchool), // selectedSchool is validated to be non-empty
       phone,
     });
   };

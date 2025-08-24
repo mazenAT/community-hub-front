@@ -10,6 +10,8 @@ import { useTutorial } from "@/contexts/TutorialContext";
 
 const shakeClass = "animate-shake border-brand-red";
 
+// SignIn component for mobile app users only (students and parents)
+// Admin users must use the admin dashboard
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
