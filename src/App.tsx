@@ -20,12 +20,10 @@ import Recharge from "./pages/Recharge";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import OrderDetails from "./pages/orders/OrderDetails";
-
 import MyOrders from "./pages/orders/MyOrders";
 import FawryCallback from "./pages/FawryCallback";
 import ContactUs from "./pages/ContactUs";
 import Notifications from "./pages/Notifications";
-import FawryTestPage from "./pages/FawryTestPage";
 
 const queryClient = new QueryClient();
 
@@ -43,60 +41,15 @@ const AppContent = () => {
           <Route path="/fawry-callback" element={<FawryCallback />} />
 
           {/* Protected Routes */}
-          <Route path="/family-setup" element={
-            <ProtectedRoute>
-              <FamilyMemberSetup />
-            </ProtectedRoute>
-          } />
-
-          {/* Protected User Routes */}
-          <Route path="/wallet" element={
-            <ProtectedRoute>
-              <Wallet />
-            </ProtectedRoute>
-          } />
-          <Route path="/planner" element={
-            <ProtectedRoute>
-              <Planner />
-            </ProtectedRoute>
-          } />
-          <Route path="/recharge" element={
-            <ProtectedRoute>
-              <Recharge />
-            </ProtectedRoute>
-          } />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          } />
-          <Route path="/contact" element={
-            <ProtectedRoute>
-              <ContactUs />
-            </ProtectedRoute>
-          } />
-          <Route path="/notifications" element={
-            <ProtectedRoute>
-              <Notifications />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/fawry-test" element={
-            <ProtectedRoute>
-              <FawryTestPage />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/orders/:id" element={
-            <ProtectedRoute>
-              <OrderDetails />
-            </ProtectedRoute>
-          } />
-          <Route path="/orders/my-orders" element={
-            <ProtectedRoute>
-              <MyOrders />
-            </ProtectedRoute>
-          } />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/family-member-setup" element={<ProtectedRoute><FamilyMemberSetup /></ProtectedRoute>} />
+          <Route path="/planner" element={<ProtectedRoute><Planner /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+          <Route path="/order/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
+          <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+          <Route path="/recharge" element={<ProtectedRoute><Recharge /></ProtectedRoute>} />
+          <Route path="/contact" element={<ProtectedRoute><ContactUs /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
           {/* 404 Route */}
           <Route path="*" element={<NotFound />} />

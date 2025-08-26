@@ -156,10 +156,10 @@ const FawryCallback = () => {
     try {
       // Check if this is a 3DS callback response from Fawry
       if (callbackData.type === 'ChargeResponse') {
-        console.log('Processing 3DS callback response:', callbackData);
+        const statusCode = callbackData.statusCode;
+        const isSuccess = statusCode === '200' || statusCode === 200;
         
-        // Check payment status first
-        if (callbackData.statusCode === '200' || callbackData.statusCode === 200) {
+        if (isSuccess) {
           // Payment successful
           setTransactionStatus('completed');
           setTransactionDetails({
@@ -179,8 +179,7 @@ const FawryCallback = () => {
             );
           }
         } else {
-          // Payment failed
-          console.error('3DS payment failed:', callbackData);
+          // Payment failed - handle all failure cases
           setTransactionStatus('failed');
           setTransactionDetails({
             amount: callbackData.paymentAmount || callbackData.amount || 0,
@@ -192,11 +191,9 @@ const FawryCallback = () => {
           });
           
           toast.error(`Payment failed: ${callbackData.statusDescription || 'Unknown error'}`);
-          
-          // Don't update wallet balance for failed payments
-          console.log('Skipping wallet update for failed payment');
         }
         
+        // Return true to prevent fallthrough to webhook processing
         return true;
       }
       
@@ -269,7 +266,6 @@ const FawryCallback = () => {
       // Check if this is a 3DS callback (returning from 3DS authentication)
       const pending3dsTransaction = localStorage.getItem('pending_3ds_transaction');
       if (pending3dsTransaction) {
-        console.log('Processing 3DS callback, completing payment flow...');
         await complete3dsPaymentFlow(JSON.parse(pending3dsTransaction));
         return;
       }
@@ -298,27 +294,16 @@ const FawryCallback = () => {
         paymentTime: searchParams.get('paymentTime')
       };
 
-      console.log('=== CALLBACK DATA ANALYSIS ===');
-      console.log('Raw callback data:', callbackData);
-      console.log('Callback type:', callbackData.type);
-      console.log('Order status:', callbackData.orderStatus);
-      console.log('=== END CALLBACK DATA ANALYSIS ===');
-
       // Try to process as 3DS callback response first
       if (callbackData.type === 'ChargeResponse') {
-        console.log('Attempting to process as 3DS callback response...');
         const success = process3dsCallbackResponse(callbackData);
         if (success) {
-          console.log('3DS callback processed successfully, returning early');
           return;
-        } else {
-          console.log('3DS callback processing failed, falling through to webhook processing');
         }
       }
       
       // Try to process as webhook data
       if (callbackData.orderStatus) {
-        console.log('Attempting to process as webhook data...');
         const webhookData = {
           requestId: callbackData.merchantRefNum || '',
           fawryRefNumber: callbackData.merchantRefNum || '',
@@ -334,7 +319,7 @@ const FawryCallback = () => {
           paymentStatus: callbackData.orderStatus,
           paymentMethod: callbackData.paymentMethod || '',
           merchantCode: callbackData.merchantCode || '',
-          orderExpiryDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Default to 24 hours from now
+          orderExpiryDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
           orderItems: '',
           signature: callbackData.signature || '',
         };
@@ -355,7 +340,6 @@ const FawryCallback = () => {
         }
       } else {
         // Process as regular callback data
-        console.log('Attempting to process as regular callback data...');
         const callbackDataProcessed = {
           merchantRefNum: callbackData.merchantRefNum || undefined,
           amount: callbackData.amount || undefined,

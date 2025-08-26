@@ -100,8 +100,6 @@ export const frontendWebhookHandler = {
   // Process webhook data from Fawry redirect (aligned with Server Notification V2)
   processWebhookData: (webhookData: FawryWebhookData): boolean => {
     try {
-      console.log('Processing Fawry webhook data (Server Notification V2):', webhookData);
-      
       // Extract key information using official Fawry parameters
       const {
         requestId,
@@ -145,7 +143,6 @@ export const frontendWebhookHandler = {
             // **CRITICAL FIX**: Update wallet balance in backend
             frontendWebhookHandler.updateWalletBalance(transaction.amount, transaction.user_id, fawryRefNumber || merchantRefNumber, orderStatus);
             
-            console.log('Transaction marked as completed (Fawry status: paid/delivered):', transaction.id);
             break;
 
         case FAWRY_ORDER_STATUSES.CANCELLED:
@@ -157,7 +154,6 @@ export const frontendWebhookHandler = {
             webhookData.statusDescription || webhookData.message || `Payment ${orderStatus}`,
             `FAWRY_${orderStatus?.toUpperCase() || 'FAILED'}`
           );
-          console.log('Transaction marked as failed (Fawry status: cancelled/expired/failed):', transaction.id);
           break;
 
         case FAWRY_ORDER_STATUSES.CREATED:
@@ -173,7 +169,6 @@ export const frontendWebhookHandler = {
             three_ds_info: threeDSInfo,
             updated_at: new Date().toISOString()
           });
-          console.log('Transaction status updated (Fawry status: created/pending/processing):', transaction.id);
           break;
 
         default:
@@ -234,8 +229,6 @@ export const frontendWebhookHandler = {
   // Process callback data from Fawry redirects (legacy support)
   processCallbackData: (callbackData: FawryCallbackData): boolean => {
     try {
-      console.log('Processing Fawry callback data:', callbackData);
-      
       const {
         merchantRefNum,
         amount,
@@ -247,7 +240,6 @@ export const frontendWebhookHandler = {
 
       if (step === 'token') {
         // This is from card token creation
-        console.log('Card token creation callback received');
         return true;
       }
 
@@ -270,7 +262,6 @@ export const frontendWebhookHandler = {
             // **CRITICAL FIX**: Update wallet balance in backend
             frontendWebhookHandler.updateWalletBalance(transaction.amount, transaction.user_id, merchantRefNum || undefined, 'paid');
             
-            console.log('Payment completed via callback:', transaction.id);
             return true;
           }
         } else if (status === 'failed' || status === 'cancelled') {
@@ -287,7 +278,6 @@ export const frontendWebhookHandler = {
               message || 'Payment failed',
               `CALLBACK_${status?.toUpperCase() || 'FAILED'}`
             );
-            console.log('Payment failed via callback:', transaction.id);
             return true;
           }
         }
@@ -303,16 +293,12 @@ export const frontendWebhookHandler = {
   // **NEW METHOD**: Update wallet balance in backend after successful recharge
   updateWalletBalance: async (amount: number, userId: number, fawryReference?: string, paymentStatus?: string): Promise<void> => {
     try {
-      console.log('Updating wallet balance in backend:', { amount, userId, fawryReference, paymentStatus });
-      
       // Validate that we have valid data before making the API call
       if (!amount || amount <= 0) {
-        console.warn('Invalid amount for wallet update:', amount);
         return;
       }
       
       if (!fawryReference) {
-        console.warn('No Fawry reference provided for wallet update');
         return;
       }
       
@@ -320,7 +306,6 @@ export const frontendWebhookHandler = {
       if (paymentStatus) {
         const statusStr = String(paymentStatus).toLowerCase();
         if (statusStr !== '200' && statusStr !== 'paid' && statusStr !== 'delivered') {
-          console.warn('Skipping wallet update for failed payment status:', paymentStatus);
           return;
         }
       }
@@ -332,24 +317,10 @@ export const frontendWebhookHandler = {
       });
 
       if (response.status === 200) {
-        console.log('Wallet balance updated successfully in backend');
-      } else {
-        console.error('Failed to update wallet balance in backend:', response);
+        // Wallet balance updated successfully
       }
     } catch (error) {
       console.error('Error updating wallet balance in backend:', error);
-      
-      // Log detailed error information for debugging
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as any;
-        console.error('Backend API error details:', {
-          status: axiosError.response?.status,
-          statusText: axiosError.response?.statusText,
-          data: axiosError.response?.data,
-          url: axiosError.config?.url,
-          method: axiosError.config?.method
-        });
-      }
       
       // Don't throw error to prevent breaking the callback flow
       // The frontend transaction is already marked as completed
@@ -440,8 +411,6 @@ export const frontendWebhookHandler = {
           currentURL.includes('orderStatus') ||
           currentURL.includes('fawryRefNumber') ||
           currentURL.includes('requestId')) {
-        
-        console.log('Fawry callback detected on page load');
         
         // Try to extract webhook data first (Server Notification V2 format)
         const webhookData = frontendWebhookHandler.extractWebhookDataFromURL(currentURL);

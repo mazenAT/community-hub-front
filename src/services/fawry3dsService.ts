@@ -3,6 +3,10 @@
 // https://developer.fawrystaging.com/docs/server-apis/create-payment-3ds-apis
 
 import { secureCredentials } from './secureCredentials';
+import axios from 'axios'; // Added axios import
+
+// Fawry API endpoints and configuration
+const FAWRY_3DS_API_URL = 'https://atfawry.fawrystaging.com/ECommercePlugin/FawryPayment.aspx';
 
 export interface Fawry3dsPaymentRequest {
   merchantCode: string;
@@ -68,230 +72,69 @@ export const fawry3dsService = {
    * Create a 3DS payment request
    * This is the main 3DS payment API call according to Fawry documentation
    */
-  create3dsPayment: async (paymentData: {
-    cardNumber: string;
-    cardExpiryYear: string;
-    cardExpiryMonth: string;
-    cvv: string;
-    amount: number;
-    customerName: string;
-    customerMobile: string;
-    customerEmail: string;
-    customerProfileId?: string;
-    description: string;
-    chargeItems: Array<{
-      itemId: string;
-      description: string;
-      price: number;
-      quantity: number;
-    }>;
-  }): Promise<Fawry3dsPaymentResponse> => {
+  create3dsPayment: async (paymentData: Fawry3dsPaymentRequest): Promise<Fawry3dsPaymentResponse> => {
     try {
       const credentials = secureCredentials.getCredentials();
-      const endpoints = secureCredentials.getApiEndpoints();
-
-      // Generate unique merchant reference
-      const merchantRefNum = `3DS_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-
-      // Generate signature according to Fawry 3DS documentation
-      // merchantCode + merchantRefNum + customerProfileId (if exists, otherwise "") + paymentMethod + amount (in two decimal format 10.00) + cardNumber + cardExpiryYear + cardExpiryMonth + cvv + returnUrl + secureKey
       
-      // Convert values to numbers BEFORE signature generation to ensure consistency
-      const cardExpiryYearNum = parseInt(paymentData.cardExpiryYear);
-      const cardExpiryMonthNum = parseInt(paymentData.cardExpiryMonth);
-      const cvvNum = parseInt(paymentData.cvv);
-      const amountNum = parseFloat(paymentData.amount.toString());
+      // Generate unique merchant reference number
+      const merchantRefNum = `3DS_${Date.now()}_${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
       
-      // Format values exactly as Fawry expects
-      const formattedAmount = amountNum.toFixed(2);           // "100.00" format
-      const formattedExpiryYear = cardExpiryYearNum.toString().padStart(2, '0');  // "29" format
-      const formattedExpiryMonth = cardExpiryMonthNum.toString().padStart(2, '0'); // "05" format
-      const formattedCvv = cvvNum.toString();                 // "123" format
-      
-      // Clean card number (remove spaces) - MUST be used in BOTH signature and payload
+      // Clean card number (remove spaces)
       const cleanCardNumber = paymentData.cardNumber.replace(/\s/g, '');
       
-      // Build returnUrl exactly as it will appear in payload
-      const returnUrl = `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amountNum}&step=3ds_payment`;
+      // Format amount to 2 decimal places
+      const formattedAmount = paymentData.amount.toFixed(2);
       
-      const signatureString = credentials.merchantCode +
-        merchantRefNum +
-        (paymentData.customerProfileId || "") +
-        'CARD' +
-        formattedAmount +
-        cleanCardNumber +                    // Use clean card number (no spaces)
-        formattedExpiryYear +
-        formattedExpiryMonth +
-        formattedCvv +
-        returnUrl +
+      // Format expiry and CVV as strings
+      const cardExpiryYear = paymentData.cardExpiryYear.toString().slice(-2);
+      const cardExpiryMonth = paymentData.cardExpiryMonth.toString().padStart(2, '0');
+      const cvv = paymentData.cvv.toString().padStart(3, '0');
+      
+      // Generate signature
+      const signatureString = 
+        credentials.merchantCode + 
+        merchantRefNum + 
+        paymentData.customerProfileId + 
+        paymentData.paymentMethod + 
+        formattedAmount + 
+        cleanCardNumber + 
+        cardExpiryYear + 
+        cardExpiryMonth + 
+        cvv + 
+        paymentData.returnUrl + 
         credentials.securityKey;
-
+      
       const signature = await generateSHA256(signatureString);
       
-      console.log('Signature generation details:', {
-        merchantCode: credentials.merchantCode,
-        merchantRefNum: merchantRefNum,
-        customerProfileId: paymentData.customerProfileId || "",
-        paymentMethod: 'CARD',
-        amount: formattedAmount,
-        cardNumber: cleanCardNumber,           // Show clean card number
-        cardNumberOriginal: paymentData.cardNumber, // Show original for comparison
-        cardExpiryYear: formattedExpiryYear,
-        cardExpiryMonth: formattedExpiryMonth,
-        cvv: formattedCvv,
-        returnUrl: returnUrl,
-        signatureString: signatureString,
-        generatedSignature: signature
-      });
-
-      // Verify signature string construction
-      console.log('=== SIGNATURE VERIFICATION ===');
-      console.log('Signature components:', {
-        merchantCode: credentials.merchantCode,
-        merchantRefNum: merchantRefNum,
-        customerProfileId: paymentData.customerProfileId || "",
-        paymentMethod: 'CARD',
-        amount: formattedAmount,
-        cardNumber: cleanCardNumber,
-        cardExpiryYear: formattedExpiryYear,
-        cardExpiryMonth: formattedExpiryMonth,
-        cvv: formattedCvv,
-        returnUrl: returnUrl,
-        secureKey: credentials.securityKey ? '***HIDDEN***' : 'MISSING'
-      });
-      console.log('Full signature string:', signatureString);
-      console.log('Generated signature:', signature);
-      console.log('=== END SIGNATURE VERIFICATION ===');
-
-      // Create 3DS payment payload according to Fawry documentation
-      const paymentPayload: Fawry3dsPaymentRequest = {
+      const payload = {
         merchantCode: credentials.merchantCode,
         merchantRefNum: merchantRefNum,
         customerProfileId: paymentData.customerProfileId,
-        paymentMethod: 'CARD',
-        cardNumber: cleanCardNumber,           // Use the SAME clean card number from signature
-        cardExpiryYear: formattedExpiryYear,    // Use the formatted string
-        cardExpiryMonth: formattedExpiryMonth,  // Use the formatted string
-        cvv: formattedCvv,                      // Use the formatted string
         customerName: paymentData.customerName,
         customerMobile: paymentData.customerMobile,
         customerEmail: paymentData.customerEmail,
-        amount: amountNum,                       // Use the number
-        description: paymentData.description,
-        language: 'en-gb',
+        amount: formattedAmount,
         currencyCode: 'EGP',
+        language: 'en-gb',
+        paymentMethod: paymentData.paymentMethod,
+        cardNumber: cleanCardNumber,
+        cardExpiryYear: cardExpiryYear,
+        cardExpiryMonth: cardExpiryMonth,
+        cvv: cvv,
+        returnUrl: paymentData.returnUrl,
         chargeItems: paymentData.chargeItems,
-        enable3DS: true,                    // Required: Enable 3DS authentication
-        authCaptureModePayment: false,      // Required: Authentication capture mode
-        returnUrl: returnUrl,               // Use the EXACT same returnUrl from signature
-        orderWebHookUrl: `${window.location.origin}/api/fawry/webhook`, // Optional: Webhook for status updates
-        saveCardInfo: false,                // Optional: Save card for future use
+        enable3DS: true,
+        authCaptureModePayment: false,
         signature: signature
       };
 
-      // Pre-flight validation - check for common Fawry requirements
-      const validationErrors = [];
-      
-      if (!paymentPayload.merchantCode || paymentPayload.merchantCode.trim() === '') {
-        validationErrors.push('merchantCode is required');
-      }
-      
-      if (!paymentPayload.merchantRefNum || paymentPayload.merchantRefNum.trim() === '') {
-        validationErrors.push('merchantRefNum is required');
-      }
-      
-      if (!paymentPayload.cardNumber || paymentPayload.cardNumber.length < 13) {
-        validationErrors.push('cardNumber must be at least 13 digits');
-      }
-      
-      if (!paymentPayload.cardExpiryYear || paymentPayload.cardExpiryYear.length !== 2) {
-        validationErrors.push('cardExpiryYear must be 2 digits (YY)');
-      }
-      
-      if (!paymentPayload.cardExpiryMonth || paymentPayload.cardExpiryMonth.length !== 2) {
-        validationErrors.push('cardExpiryMonth must be 2 digits (MM)');
-      }
-      
-      if (!paymentPayload.cvv || paymentPayload.cvv.length < 3) {
-        validationErrors.push('cvv must be at least 3 digits');
-      }
-      
-      if (!paymentPayload.amount || paymentPayload.amount <= 0) {
-        validationErrors.push('amount must be greater than 0');
-      }
-      
-      if (!paymentPayload.customerMobile || paymentPayload.customerMobile.trim() === '') {
-        validationErrors.push('customerMobile is required');
-      }
-      
-      if (!paymentPayload.customerEmail || paymentPayload.customerEmail.trim() === '') {
-        validationErrors.push('customerEmail is required');
-      }
-      
-      if (!Array.isArray(paymentPayload.chargeItems) || paymentPayload.chargeItems.length === 0) {
-        validationErrors.push('chargeItems array is required and must not be empty');
-      }
-      
-      if (validationErrors.length > 0) {
-        console.error('Fawry payload validation failed:', validationErrors);
-        throw new Error(`Payload validation failed: ${validationErrors.join(', ')}`);
-      }
-
-      console.log('Creating 3DS payment with payload:', paymentPayload);
-
-      // Detailed payload inspection for debugging
-      console.log('=== FULL PAYLOAD INSPECTION ===');
-      console.log('Raw payload object:', JSON.stringify(paymentPayload, null, 2));
-      console.log('Charge items structure:', paymentPayload.chargeItems.map(item => ({
-        itemId: item.itemId,
-        description: item.description,
-        price: item.price,
-        quantity: item.quantity,
-        priceType: typeof item.price,
-        quantityType: typeof item.quantity
-      })));
-      console.log('Card details:', {
-        cardNumber: paymentPayload.cardNumber,
-        cardNumberLength: paymentPayload.cardNumber.length,
-        cardNumberClean: paymentPayload.cardNumber.replace(/\s/g, ''),
-        cardNumberCleanLength: paymentPayload.cardNumber.replace(/\s/g, '').length,
-        expiryYear: paymentPayload.cardExpiryYear,
-        expiryMonth: paymentPayload.cardExpiryMonth,
-        cvv: paymentPayload.cvv,
-        cvvLength: paymentPayload.cvv.length
-      });
-      console.log('Customer details:', {
-        name: paymentPayload.customerName,
-        mobile: paymentPayload.customerMobile,
-        email: paymentPayload.customerEmail,
-        profileId: paymentPayload.customerProfileId
-      });
-      console.log('=== END PAYLOAD INSPECTION ===');
-
-      // Call Fawry 3DS payment API
-      const response = await fetch(endpoints.paymentEndpoint, {
-        method: 'POST',
+      const response = await axios.post(FAWRY_3DS_API_URL, payload, {
         headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(paymentPayload)
+          'Content-Type': 'application/json',
+        }
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Fawry API Error Response:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText
-        });
-        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
-      }
-
-      const paymentResponse: Fawry3dsPaymentResponse = await response.json();
-      console.log('Fawry 3DS payment response:', paymentResponse);
-
-      return paymentResponse;
-
+      return response.data;
     } catch (error) {
       console.error('Error creating 3DS payment:', error);
       throw error;
