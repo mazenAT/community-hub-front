@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { plannerApi, profileApi, addOnApi, familyMembersApi, addOnOrderApi } from "@/services/api";
 import { format, parseISO, getDay, isBefore, startOfDay, endOfDay, subDays, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameDay } from "date-fns";
-import { CalendarIcon, AlertCircle, Filter, FileText, ChevronDown, Users } from "lucide-react";
+import { CalendarIcon, AlertCircle, FileText, ChevronDown, Users } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -374,14 +374,32 @@ const Planner = () => {
 
   const preOrderMutation = useMutation({
     mutationFn: (payload: any) => plannerApi.preOrderMeal(payload),
-    onSuccess: () => {
-      toast.success("Meal ordered and confirmed successfully");
+    onSuccess: (response) => {
+      toast.success("Order placed successfully!");
+      
+      // Show order confirmation with details
+      const orderDetails = response.data;
+      if (orderDetails) {
+        // Navigate to order confirmation or show modal with details
+        showOrderConfirmation(orderDetails);
+      }
+      
       refetch(); // Update the UI after pre-order
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to order meal");
+      toast.error(error.response?.data?.message || "Failed to place order");
     },
   });
+
+  const [showOrderConfirmationModal, setShowOrderConfirmationModal] = useState(false);
+  const [orderConfirmationData, setOrderConfirmationData] = useState<any>(null);
+  const [showAddOnOrderModal, setShowAddOnOrderModal] = useState(false);
+  const [selectedAddOnsForOrder, setSelectedAddOnsForOrder] = useState<Record<number, number>>({});
+
+  const showOrderConfirmation = (orderData: any) => {
+    setOrderConfirmationData(orderData);
+    setShowOrderConfirmationModal(true);
+  };
 
   const handlePreOrder = (meal: MealWithPivot, date: Date) => {
     if (!activePlan) return;
@@ -563,6 +581,54 @@ const Planner = () => {
       });
   }, []);
 
+  const navigate = useNavigate();
+
+  const addOnOrderMutation = useMutation({
+    mutationFn: (payload: any) => addOnOrderApi.createOrder(payload.add_on_id, payload.quantity, parseInt(selectedFamilyMember)),
+    onSuccess: (response) => {
+      toast.success("Add-on order placed successfully!");
+      
+      // Show order confirmation with details
+      const orderDetails = response.data;
+      if (orderDetails) {
+        showOrderConfirmation(orderDetails);
+      }
+      
+      // Clear selected add-ons
+      setSelectedAddOnsForOrder({});
+      setShowAddOnOrderModal(false);
+      
+      refetch(); // Update the UI after order
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to place add-on order");
+    },
+  });
+
+  const handleAddOnOrder = () => {
+    if (!selectedFamilyMember) {
+      toast.error("Please select a family member before placing an order");
+      return;
+    }
+
+    const selectedItems = Object.entries(selectedAddOnsForOrder)
+      .filter(([_, quantity]) => quantity > 0)
+      .map(([addonId, quantity]) => ({
+        add_on_id: parseInt(addonId),
+        quantity
+      }));
+
+    if (selectedItems.length === 0) {
+      toast.error("Please select at least one add-on item");
+      return;
+    }
+
+    // Place order for each selected add-on
+    selectedItems.forEach(item => {
+      addOnOrderMutation.mutate(item);
+    });
+  };
+
   // Replace loading spinner in loading state
   if (isLoadingProfile || isLoadingPlans) {
     return (
@@ -614,7 +680,7 @@ const Planner = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-white">View Menu</h1>
           <div className="flex items-center space-x-2">
-            <Filter className="w-5 h-5 text-white" />
+            <FileText className="w-5 h-5 text-white" />
             <NotificationBell />
           </div>
         </div>
@@ -1042,6 +1108,42 @@ const Planner = () => {
           <EmptyState message="No active weekly plan found for your school." />
         )}
 
+        {/* Separate Add-on Ordering Section */}
+        <div className="mb-8 bg-white rounded-xl border border-brand-yellow/30 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-brand-black">Order Add-ons Separately</h2>
+            <Button
+              onClick={() => setShowAddOnOrderModal(true)}
+              className="bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white"
+            >
+              Order Add-ons
+            </Button>
+          </div>
+          
+          <p className="text-sm text-gray-600 mb-4">
+            You can order add-ons independently of meals. These will be available for pickup on the same day.
+          </p>
+
+          {/* Quick Add-on Categories */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {['Bakery', 'Snacks', 'Drinks', 'Greek Yogurt Popsicle'].map((category) => (
+              <div key={category} className="text-center p-3 bg-brand-yellow/10 rounded-lg border border-brand-yellow/30">
+                <div className="text-sm font-medium text-brand-black">{category}</div>
+                <div className="text-xs text-gray-600 mt-1">
+                  {filteredAddOns.filter(addon => {
+                    switch (category) {
+                      case 'Bakery': return addon.category === 'bakery';
+                      case 'Snacks': return addon.category === 'snacks';
+                      case 'Drinks': return addon.category === 'drinks';
+                      case 'Greek Yogurt Popsicle': return addon.category === 'greek_yoghurt_popsicle';
+                      default: return false;
+                    }
+                  }).length} items
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         </div>
 
@@ -1190,9 +1292,235 @@ const Planner = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Add-on Order Modal */}
+      <Dialog open={showAddOnOrderModal} onOpenChange={setShowAddOnOrderModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-center text-brand-black">
+              🍽️ Order Add-ons Separately
+            </DialogTitle>
+            <p className="text-sm text-gray-600 text-center">
+              Select add-ons to order independently of meals
+            </p>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Add-on Categories */}
+            {['Bakery', 'Snacks', 'Drinks', 'Greek Yogurt Popsicle'].map((category) => {
+              const categoryAddOns = filteredAddOns.filter(addon => {
+                switch (category) {
+                  case 'Bakery': return addon.category === 'bakery';
+                  case 'Snacks': return addon.category === 'snacks';
+                  case 'Drinks': return addon.category === 'drinks';
+                  case 'Greek Yogurt Popsicle': return addon.category === 'greek_yoghurt_popsicle';
+                  default: return false;
+                }
+              });
+
+              if (categoryAddOns.length === 0) return null;
+
+              return (
+                <div key={category} className="border border-gray-200 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-brand-black mb-3">{category}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {categoryAddOns.map((addon) => (
+                      <div key={addon.id} className="flex items-center justify-between p-3 border border-brand-yellow/30 rounded-lg bg-brand-yellow/5">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-brand-black">{addon.name}</h4>
+                          {addon.description && (
+                            <p className="text-sm text-brand-black/70">{addon.description}</p>
+                          )}
+                          <p className="text-sm font-medium text-brand-orange mt-1">
+                            {formatCurrency(addon.price)}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-8 h-8 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
+                            onClick={() => {
+                              setSelectedAddOnsForOrder(prev => ({
+                                ...prev,
+                                [addon.id]: Math.max(0, (prev[addon.id] || 0) - 1)
+                              }));
+                            }}
+                            disabled={!selectedAddOnsForOrder[addon.id] || selectedAddOnsForOrder[addon.id] === 0}
+                          >
+                            -
+                          </Button>
+                          <span className="w-8 text-center text-sm font-medium">
+                            {selectedAddOnsForOrder[addon.id] || 0}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-8 h-8 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
+                            onClick={() => {
+                              setSelectedAddOnsForOrder(prev => ({
+                                ...prev,
+                                [addon.id]: (prev[addon.id] || 0) + 1
+                              }));
+                            }}
+                          >
+                            +
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Order Summary and Actions */}
+            <div className="border-t border-gray-200 pt-4">
+              <div className="flex justify-between items-center mb-4">
+                <div className="text-sm text-gray-600">
+                  Total: {formatCurrency(
+                    Object.entries(selectedAddOnsForOrder).reduce((total, [addonId, quantity]) => {
+                      const addon = filteredAddOns.find(a => a.id === parseInt(addonId));
+                      return total + (addon ? addon.price * quantity : 0);
+                    }, 0)
+                  )}
+                </div>
+                <div className="space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowAddOnOrderModal(false);
+                      setSelectedAddOnsForOrder({});
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white"
+                    onClick={handleAddOnOrder}
+                    disabled={Object.values(selectedAddOnsForOrder).every(qty => qty === 0)}
+                  >
+                    Place Add-on Order
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Order Confirmation Modal */}
+      <Dialog open={showOrderConfirmationModal} onOpenChange={setShowOrderConfirmationModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-center text-green-600">
+              ✅ Order Confirmed Successfully!
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {orderConfirmationData && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h3 className="font-semibold text-green-800 mb-3">Order Summary</h3>
+                
+                {/* Order Details */}
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Order ID:</span>
+                    <span className="font-medium">#{orderConfirmationData.id || 'N/A'}</span>
+                  </div>
+                  
+                  {orderConfirmationData.items && orderConfirmationData.items.map((item: any, index: number) => (
+                    <div key={index} className="border-l-2 border-green-300 pl-3">
+                      <div className="font-medium text-gray-800">
+                        {item.meal?.name || item.meal?.title || item.add_on?.name || 'Item'}
+                      </div>
+                      <div className="text-gray-600">
+                        Type: {item.meal ? 'Meal' : 'Add-on'}
+                      </div>
+                      {item.meal_date && (
+                        <div className="text-gray-600">
+                          Date: {new Date(item.meal_date).toLocaleDateString()}
+                        </div>
+                      )}
+                      <div className="text-gray-600">
+                        Quantity: {item.quantity}
+                      </div>
+                      {item.meal && item.add_ons && item.add_ons.length > 0 && (
+                        <div className="mt-1">
+                          <div className="text-gray-600 text-xs">Add-ons:</div>
+                          {item.add_ons.map((addon: any, addonIndex: number) => (
+                            <div key={addonIndex} className="text-xs text-gray-500 ml-2">
+                              • {addon.add_on?.name || 'Add-on'} (x{addon.quantity})
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {/* Handle add-on only orders */}
+                  {!orderConfirmationData.items && orderConfirmationData.add_on && (
+                    <div className="border-l-2 border-green-300 pl-3">
+                      <div className="font-medium text-gray-800">
+                        {orderConfirmationData.add_on.name || 'Add-on'}
+                      </div>
+                      <div className="text-gray-600">
+                        Type: Add-on
+                      </div>
+                      <div className="text-gray-600">
+                        Quantity: {orderConfirmationData.quantity}
+                      </div>
+                      <div className="text-gray-600">
+                        Unit Price: {formatCurrency(orderConfirmationData.unit_price)}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {orderConfirmationData.total_amount && (
+                    <div className="border-t border-green-200 pt-2 mt-3">
+                      <div className="flex justify-between font-semibold">
+                        <span>Total Amount:</span>
+                        <span className="text-green-700">
+                          {formatCurrency(orderConfirmationData.total_amount)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* Action Buttons */}
+            <div className="flex flex-col space-y-3">
+              <Button
+                onClick={() => {
+                  setShowOrderConfirmationModal(false);
+                  navigate('/orders');
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                View My Orders
+              </Button>
+              <Button
+                onClick={() => setShowOrderConfirmationModal(false)}
+                variant="outline"
+                className="w-full"
+              >
+                Back to Menu
+              </Button>
+            </div>
+            
+            <div className="text-center text-sm text-gray-500">
+              You can always view your previous orders with full details
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <BottomNavigation activeTab="planner" />
     </div>
   );
 };
 
 export default Planner;
+

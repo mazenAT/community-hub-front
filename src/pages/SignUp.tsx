@@ -112,6 +112,28 @@ const SignUp = () => {
       newErrors.password = "Password must be at least 8 characters long.";
       newShake.password = true;
     }
+    
+    // Enhanced password validation matching backend StrongPassword rule
+    if (!/[A-Z]/.test(password)) {
+      newErrors.password = "Password must contain at least one uppercase letter (A-Z).";
+      newShake.password = true;
+    }
+
+    if (!/[a-z]/.test(password)) {
+      newErrors.password = "Password must contain at least one lowercase letter (a-z).";
+      newShake.password = true;
+    }
+
+    if (!/[0-9]/.test(password)) {
+      newErrors.password = "Password must contain at least one number (0-9).";
+      newShake.password = true;
+    }
+
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      newErrors.password = "Password must contain at least one special character (!@#$%^&*).";
+      newShake.password = true;
+    }
+
     if (!phone) {
       newErrors.phone = "Phone number is required.";
       newShake.phone = true;

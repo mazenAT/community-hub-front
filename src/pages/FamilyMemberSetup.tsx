@@ -54,9 +54,12 @@ const FamilyMemberSetup = () => {
   const handleAddAllergy = (memberIndex: number) => {
     if (currentAllergy.trim()) {
       const updatedMembers = [...familyMembers];
+      // Only add allergy to the specific member
       updatedMembers[memberIndex].allergies.push(currentAllergy.trim());
       setFamilyMembers(updatedMembers);
       setCurrentAllergy("");
+      // Reset current member index to prevent cross-contamination
+      setCurrentMemberIndex(memberIndex);
     }
   };
 

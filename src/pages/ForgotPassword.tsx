@@ -11,7 +11,7 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState("");
 
   const forgotPasswordMutation = useMutation({
-    mutationFn: (email: string) => authApi.forgotPassword(email),
+    mutationFn: (email: string) => authApi.forgotPassword({ email }),
     onSuccess: () => {
       toast.success("Password reset instructions sent to your email");
       navigate("/");
@@ -24,6 +24,13 @@ const ForgotPassword = () => {
   const handleSubmit = () => {
     if (!email) {
       toast.error("Please enter your email");
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address");
       return;
     }
 

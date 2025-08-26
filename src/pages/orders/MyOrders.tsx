@@ -60,6 +60,12 @@ interface AddOnOrder {
   total_price: number;
   status: string;
   created_at: string;
+  family_member?: {
+    id: number;
+    name: string;
+    grade: string;
+    class: string;
+  };
 }
 
 const MyOrders: React.FC = () => {
@@ -270,6 +276,14 @@ const MyOrders: React.FC = () => {
                     <div>
                       <h3 className="font-semibold text-lg">Add-on Order #{addOnOrder.id}</h3>
                       <p className="text-xs text-gray-400 mb-1">{new Date(addOnOrder.created_at).toLocaleDateString()}</p>
+                      
+                      {/* Family Member Information */}
+                      {addOnOrder.family_member && (
+                        <p className="text-sm text-brand-red font-medium mb-1">
+                          For: {addOnOrder.family_member.name} ({addOnOrder.family_member.grade} - {addOnOrder.family_member.class})
+                        </p>
+                      )}
+                      
                       <div className="mt-2 text-sm text-gray-700">
                         <div className="font-semibold">{addOnOrder.add_on?.name || 'N/A'}</div>
                         {addOnOrder.add_on?.description && (

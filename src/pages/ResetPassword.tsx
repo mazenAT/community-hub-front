@@ -63,8 +63,29 @@ const ResetPassword = () => {
       return;
     }
 
+    // Enhanced password validation matching backend StrongPassword rule
     if (password.length < 8) {
       toast.error("Password must be at least 8 characters long");
+      return;
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      toast.error("Password must contain at least one uppercase letter (A-Z)");
+      return;
+    }
+
+    if (!/[a-z]/.test(password)) {
+      toast.error("Password must contain at least one lowercase letter (a-z)");
+      return;
+    }
+
+    if (!/[0-9]/.test(password)) {
+      toast.error("Password must contain at least one number (0-9)");
+      return;
+    }
+
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      toast.error("Password must contain at least one special character (!@#$%^&*)");
       return;
     }
 

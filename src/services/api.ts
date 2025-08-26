@@ -117,6 +117,11 @@ export const notificationApi = {
 export const ordersApi = {
   getOrders: (params?: { status?: string }) => api.get('/orders/my-orders', { params }),
   getOrder: (id: number) => api.get(`/orders/${id}`),
+  createOrder: (data: {
+    meals?: Array<{ meal_id: number; quantity: number; meal_date: string }>;
+    add_ons?: Array<{ add_on_id: number; quantity: number }>;
+    family_member_id?: number;
+  }) => api.post('/orders', data),
 };
 
 export const profileApi = {
@@ -156,7 +161,8 @@ export const addOnApi = {
 };
 
 export const addOnOrderApi = {
-  createOrder: (add_on_id: number, quantity: number) => api.post('/add-on-orders', { add_on_id, quantity }),
+  createOrder: (add_on_id: number, quantity: number, family_member_id?: number) => 
+    api.post('/add-on-orders', { add_on_id, quantity, family_member_id }),
   getMyOrders: () => api.get('/add-on-orders'),
   getOrder: (id: number) => api.get(`/add-on-orders/${id}`),
 };
