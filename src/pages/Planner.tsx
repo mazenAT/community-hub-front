@@ -141,52 +141,42 @@ const Planner = () => {
   };
 
   const getDatesForWeek = (plan: WeeklyPlan, weekNumber: number): Date[] => {
-    if (!plan) return [];
+    if (!plan.start_date || !plan.end_date) return [];
     
     const startDate = parseISO(plan.start_date);
     const endDate = parseISO(plan.end_date);
     const dates: Date[] = [];
     
-    let currentDate = startDate;
-    while (currentDate <= endDate) {
+    // Calculate week start (assuming week 1 starts from start_date)
+    const weekStart = addDays(startDate, (weekNumber - 1) * 7);
+    const weekEnd = addDays(weekStart, 6);
+    
+    // Ensure we don't go beyond the plan end date
+    const actualWeekEnd = isBefore(weekEnd, endDate) ? weekEnd : endDate;
+    
+    let currentDate = new Date(weekStart);
+    while (isBefore(currentDate, actualWeekEnd) || isSameDay(currentDate, actualWeekEnd)) {
       dates.push(new Date(currentDate));
       currentDate = addDays(currentDate, 1);
     }
-    
-    // Sort dates to ensure Sunday is first (Sunday = 0 in JavaScript Date)
-    dates.sort((a, b) => {
-      const dayA = a.getDay(); // 0 = Sunday, 1 = Monday, etc.
-      const dayB = b.getDay();
-      return dayA - dayB;
-    });
     
     return dates;
   };
 
   const getDatesForView = (plan: WeeklyPlan): Date[] => {
-    if (viewMode === 'custom') {
-      if (customStartDate && customEndDate) {
-        // Range selection
-        const dates: Date[] = [];
-        let currentDate = startOfDay(customStartDate);
-        const endDate = endOfDay(customEndDate);
-        
-        while (currentDate <= endDate) {
-          dates.push(new Date(currentDate));
-          currentDate = addDays(currentDate, 1);
-        }
-        return dates;
-      } else if (customStartDate) {
-        // Single date selection - return only that date
-        return [startOfDay(customStartDate)];
-      } else {
-        // No dates selected
-        return [];
-      }
-    } else {
-      // Week-based view
-      return getDatesForWeek(plan, parseInt(selectedWeek));
+    if (!customStartDate || !customEndDate) return [];
+    
+    const startDate = new Date(customStartDate);
+    const endDate = new Date(customEndDate);
+    const dates: Date[] = [];
+    
+    let currentDate = new Date(startDate);
+    while (isBefore(currentDate, endDate) || isSameDay(currentDate, endDate)) {
+      dates.push(new Date(currentDate));
+      currentDate = addDays(currentDate, 1);
     }
+    
+    return dates;
   };
 
   const getMealsForDay = (date: Date, plans: WeeklyPlan[]): any[] => {
@@ -401,6 +391,32 @@ const Planner = () => {
     setShowOrderConfirmationModal(true);
   };
 
+  // Handle viewing meal plan PDF
+  const handleViewMealPlanPdf = async (plan: WeeklyPlan) => {
+    try {
+      setLoadingPdf(true);
+      
+      // Check if plan has PDF path
+      if (plan.meals && plan.meals.length > 0) {
+        const firstMeal = plan.meals[0];
+        if (firstMeal.pdf_path) {
+          // Open PDF in new tab
+          window.open(firstMeal.pdf_path, '_blank');
+        } else {
+          // Show message if no PDF available
+          toast.info("PDF menu is not available for this plan. Please contact the school for the full menu.");
+        }
+      } else {
+        toast.info("No meals available in this plan to view.");
+      }
+    } catch (error) {
+      console.error('Error viewing PDF:', error);
+      toast.error("Failed to open PDF menu. Please try again.");
+    } finally {
+      setLoadingPdf(false);
+    }
+  };
+
   const handlePreOrder = (meal: MealWithPivot, date: Date) => {
     if (!activePlan) return;
     
@@ -485,28 +501,6 @@ const Planner = () => {
       }
     } catch (error) {
       toast.error('Failed to load PDF');
-    } finally {
-      setLoadingPdf(false);
-    }
-  };
-
-  const handleViewMealPlanPdf = async (mealPlan: WeeklyPlan) => {
-    try {
-      setLoadingPdf(true);
-      const response = await plannerApi.getGeneralPdf();
-      // PDF response handled
-      
-      // Handle nested data structure from backend
-      const pdfData = response.data?.data || response.data;
-      if (pdfData?.pdf_url) {
-        setSelectedPdfUrl(pdfData.pdf_url);
-        setShowPdfModal(true);
-      } else {
-        toast.error('No general PDF available');
-      }
-    } catch (error) {
-      // Handle PDF load error
-      toast.error('Failed to load general PDF');
     } finally {
       setLoadingPdf(false);
     }
@@ -845,26 +839,35 @@ const Planner = () => {
         {/* Week Filter */}
         <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
           <h3 className="text-sm font-semibold text-brand-black mb-3">Week Selection</h3>
-          <div className="flex flex-wrap gap-2">
-            {normalizedPlans.map((plan: WeeklyPlan, index: number) => (
-              <Button
-                key={plan.id}
-                variant={selectedWeek === (index + 1).toString() ? 'default' : 'outline'}
-                size="sm"
-                className={`${
-                  selectedWeek === (index + 1).toString()
-                    ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
-                    : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
-                } rounded-full px-3 py-1 text-xs font-medium`}
-                onClick={() => {
-                  setSelectedWeek((index + 1).toString());
-                  setViewMode('week');
-                }}
-              >
-                Week {index + 1}
-              </Button>
-            ))}
-          </div>
+          {normalizedPlans.length === 0 ? (
+            <p className="text-sm text-brand-black/60">No weekly plans available</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {normalizedPlans.map((plan: WeeklyPlan, index: number) => (
+                <Button
+                  key={plan.id}
+                  variant={selectedWeek === (index + 1).toString() ? 'default' : 'outline'}
+                  size="sm"
+                  className={`${
+                    selectedWeek === (index + 1).toString()
+                      ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
+                      : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
+                  } rounded-full px-3 py-1 text-xs font-medium`}
+                  onClick={() => {
+                    setSelectedWeek((index + 1).toString());
+                    setViewMode('week');
+                  }}
+                >
+                  Week {index + 1}
+                </Button>
+              ))}
+            </div>
+          )}
+          {normalizedPlans.length > 0 && (
+            <p className="text-xs text-brand-black/40 mt-2">
+              {normalizedPlans.length} plan{normalizedPlans.length !== 1 ? 's' : ''} available
+            </p>
+          )}
         </div>
 
         {/* Meal Filters */}
@@ -911,7 +914,7 @@ const Planner = () => {
               disabled={loadingPdf}
             >
               <FileText className="w-5 h-5 mr-2" />
-              Show Plans
+              View Full Menu
             </Button>
           </div>
         )}
