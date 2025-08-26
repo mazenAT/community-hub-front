@@ -51,13 +51,28 @@ const NotificationBell: React.FC = () => {
     setError(null);
     try {
       const res = await notificationApi.getNotifications();
-      setNotifications(Array.isArray(res.data) ? res.data : res.data.data || []);
+      
+      // Ensure notifications is always an array
+      let notificationsData = [];
+      if (res.data && Array.isArray(res.data)) {
+        notificationsData = res.data;
+      } else if (res.data && res.data.data && Array.isArray(res.data.data)) {
+        notificationsData = res.data.data;
+      } else {
+        notificationsData = [];
+      }
+      
+      setNotifications(notificationsData);
+      
       // Reset retry count on success
       setRetryCount(0);
       setRetryDelay(1000);
       setNotificationsDisabled(false);
     } catch (err: any) {
       console.error('Failed to fetch notifications:', err);
+      
+      // Set empty array on error to prevent filter issues
+      setNotifications([]);
       
       // Handle different types of errors
       if (err.message?.includes('Network error') || err.message?.includes('CORS')) {
@@ -103,12 +118,17 @@ const NotificationBell: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const unreadCount = Array.isArray(notifications) ? notifications.filter(n => !n.is_read).length : 0;
 
   const handleMarkAsRead = async (id: number) => {
     try {
       await notificationApi.markAsRead(id);
-      setNotifications(notifications => notifications.map(n => n.id === id ? { ...n, is_read: true, read_at: new Date().toISOString() } : n));
+      setNotifications(notifications => {
+        if (Array.isArray(notifications)) {
+          return notifications.map(n => n.id === id ? { ...n, is_read: true, read_at: new Date().toISOString() } : n);
+        }
+        return [];
+      });
     } catch {}
   };
 
@@ -178,9 +198,9 @@ const NotificationBell: React.FC = () => {
                   Retry
                 </Button>
               </div>
-            ) : notifications.length === 0 ? (
+            ) : Array.isArray(notifications) && notifications.length === 0 ? (
               <EmptyState message="No notifications" />
-            ) : (
+            ) : Array.isArray(notifications) ? (
               notifications.map(n => (
                 <div
                   key={n.id}
@@ -197,9 +217,11 @@ const NotificationBell: React.FC = () => {
                   </div>
                 </div>
               ))
+            ) : (
+              <EmptyState message="Unable to load notifications" />
             )}
           </div>
-          {notifications.length > 0 && (
+          {Array.isArray(notifications) && notifications.length > 0 && (
             <div className="p-3 border-t border-gray-100">
               <Button 
                 variant="ghost" 
