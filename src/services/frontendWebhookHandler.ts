@@ -143,7 +143,7 @@ export const frontendWebhookHandler = {
             );
             
             // **CRITICAL FIX**: Update wallet balance in backend
-            frontendWebhookHandler.updateWalletBalance(transaction.amount, transaction.user_id, fawryRefNumber || merchantRefNumber);
+            frontendWebhookHandler.updateWalletBalance(transaction.amount, transaction.user_id, fawryRefNumber || merchantRefNumber, orderStatus);
             
             console.log('Transaction marked as completed (Fawry status: paid/delivered):', transaction.id);
             break;
@@ -268,7 +268,7 @@ export const frontendWebhookHandler = {
             );
             
             // **CRITICAL FIX**: Update wallet balance in backend
-            frontendWebhookHandler.updateWalletBalance(transaction.amount, transaction.user_id, merchantRefNum || undefined);
+            frontendWebhookHandler.updateWalletBalance(transaction.amount, transaction.user_id, merchantRefNum || undefined, 'paid');
             
             console.log('Payment completed via callback:', transaction.id);
             return true;
@@ -301,14 +301,34 @@ export const frontendWebhookHandler = {
   },
 
   // **NEW METHOD**: Update wallet balance in backend after successful recharge
-  updateWalletBalance: async (amount: number, userId: number, fawryReference?: string): Promise<void> => {
+  updateWalletBalance: async (amount: number, userId: number, fawryReference?: string, paymentStatus?: string): Promise<void> => {
     try {
-      console.log('Updating wallet balance in backend:', { amount, userId, fawryReference });
+      console.log('Updating wallet balance in backend:', { amount, userId, fawryReference, paymentStatus });
+      
+      // Validate that we have valid data before making the API call
+      if (!amount || amount <= 0) {
+        console.warn('Invalid amount for wallet update:', amount);
+        return;
+      }
+      
+      if (!fawryReference) {
+        console.warn('No Fawry reference provided for wallet update');
+        return;
+      }
+      
+      // **CRITICAL FIX**: Only update wallet for successful payments
+      if (paymentStatus) {
+        const statusStr = String(paymentStatus).toLowerCase();
+        if (statusStr !== '200' && statusStr !== 'paid' && statusStr !== 'delivered') {
+          console.warn('Skipping wallet update for failed payment status:', paymentStatus);
+          return;
+        }
+      }
       
       const response = await api.post('/wallet/update-balance', {
         amount: amount,
         type: 'top_up',
-        note: `Fawry recharge - Reference: ${fawryReference || 'N/A'}`
+        note: `Fawry recharge - Reference: ${fawryReference}`
       });
 
       if (response.status === 200) {
@@ -318,6 +338,19 @@ export const frontendWebhookHandler = {
       }
     } catch (error) {
       console.error('Error updating wallet balance in backend:', error);
+      
+      // Log detailed error information for debugging
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as any;
+        console.error('Backend API error details:', {
+          status: axiosError.response?.status,
+          statusText: axiosError.response?.statusText,
+          data: axiosError.response?.data,
+          url: axiosError.config?.url,
+          method: axiosError.config?.method
+        });
+      }
+      
       // Don't throw error to prevent breaking the callback flow
       // The frontend transaction is already marked as completed
       // Admin can manually reconcile failed balance updates

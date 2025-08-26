@@ -12,7 +12,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    https: true, // Enable HTTPS for local development
+    https: false, // Disable HTTPS for local development
     host: true, // Allow external connections
   },
   build: {

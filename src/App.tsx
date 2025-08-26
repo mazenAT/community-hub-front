@@ -25,6 +25,7 @@ import MyOrders from "./pages/orders/MyOrders";
 import FawryCallback from "./pages/FawryCallback";
 import ContactUs from "./pages/ContactUs";
 import Notifications from "./pages/Notifications";
+import FawryTestPage from "./pages/FawryTestPage";
 
 const queryClient = new QueryClient();
 
@@ -77,6 +78,12 @@ const AppContent = () => {
           <Route path="/notifications" element={
             <ProtectedRoute>
               <Notifications />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/fawry-test" element={
+            <ProtectedRoute>
+              <FawryTestPage />
             </ProtectedRoute>
           } />
 

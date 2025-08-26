@@ -114,9 +114,11 @@ const Wallet = () => {
     }
     setRefundLoading(0);
     try {
-      // For now, we'll use a placeholder transaction_id since this is a general refund request
-      // In the future, this should be tied to a specific transaction
-      await walletApi.requestRefund({ transaction_id: 0, reason: refundReason });
+      // Send the correct payload with amount and reason
+      await walletApi.requestRefund({ 
+        amount: Number(refundAmount), 
+        reason: refundReason 
+      });
       toast({ title: "Refund Requested", description: `Refund request for ${formatCurrency(Number(refundAmount))} has been submitted. It will be processed within 3-5 business days.` });
       setRefundModalOpen(false);
       setRefundAmount("");

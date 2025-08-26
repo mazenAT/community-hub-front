@@ -11,6 +11,7 @@ import SavedCards from "../components/SavedCards";
 import BottomNavigation from "@/components/BottomNavigation";
 import { frontendTransactionTracker } from "../services/frontendTransactionTracker";
 import { secureCredentials } from "../services/secureCredentials";
+import { fawry3dsService } from '../services/fawry3dsService';
 
 interface SavedCard {
   id: number;
@@ -38,6 +39,7 @@ const Recharge = () => {
   const [mobile, setMobile] = useState("");
   const [selectedCard, setSelectedCard] = useState<SavedCard | null>(null);
   const [paymentMode, setPaymentMode] = useState<'saved' | 'new'>('saved');
+  const [error, setError] = useState('');
 
   // Initialize secure credentials
   useEffect(() => {
@@ -101,6 +103,10 @@ const Recharge = () => {
       }
 
       const finalAmount = selectedAmount || parseFloat(customAmount) || 0;
+      const customerName = profile.name || 'Customer';
+      const customerMobile = mobile;
+      const customerEmail = profile.email || 'customer@example.com';
+      const customerProfileId = profile.id.toString();
 
       // Frontend validation before calling Fawry
       if (finalAmount <= 0) {
@@ -142,27 +148,19 @@ const Recharge = () => {
       }
 
       setIsSubmitting(true);
-
-      // Create transaction record for tracking
-      const transaction = frontendTransactionTracker.createTransaction({
-        amount: finalAmount,
-        user_id: profile.id,
-        card_details: paymentMode === 'saved' && selectedCard ? {
-          last_four_digits: selectedCard.last_four_digits,
-          card_alias: selectedCard.card_alias
-        } : undefined
-      });
+      setError('');
 
       try {
         if (paymentMode === 'saved' && selectedCard) {
-          await processPaymentWithSavedCard(selectedCard, finalAmount, transaction.id, credentials, endpoints);
+          await processPaymentWithSavedCard(selectedCard, finalAmount, customerProfileId, customerName, customerMobile, customerEmail);
         } else {
-          await createNewCardToken(finalAmount, transaction.id, credentials, endpoints);
+          await handleSubmit(finalAmount, customerProfileId, customerName, customerMobile, customerEmail);
         }
       } catch (error) {
         console.error('Payment processing error:', error);
+        const transactionId = `TXN_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
         frontendTransactionTracker.markTransactionFailed(
-          transaction.id, 
+          transactionId, 
           error instanceof Error ? error.message : "An unexpected error occurred during recharge",
           "UNEXPECTED_ERROR"
         );
@@ -194,122 +192,164 @@ const Recharge = () => {
     }
   };
 
-  const createNewCardToken = async (amount: number, transactionId: string, credentials: any, endpoints: any) => {
+  const handleSubmit = async (amount: number, customerProfileId: string, customerName: string, customerMobile: string, customerEmail: string) => {
+    setIsSubmitting(true);
+    setError('');
+
+    // Validate form data
+    const validation = fawry3dsService.validate3dsPaymentData({
+      cardNumber: cardNumber,
+      cardExpiryYear: expiryYear,
+      cardExpiryMonth: expiryMonth,
+      cvv: cvv,
+      amount: amount,
+      customerName: customerName,
+      customerMobile: customerMobile,
+      customerEmail: customerEmail
+    });
+
+    if (!validation.isValid) {
+      toast.error(`Please fix the following errors: ${validation.errors.join(', ')}`);
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      const merchantRefNum = Date.now().toString();
-      const customerProfileId = profile.id.toString();
-      const customerName = profile.name || 'Customer';
-      const customerMobile = mobile;
-      const customerEmail = profile.email || 'customer@example.com';
+      // Create unique transaction ID for tracking
+      const transactionId = `TXN_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      
+      // Track transaction start
+      frontendTransactionTracker.createTransaction({
+        amount: amount,
+        user_id: parseInt(customerProfileId),
+        card_details: {
+          last_four_digits: cardNumber.slice(-4),
+          card_alias: 'New Card'
+        }
+      });
 
-      // Validate that numeric fields can be converted to integers where needed
-      const cvvInt = parseInt(cvv);
+      console.log('Starting 3DS payment flow for transaction:', transactionId);
 
-      if (isNaN(cvvInt) || cvvInt < 100 || cvvInt > 999) {
-        toast.error("Invalid CVV");
-        return;
-      }
-
-      // Validate expiry dates (as strings, but check format)
-      if (!expiryMonth || expiryMonth.length !== 2 || parseInt(expiryMonth) < 1 || parseInt(expiryMonth) > 12) {
-        toast.error("Invalid expiry month (use MM format)");
-        return;
-      }
-      if (!expiryYear || expiryYear.length !== 2 || parseInt(expiryYear) < 20 || parseInt(expiryYear) > 99) {
-        toast.error("Invalid expiry year (use YY format)");
-        return;
-      }
-
-      const tokenPayload = {
-        merchantCode: credentials.merchantCode,
-        customerProfileId: customerProfileId, // Keep as String as per Fawry sample
+      // Create 3DS payment request according to Fawry documentation
+      const paymentResponse = await fawry3dsService.create3dsPayment({
+        cardNumber: cardNumber,
+        cardExpiryYear: expiryYear,
+        cardExpiryMonth: expiryMonth,
+        cvv: cvv,
+        amount: amount,
+        customerName: customerName,
         customerMobile: customerMobile,
         customerEmail: customerEmail,
-        cardNumber: cardNumber, // Keep as String as per Fawry sample
-        cardAlias: cardAlias, // REQUIRED by Fawry
-        expiryMonth: expiryMonth, // Keep as String as per Fawry sample
-        expiryYear: expiryYear, // Keep as String as per Fawry sample
-        cvv: cvvInt, // Convert to Integer as per Fawry sample
-        isDefault: true, // REQUIRED by Fawry
-        enable3ds: true, // REQUIRED by Fawry
-        returnUrl: `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=token&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}`
-      };
-      
-      console.log('Creating card token with payload:', tokenPayload);
-      
-      let tokenResponse;
-      try {
-        tokenResponse = await fetch(endpoints.tokenEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(tokenPayload),
-        });
-      } catch (fetchError) {
-        console.error('Network error during token creation:', fetchError);
-        throw new Error('Failed to fetch - Network error during card token creation');
-      }
+        customerProfileId: customerProfileId || undefined,
+        description: `Wallet recharge - ${amount} EGP`,
+        chargeItems: [
+          {
+            itemId: 'wallet_recharge',
+            description: 'Wallet Recharge',
+            price: amount,
+            quantity: 1
+          }
+        ]
+      });
 
-      if (!tokenResponse.ok) {
-        console.error('Token creation HTTP error:', tokenResponse.status, tokenResponse.statusText);
-        throw new Error(`HTTP ${tokenResponse.status}: ${tokenResponse.statusText}`);
-      }
+      console.log('3DS payment response received:', paymentResponse);
 
-      let tokenData;
-      try {
-        tokenData = await tokenResponse.json();
-      } catch (parseError) {
-        console.error('Failed to parse token response:', parseError);
-        throw new Error('Invalid response from payment service');
-      }
-
-      console.log('Fawry Token Response:', tokenData);
-
-      if (tokenData.statusCode === 200 && tokenData.cardToken) {
-        // Card token created successfully, now process payment
-        await processPaymentWithToken(tokenData.cardToken, amount, transactionId, credentials, endpoints);
+      if (paymentResponse.statusCode === 200) {
+        if (paymentResponse.nextAction && paymentResponse.nextAction.type === 'THREE_D_SECURE') {
+          // 3DS authentication required - redirect to Fawry's 3DS page
+          console.log('3DS authentication required, redirecting to:', paymentResponse.nextAction.redirectUrl);
+          
+          // Store transaction info for callback handling
+          localStorage.setItem('pending_3ds_transaction', JSON.stringify({
+            transactionId,
+            amount,
+            merchantRefNum: `3DS_${Date.now()}`, // Generate merchant ref since it's not in response
+            customerProfileId,
+            customerName,
+            customerMobile,
+            customerEmail,
+            step: '3ds_authentication',
+            paymentResponse: paymentResponse
+          }));
+          
+          // Redirect to Fawry's 3DS page for authentication
+          window.location.href = paymentResponse.nextAction.redirectUrl;
+        } else {
+          // No 3DS action - this might be an error or immediate success
+          const errorMessage = paymentResponse.statusDescription || "Unexpected response from Fawry";
+          console.error('Fawry 3DS Payment Error:', paymentResponse);
+          
+          frontendTransactionTracker.markTransactionFailed(
+            transactionId,
+            errorMessage,
+            `3DS_PAYMENT_${paymentResponse.statusCode || 'UNKNOWN'}`
+          );
+          
+          toast.error(errorMessage);
+          setIsSubmitting(false);
+        }
       } else {
-        const errorMessage = tokenData.statusDescription || tokenData.message || "Failed to create card token";
-        console.error('Fawry Token Creation Error:', tokenData);
+        // Payment request failed
+        const errorMessage = paymentResponse.statusDescription || "Failed to create 3DS payment request";
+        console.error('Fawry 3DS Payment Request Failed:', paymentResponse);
         
         frontendTransactionTracker.markTransactionFailed(
           transactionId,
           errorMessage,
-          `TOKEN_CREATION_${tokenData.statusCode || 'UNKNOWN'}`
+          `3DS_REQUEST_${paymentResponse.statusCode || 'FAILED'}`
         );
         
-        if (tokenData.statusCode === 400) {
-          toast.error("Invalid card details. Please check your card information.");
-        } else if (tokenData.statusCode === 401) {
+        if (paymentResponse.statusCode === 400) {
+          toast.error("Invalid payment details. Please check your information.");
+        } else if (paymentResponse.statusCode === 401) {
           toast.error("Authentication failed. Please try again.");
-        } else if (tokenData.statusCode === 500) {
+        } else if (paymentResponse.statusCode === 500) {
           toast.error("Payment service temporarily unavailable. Please try again later.");
         } else {
           toast.error(errorMessage);
         }
         setIsSubmitting(false);
       }
+
     } catch (error) {
-      console.error('Error creating card token:', error);
+      console.error('Error in 3DS payment flow:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      setError(errorMessage);
+      
+      // Mark transaction as failed
+      const transactionId = `TXN_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
       frontendTransactionTracker.markTransactionFailed(
         transactionId,
-        error instanceof Error ? error.message : "Failed to create card token",
-        "TOKEN_CREATION_ERROR"
+        errorMessage,
+        '3DS_PAYMENT_ERROR'
       );
-      toast.error(error instanceof Error ? error.message : "Failed to create card token. Please try again.");
+      
+      toast.error(errorMessage);
       setIsSubmitting(false);
     }
   };
 
-  const processPaymentWithSavedCard = async (card: SavedCard, amount: number, transactionId: string, credentials: any, endpoints: any) => {
+  const processPaymentWithSavedCard = async (card: SavedCard, amount: number, customerProfileId: string, customerName: string, customerMobile: string, customerEmail: string) => {
     try {
       const merchantRefNum = Date.now().toString();
-      const customerProfileId = profile.id.toString();
-      const customerName = profile.name || 'Customer';
-      const customerMobile = profile.mobile || '01234567891';
-      const customerEmail = profile.email || 'customer@example.com';
+      const transactionId = `TXN_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      
+      // Track transaction start
+      frontendTransactionTracker.createTransaction({
+        amount: amount,
+        user_id: parseInt(customerProfileId),
+        card_details: {
+          last_four_digits: card.last_four_digits,
+          card_alias: card.card_alias
+        }
+      });
 
-      // Generate signature for payment with saved card (Fawry format)
-      // According to Fawry docs: merchantCode + merchantRefNum + customerProfileId (if exists, otherwise "") + paymentMethod + amount + cardToken + cvv + returnUrl + secureKey
+      // Get credentials and endpoints
+      const credentials = secureCredentials.getCredentials();
+      const endpoints = secureCredentials.getApiEndpoints();
+
+      // Generate signature for payment (Fawry format)
       const signatureString = credentials.merchantCode + 
         merchantRefNum + 
         (customerProfileId || "") + 
@@ -325,21 +365,21 @@ const Recharge = () => {
       const paymentPayload = {
         merchantCode: credentials.merchantCode,
         merchantRefNum: merchantRefNum,
-        customerProfileId: customerProfileId, // Keep as String as per Fawry sample
+        customerProfileId: customerProfileId,
         customerName: customerName,
         customerMobile: customerMobile,
         customerEmail: customerEmail,
         cardToken: card.card_token,
-        cvv: parseInt(cvv), // Convert to Integer as per Fawry sample
+        cvv: parseInt(cvv),
         amount: amount,
         paymentMethod: 'CARD',
         currencyCode: 'EGP',
-        description: 'Wallet Recharge',
+        description: 'Wallet Recharge (Saved Card)',
         language: 'en-gb',
         chargeItems: [
           {
-            itemId: 'wallet_recharge',
-            description: 'Wallet Recharge',
+            itemId: 'wallet_recharge_saved',
+            description: 'Wallet Recharge (Saved Card)',
             price: amount,
             quantity: 1
           }
@@ -347,139 +387,7 @@ const Recharge = () => {
         signature: signature
       };
 
-      console.log('Processing Fawry payment with saved card payload:', paymentPayload);
-      
-      let paymentResponse;
-      try {
-        paymentResponse = await fetch(endpoints.paymentEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(paymentPayload),
-        });
-      } catch (fetchError) {
-        console.error('Network error during payment processing:', fetchError);
-        throw new Error('Failed to fetch - Network error during payment processing');
-      }
-
-      if (!paymentResponse.ok) {
-        console.error('Payment HTTP error:', paymentResponse.status, paymentResponse.statusText);
-        throw new Error(`HTTP ${paymentResponse.status}: ${paymentResponse.statusText}`);
-      }
-
-      let paymentData;
-      try {
-        paymentData = await paymentResponse.json();
-      } catch (parseError) {
-        console.error('Failed to parse payment response:', parseError);
-        throw new Error('Invalid response from payment service');
-      }
-
-      console.log('Fawry Payment Response (Saved Card):', paymentData);
-
-      if (paymentData.statusCode === 200) {
-        frontendTransactionTracker.markTransactionCompleted(transactionId, merchantRefNum);
-        
-        // Update wallet balance in backend
-        try {
-          await api.post('/wallet/update-balance', {
-            amount: amount,
-            type: 'top_up',
-            note: `Fawry recharge - Reference: ${merchantRefNum}`
-          });
-          console.log('Wallet balance updated in backend');
-        } catch (error) {
-          console.error('Failed to update wallet balance in backend:', error);
-          // Don't prevent success flow - admin can reconcile later
-        }
-        
-        toast.success('Payment successful! Your wallet has been recharged.');
-        navigate('/wallet');
-      } else if (paymentData.nextAction?.redirectUrl) {
-        // Payment requires 3DS, redirect to Fawry
-        window.location.href = paymentData.nextAction.redirectUrl;
-      } else {
-        const errorMessage = paymentData.statusDescription || paymentData.message || "Failed to complete payment";
-        console.error('Fawry Payment Error (Saved Card):', paymentData);
-        
-        frontendTransactionTracker.markTransactionFailed(
-          transactionId,
-          errorMessage,
-          `PAYMENT_${paymentData.statusCode || 'UNKNOWN'}`
-        );
-        
-        if (paymentData.statusCode === 400) {
-          toast.error("Invalid payment details. Please check your card information.");
-        } else if (paymentData.statusCode === 401) {
-          toast.error("Authentication failed. Please try again.");
-        } else if (paymentData.statusCode === 402) {
-          toast.error("Payment declined. Please check your card or try a different card.");
-        } else if (paymentData.statusCode === 500) {
-          toast.error("Payment service temporarily unavailable. Please try again later.");
-        } else {
-          toast.error(errorMessage);
-        }
-        setIsSubmitting(false);
-      }
-    } catch (error) {
-      console.error('Error processing payment with saved card:', error);
-      frontendTransactionTracker.markTransactionFailed(
-        transactionId,
-        "Failed to process payment with saved card",
-        "PAYMENT_ERROR"
-      );
-      toast.error("Failed to process payment. Please try again.");
-      setIsSubmitting(false);
-    }
-  };
-
-  const processPaymentWithToken = async (cardToken: string, amount: number, transactionId: string, credentials: any, endpoints: any) => {
-    try {
-      const merchantRefNum = Date.now().toString();
-      const customerProfileId = profile.id.toString();
-      const customerName = profile.name || 'Customer';
-      const customerMobile = mobile;
-      const customerEmail = profile.email || 'customer@example.com';
-
-      // Generate signature for payment (Fawry format)
-      // According to Fawry docs: merchantCode + merchantRefNum + customerProfileId (if exists, otherwise "") + paymentMethod + amount + cardToken + cvv + returnUrl + secureKey
-      const signatureString = credentials.merchantCode + 
-        merchantRefNum + 
-        (customerProfileId || "") + 
-        'CARD' + 
-        amount.toFixed(2) + 
-        cardToken + 
-        cvv + 
-        `${window.location.origin}/fawry-callback?merchantRefNum=${merchantRefNum}&amount=${amount}&step=payment&customerProfileId=${customerProfileId}&customerName=${encodeURIComponent(customerName)}&customerMobile=${customerMobile}&customerEmail=${encodeURIComponent(customerEmail)}` + 
-        credentials.securityKey;
-      
-      const signature = await generateSHA256(signatureString);
-
-      const paymentPayload = {
-        merchantCode: credentials.merchantCode,
-        merchantRefNum: merchantRefNum,
-        customerProfileId: customerProfileId, // Keep as String as per Fawry sample
-        customerName: customerName,
-        customerMobile: customerMobile,
-        customerEmail: customerEmail,
-        cardToken: cardToken,
-        cvv: parseInt(cvv), // Convert to Integer as per Fawry sample
-        amount: amount,
-        paymentMethod: 'CARD',
-        currencyCode: 'EGP',
-        description: 'Wallet Recharge',
-        language: 'en-gb',
-        chargeItems: [
-          {
-            itemId: 'wallet_recharge',
-            description: 'Wallet Recharge',
-            price: amount,
-            quantity: 1
-          }
-        ],
-        signature: signature
-      };
-
-      console.log('Processing Fawry payment with payload:', paymentPayload);
+      console.log('Processing saved card payment with payload:', paymentPayload);
       
       let paymentResponse;
       try {
@@ -516,7 +424,7 @@ const Recharge = () => {
           await api.post('/wallet/update-balance', {
             amount: amount,
             type: 'top_up',
-            note: `Fawry recharge - Reference: ${merchantRefNum}`
+            note: `Fawry recharge (saved card) - Reference: ${merchantRefNum}`
           });
           console.log('Wallet balance updated in backend');
         } catch (error) {
@@ -553,11 +461,12 @@ const Recharge = () => {
         setIsSubmitting(false);
       }
     } catch (error) {
-      console.error('Error processing payment:', error);
+      console.error('Error processing saved card payment:', error);
+      const transactionId = `TXN_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
       frontendTransactionTracker.markTransactionFailed(
         transactionId,
-        "Failed to process payment",
-        "PAYMENT_ERROR"
+        "Failed to process saved card payment",
+        "SAVED_CARD_PAYMENT_ERROR"
       );
       toast.error("Failed to process payment. Please try again.");
       setIsSubmitting(false);

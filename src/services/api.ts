@@ -81,17 +81,6 @@ export const authApi = {
   }) => api.post('/auth/reset-password', data),
 };
 
-// Wallet API
-export const walletApi = {
-  getBalance: () => api.get('/wallet'), // Returns wallet info including balance
-  getTransactions: (params?: { type?: string; start_date?: string; end_date?: string }) =>
-    api.get('/transactions', { params }), // Returns user's transactions
-  addMoney: (data: { amount: number; payment_method: string }) =>
-    api.post('/wallet/topup', data), // Adds money to wallet
-  requestRefund: (data: { transaction_id: number; reason: string }) =>
-    api.post('/wallet/request-refund', data), // Requests refund
-};
-
 // Transaction API
 export const transactionApi = {
   getTransactions: (params?: { type?: string; start_date?: string; end_date?: string }) =>
@@ -240,6 +229,16 @@ export const getCurrentUser = () => {
     console.error('Error parsing user data from localStorage:', error);
     return null;
   }
+};
+
+// Wallet API
+export const walletApi = {
+  getTransactions: () => api.get('/transactions'),
+  requestRefund: (data: { amount: number; reason?: string; transaction_id?: number }) => 
+    api.post('/wallet/request-refund', data),
+  topUp: (data: { amount: number; payment_method: string }) => 
+    api.post('/wallet/topup', data),
+  getBalance: () => api.get('/wallet'),
 };
 
 export { api }; 
