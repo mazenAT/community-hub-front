@@ -417,6 +417,22 @@ const Planner = () => {
     }
   };
 
+  // Handle viewing general PDF when no active plan
+  const handleViewGeneralPdf = async () => {
+    try {
+      setLoadingPdf(true);
+      
+      // Since we don't have a general PDF API, show a helpful message
+      toast.info("Please select a weekly plan to view the menu, or contact the school for the general menu.");
+      
+    } catch (error) {
+      console.error('Error handling general PDF request:', error);
+      toast.info("Please select a weekly plan to view the menu, or contact the school for the general menu.");
+    } finally {
+      setLoadingPdf(false);
+    }
+  };
+
   const handlePreOrder = (meal: MealWithPivot, date: Date) => {
     if (!activePlan) return;
     
@@ -903,21 +919,26 @@ const Planner = () => {
           </div>
         </div>
 
-        {/* Show Plans Button */}
-        {activePlan && (
-          <div className="mb-6 flex justify-center">
-            <Button
-              variant="outline"
-              size="lg"
-              className="bg-brand-yellow text-brand-black border-brand-yellow hover:bg-brand-yellow/90 rounded-full px-6 py-3 font-medium"
-              onClick={() => handleViewMealPlanPdf(activePlan)}
-              disabled={loadingPdf}
-            >
-              <FileText className="w-5 h-5 mr-2" />
-              View Full Menu
-            </Button>
-          </div>
-        )}
+        {/* View Full Menu Button - Always Visible */}
+        <div className="mb-6 flex justify-center">
+          <Button
+            variant="outline"
+            size="lg"
+            className="bg-brand-yellow text-brand-black border-brand-yellow hover:bg-brand-yellow/90 rounded-full px-6 py-3 font-medium"
+            onClick={() => {
+              if (activePlan) {
+                handleViewMealPlanPdf(activePlan);
+              } else {
+                // Try to get general PDF if no active plan
+                handleViewGeneralPdf();
+              }
+            }}
+            disabled={loadingPdf}
+          >
+            <FileText className="w-5 h-5 mr-2" />
+            View Full Menu
+          </Button>
+        </div>
 
         {/* Meal Planner Cards */}
         {activePlan ? (
