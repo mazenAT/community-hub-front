@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useTutorial } from '@/contexts/TutorialContext';
-import { X, ChevronLeft, ChevronRight, Play, Target, Lightbulb, Loader2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Play, Target, Lightbulb, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -71,11 +71,31 @@ const TutorialOverlay: React.FC = () => {
               overlayLeft = rect.left + rect.width / 2 - 200;
           }
           
+          // Ensure overlay stays within viewport bounds
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+          const overlayWidth = 400;
+          const overlayHeight = 300;
+          
+          // Adjust horizontal position to stay within viewport
+          if (overlayLeft < 20) {
+            overlayLeft = 20;
+          } else if (overlayLeft + overlayWidth > viewportWidth - 20) {
+            overlayLeft = viewportWidth - overlayWidth - 20;
+          }
+          
+          // Adjust vertical position to stay within viewport
+          if (overlayTop < 20) {
+            overlayTop = 20;
+          } else if (overlayTop + overlayHeight > viewportHeight - 20) {
+            overlayTop = viewportHeight - overlayHeight - 20;
+          }
+          
           setOverlayPosition({
-            top: Math.max(20, Math.min(overlayTop, window.innerHeight - 320)),
-            left: Math.max(20, Math.min(overlayLeft, window.innerWidth - 420)),
-            width: 400,
-            height: 300,
+            top: overlayTop,
+            left: overlayLeft,
+            width: overlayWidth,
+            height: overlayHeight,
           });
         } else {
           console.log('No target element found or highlighting disabled');
@@ -127,7 +147,7 @@ const TutorialOverlay: React.FC = () => {
   return (
     <>
       {/* Full-screen overlay with SVG mask for spotlight effect */}
-      <div className="fixed inset-0 z-50 pointer-events-none">
+      <div className="fixed inset-0 z-40 pointer-events-none">
         <svg
           width="100%"
           height="100%"
@@ -183,7 +203,7 @@ const TutorialOverlay: React.FC = () => {
 
       {/* Loading overlay for navigation */}
       {isNavigating && (
-        <div className="fixed inset-0 z-60 bg-black/50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 text-center">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-brand-orange" />
             <p className="text-lg font-semibold">Navigating...</p>
@@ -192,10 +212,10 @@ const TutorialOverlay: React.FC = () => {
         </div>
       )}
 
-      {/* Tutorial content overlay */}
+      {/* Tutorial content overlay - MUST be above the dark overlay */}
       <div
         ref={overlayRef}
-        className="fixed z-55 pointer-events-auto"
+        className="fixed z-50 pointer-events-auto"
         style={{
           top: overlayPosition.top,
           left: overlayPosition.left,
@@ -328,7 +348,7 @@ const TutorialOverlay: React.FC = () => {
       {/* Directional arrow pointing to highlighted element */}
       {currentStep.showArrow && highlightedElement && (
         <div 
-          className="fixed z-55 text-brand-orange animate-bounce pointer-events-none"
+          className="fixed z-50 text-brand-orange animate-bounce pointer-events-none"
           style={{
             left: highlightedElement.left + highlightedElement.width / 2 - 12,
             top: currentStep.arrowDirection === 'up' ? highlightedElement.top - 40 : 
@@ -346,18 +366,5 @@ const TutorialOverlay: React.FC = () => {
     </>
   );
 };
-
-// Missing icon components
-const ChevronUp = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-  </svg>
-);
-
-const ChevronDown = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-  </svg>
-);
 
 export default TutorialOverlay; 
