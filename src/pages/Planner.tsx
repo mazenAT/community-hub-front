@@ -578,18 +578,29 @@ const Planner = () => {
     }));
   })();
 
-  // Find the active plan based on selected week instead of today's date
+  // Find the active plan based on selected week
   const activePlan = (() => {
     if (normalizedPlans.length === 0) return null;
     
-    // If we have plans, use the one corresponding to the selected week
-    const weekIndex = parseInt(selectedWeek) - 1;
-    if (weekIndex >= 0 && weekIndex < normalizedPlans.length) {
-      return normalizedPlans[weekIndex];
+    // Find the plan that matches the selected week
+    const selectedWeekNumber = parseInt(selectedWeek);
+    
+    // If selectedWeek is 1, 2, 3, etc., find the corresponding plan
+    if (selectedWeekNumber >= 1 && selectedWeekNumber <= normalizedPlans.length) {
+      return normalizedPlans[selectedWeekNumber - 1];
     }
     
-    // Fallback to first available plan
-    return normalizedPlans[0];
+    // If selectedWeek doesn't match any available plans, use the first one
+    // and update the selectedWeek state to match
+    if (normalizedPlans.length > 0) {
+      // Update selectedWeek to match the first available plan
+      if (selectedWeek !== "1") {
+        setSelectedWeek("1");
+      }
+      return normalizedPlans[0];
+    }
+    
+    return null;
   })();
 
 
@@ -1034,26 +1045,26 @@ const Planner = () => {
                         {/* Meals Grid */}
                         <div className="p-4">
                           <div 
-                            className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2"
+                            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4"
                             data-tutorial="meal-list"
                           >
                             {mealsForDay.map((meal: any, mealIndex: number) => (
-                              <div key={`${date.toISOString()}-${meal.id}-${mealIndex}`} className="bg-brand-yellow/5 rounded-lg p-2 sm:p-3 border border-brand-yellow/20 hover:shadow-md transition-shadow">
+                              <div key={`${date.toISOString()}-${meal.id}-${mealIndex}`} className="bg-brand-yellow/5 rounded-lg p-3 sm:p-4 border border-brand-yellow/20 hover:shadow-md transition-shadow">
                                 {/* Meal Info */}
-                                <div className="space-y-1">
-                                  <h4 className="font-semibold text-brand-black text-sm line-clamp-1">
+                                <div className="space-y-2">
+                                  <h4 className="font-semibold text-brand-black text-sm sm:text-base line-clamp-2">
                                     {meal.title || meal.name}
                                   </h4>
-                                  <p className="text-brand-black/70 text-xs line-clamp-2">
+                                  <p className="text-brand-black/70 text-xs sm:text-sm line-clamp-3">
                                     {meal.description || 'No description available'}
                                   </p>
                                   
-                                  {/* Meal Type Badge */}
-                                  <div className="flex items-center justify-between mt-2">
-                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-brand-orange/20 text-brand-orange">
+                                  {/* Meal Type Badge and Price */}
+                                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-3">
+                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-brand-orange/20 text-brand-orange self-start">
                                       {CATEGORY_LABELS[meal.category as MealCategory] || meal.category || 'N/A'}
                                     </span>
-                                    <span className="text-xs font-medium text-brand-black">
+                                    <span className="text-sm sm:text-base font-semibold text-brand-black">
                                       {meal.price ? formatCurrency(meal.price) : 'N/A'}
                                     </span>
                                   </div>
@@ -1063,7 +1074,7 @@ const Planner = () => {
                                     const mealKey = `${meal.id}_${format(date, 'yyyy-MM-dd')}`;
                                     const selectedMealAddOns = mealAddOns[mealKey] || [];
                                     return selectedMealAddOns.length > 0 && (
-                                      <div className="mt-1">
+                                      <div className="mt-2">
                                         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
                                           {selectedMealAddOns.length} daily-item{selectedMealAddOns.length !== 1 ? 's' : ''} selected
                                         </span>
@@ -1072,12 +1083,12 @@ const Planner = () => {
                                   })()}
                                   
                                   {/* Action Buttons */}
-                                  <div className="flex space-x-1 mt-2">
+                                  <div className="flex flex-col sm:flex-row gap-2 mt-3">
                                     {meal.pdf_path && (
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="flex-1 h-6 px-2 border-brand-blue text-brand-blue hover:bg-brand-blue/10 text-xs"
+                                        className="w-full sm:w-auto h-8 px-3 border-brand-blue text-brand-blue hover:bg-brand-blue/10 text-xs sm:text-sm"
                                         onClick={() => handleViewPdf(meal)}
                                         disabled={loadingPdf}
                                       >
@@ -1087,7 +1098,7 @@ const Planner = () => {
                                     )}
                                     <Button
                                       size="sm"
-                                      className="flex-1 h-6 px-2 bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white text-xs"
+                                      className="w-full sm:w-auto h-8 px-3 bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white text-xs sm:text-sm"
                                       onClick={() => handlePreOrder(meal, date)}
                                       disabled={!isOrderingWindowOpen(date)}
                                     >
@@ -1096,13 +1107,13 @@ const Planner = () => {
                                   </div>
                                   
                                   {/* Daily Items Section */}
-                                  <div className="mt-2 pt-2 border-t border-brand-yellow/20">
-                                    <h5 className="text-xs font-medium text-brand-black mb-1">Daily Items</h5>
-                                    <div className="grid grid-cols-3 gap-1">
+                                  <div className="mt-3 pt-3 border-t border-brand-yellow/20">
+                                    <h5 className="text-xs font-medium text-brand-black mb-2">Daily Items</h5>
+                                    <div className="grid grid-cols-2 gap-2">
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-5 px-1 border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10 text-xs"
+                                        className="h-7 px-2 border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10 text-xs"
                                         onClick={() => handleAddOnsClick(date, meal, 'Bakery')}
                                       >
                                         Bakery
@@ -1110,7 +1121,7 @@ const Planner = () => {
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-5 px-1 border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10 text-xs"
+                                        className="h-7 px-2 border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10 text-xs"
                                         onClick={() => handleAddOnsClick(date, meal, 'Snacks')}
                                       >
                                         Snacks
@@ -1118,7 +1129,7 @@ const Planner = () => {
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-5 px-1 border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10 text-xs"
+                                        className="h-7 px-2 border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10 text-xs"
                                         onClick={() => handleAddOnsClick(date, meal, 'Drinks')}
                                       >
                                         Drinks
@@ -1126,7 +1137,7 @@ const Planner = () => {
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-5 px-1 border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10 text-xs"
+                                        className="h-7 px-2 border-brand-yellow/30 text-brand-black hover:bg-brand-yellow/10 text-xs"
                                         onClick={() => handleAddOnsClick(date, meal, 'Greek Yogurt Popsicle')}
                                       >
                                         Greek Yogurt Popsicle
@@ -1166,7 +1177,7 @@ const Planner = () => {
           </p>
 
           {/* Quick Daily Item Categories */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             {['Bakery', 'Snacks', 'Drinks', 'Greek Yogurt Popsicle'].map((category) => (
               <div key={category} className="text-center p-3 bg-brand-yellow/10 rounded-lg border border-brand-yellow/30">
                 <div className="text-sm font-medium text-brand-black">{category}</div>
