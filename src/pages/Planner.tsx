@@ -168,15 +168,15 @@ const Planner = () => {
     
     const startDate = new Date(customStartDate);
     const endDate = new Date(customEndDate);
-    const dates: Date[] = [];
-    
+        const dates: Date[] = [];
+        
     let currentDate = new Date(startDate);
     while (isBefore(currentDate, endDate) || isSameDay(currentDate, endDate)) {
-      dates.push(new Date(currentDate));
-      currentDate = addDays(currentDate, 1);
-    }
+          dates.push(new Date(currentDate));
+          currentDate = addDays(currentDate, 1);
+        }
     
-    return dates;
+        return dates;
   };
 
   const getMealsForDay = (date: Date, plans: WeeklyPlan[]): any[] => {
@@ -875,26 +875,26 @@ const Planner = () => {
           {normalizedPlans.length === 0 ? (
             <p className="text-sm text-brand-black/60">No weekly plans available</p>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              {normalizedPlans.map((plan: WeeklyPlan, index: number) => (
-                <Button
-                  key={plan.id}
-                  variant={selectedWeek === (index + 1).toString() ? 'default' : 'outline'}
-                  size="sm"
-                  className={`${
-                    selectedWeek === (index + 1).toString()
-                      ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
-                      : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
-                  } rounded-full px-3 py-1 text-xs font-medium`}
-                  onClick={() => {
-                    setSelectedWeek((index + 1).toString());
-                    setViewMode('week');
-                  }}
-                >
-                  Week {index + 1}
-                </Button>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-2">
+            {normalizedPlans.map((plan: WeeklyPlan, index: number) => (
+              <Button
+                key={plan.id}
+                variant={selectedWeek === (index + 1).toString() ? 'default' : 'outline'}
+                size="sm"
+                className={`${
+                  selectedWeek === (index + 1).toString()
+                    ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
+                    : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
+                } rounded-full px-3 py-1 text-xs font-medium`}
+                onClick={() => {
+                  setSelectedWeek((index + 1).toString());
+                  setViewMode('week');
+                }}
+              >
+                Week {index + 1}
+              </Button>
+            ))}
+          </div>
           )}
           {normalizedPlans.length > 0 && (
             <p className="text-xs text-brand-black/40 mt-2">
@@ -937,18 +937,18 @@ const Planner = () => {
         </div>
 
         {/* View Full Menu Button - Always Visible */}
-        <div className="mb-6 flex justify-center">
-          <Button
-            variant="outline"
-            size="lg"
-            className="bg-brand-yellow text-brand-black border-brand-yellow hover:bg-brand-yellow/90 rounded-full px-6 py-3 font-medium"
+          <div className="mb-6 flex justify-center">
+            <Button
+              variant="outline"
+              size="lg"
+              className="bg-brand-yellow text-brand-black border-brand-yellow hover:bg-brand-yellow/90 rounded-full px-6 py-3 font-medium"
             onClick={handleViewGeneralPdf}
-            disabled={loadingPdf}
-          >
-            <FileText className="w-5 h-5 mr-2" />
+              disabled={loadingPdf}
+            >
+              <FileText className="w-5 h-5 mr-2" />
             View Full Menu
-          </Button>
-        </div>
+            </Button>
+          </div>
 
         {/* Meal Planner Cards */}
         {activePlan ? (

@@ -151,9 +151,9 @@ const OrderDetails: React.FC = () => {
           {/* Order Header */}
           <div className="border-b border-gray-200 pb-4 mb-6">
             <div className="flex flex-wrap items-center gap-2 mb-3">
-              {getStatusBadge(order.status)}
-              <span className="text-gray-500 text-sm">Order #{order.id}</span>
-            </div>
+            {getStatusBadge(order.status)}
+            <span className="text-gray-500 text-sm">Order #{order.id}</span>
+          </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
@@ -180,7 +180,7 @@ const OrderDetails: React.FC = () => {
             {order.items && order.items.length > 0 ? (
               <div className="space-y-3">
                 {order.items.map((item, index) => renderOrderItem(item, index))}
-              </div>
+          </div>
             ) : (
               <p className="text-gray-500 text-center py-4">No items found in this order</p>
             )}

@@ -104,13 +104,11 @@ export const notificationApi = {
 
 // Orders API
 export const ordersApi = {
-  getOrders: (params?: { status?: string }) => api.get('/orders/my-orders', { params }),
   getOrder: (id: number) => api.get(`/orders/${id}`),
-  createOrder: (data: {
-    meals?: Array<{ meal_id: number; quantity: number; meal_date: string }>;
-    add_ons?: Array<{ add_on_id: number; quantity: number }>;
-    family_member_id?: number;
-  }) => api.post('/orders', data),
+  getMyOrders: () => api.get('/orders'),
+  createOrder: (data: any) => api.post('/orders', data),
+  updateOrder: (id: number, data: any) => api.put(`/orders/${id}`, data),
+  cancelOrder: (id: number) => api.post(`/orders/${id}/cancel`),
 };
 
 export const profileApi = {

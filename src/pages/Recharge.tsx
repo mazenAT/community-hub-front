@@ -204,7 +204,7 @@ const Recharge = () => {
       cvv: cvv,
       amount: amount,
       customerName: customerName,
-      customerMobile: customerMobile,
+        customerMobile: customerMobile,
       customerEmail: customerEmail
     });
 
@@ -254,60 +254,25 @@ const Recharge = () => {
 
       console.log('3DS payment response received:', paymentResponse);
 
-      if (paymentResponse.statusCode === 200) {
-        if (paymentResponse.nextAction && paymentResponse.nextAction.type === 'THREE_D_SECURE') {
-          // 3DS authentication required - redirect to Fawry's 3DS page
-          console.log('3DS authentication required, redirecting to:', paymentResponse.nextAction.redirectUrl);
-          
-          // Store transaction info for callback handling
-          localStorage.setItem('pending_3ds_transaction', JSON.stringify({
-            transactionId,
-            amount,
-            merchantRefNum: `3DS_${Date.now()}`, // Generate merchant ref since it's not in response
-            customerProfileId,
-            customerName,
-            customerMobile,
-            customerEmail,
-            step: '3ds_authentication',
-            paymentResponse: paymentResponse
-          }));
-          
-          // Redirect to Fawry's 3DS page for authentication
-          window.location.href = paymentResponse.nextAction.redirectUrl;
-        } else {
-          // No 3DS action - this might be an error or immediate success
-          const errorMessage = paymentResponse.statusDescription || "Unexpected response from Fawry";
-          console.error('Fawry 3DS Payment Error:', paymentResponse);
-          
-          frontendTransactionTracker.markTransactionFailed(
-            transactionId,
-            errorMessage,
-            `3DS_PAYMENT_${paymentResponse.statusCode || 'UNKNOWN'}`
-          );
-          
-          toast.error(errorMessage);
-          setIsSubmitting(false);
-        }
+      // With redirect flow, the user will be redirected to Fawry immediately
+      // The response here is just for logging - the actual redirect happens in fawry3dsService
+      if (paymentResponse.type === 'redirect') {
+        console.log('Redirecting to Fawry payment page...');
+        // The redirect is handled automatically by fawry3dsService
+        // User will be taken to Fawry's hosted payment page
+        // No need to handle response here as the page will change
       } else {
-        // Payment request failed
-        const errorMessage = paymentResponse.statusDescription || "Failed to create 3DS payment request";
-        console.error('Fawry 3DS Payment Request Failed:', paymentResponse);
+        // Fallback error handling
+        const errorMessage = paymentResponse.statusDescription || "Unexpected response from Fawry";
+        console.error('Fawry 3DS Payment Error:', paymentResponse);
         
         frontendTransactionTracker.markTransactionFailed(
           transactionId,
           errorMessage,
-          `3DS_REQUEST_${paymentResponse.statusCode || 'FAILED'}`
+          `3DS_PAYMENT_${paymentResponse.statusCode || 'UNKNOWN'}`
         );
         
-        if (paymentResponse.statusCode === 400) {
-          toast.error("Invalid payment details. Please check your information.");
-        } else if (paymentResponse.statusCode === 401) {
-          toast.error("Authentication failed. Please try again.");
-        } else if (paymentResponse.statusCode === 500) {
-          toast.error("Payment service temporarily unavailable. Please try again later.");
-        } else {
-          toast.error(errorMessage);
-        }
+        toast.error(errorMessage);
         setIsSubmitting(false);
       }
 

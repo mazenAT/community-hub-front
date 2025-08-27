@@ -301,7 +301,7 @@ const FawryCallback = () => {
           return;
         }
       }
-      
+
       // Try to process as webhook data
       if (callbackData.orderStatus) {
         const webhookData = {

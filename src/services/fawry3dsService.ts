@@ -1,41 +1,46 @@
-// Fawry 3DS Payment Service
-// Implements the correct 3DS payment flow according to Fawry documentation
+// Fawry 3DS Payment Service - Redirect Flow
+// Implements Fawry's redirect-based payment flow to avoid CORS issues
+// Instead of direct API calls, users are redirected to Fawry's hosted payment page
 // https://developer.fawrystaging.com/docs/server-apis/create-payment-3ds-apis
 
 import { secureCredentials } from './secureCredentials';
-import axios from 'axios'; // Added axios import
 
-// Fawry API endpoints and configuration
-const FAWRY_3DS_API_URL = 'https://atfawry.fawrystaging.com/ECommercePlugin/FawryPayment.aspx';
+// Fawry redirect payment URL (for hosted payment page)
+// This URL is for redirecting users to Fawry's hosted payment page
+// No CORS issues since the user goes directly to Fawry's domain
+const FAWRY_PAYMENT_URL = 'https://atfawry.fawrystaging.com/ECommercePlugin/FawryPayment.aspx';
 
 export interface Fawry3dsPaymentRequest {
-  merchantCode: string;
-  merchantRefNum: string;
-  customerProfileId?: string;
-  paymentMethod: string;
+  // Required fields for payment
   cardNumber: string;
-  cardExpiryYear: string;      // Changed back to string (formatted as "29")
-  cardExpiryMonth: string;     // Changed back to string (formatted as "05")
-  cvv: string;                 // Changed back to string (formatted as "123")
-  customerName?: string;
+  cardExpiryYear: string;      // Format: "29" (YY)
+  cardExpiryMonth: string;     // Format: "05" (MM)
+  cvv: string;                 // Format: "123"
+  amount: number;
+  customerName: string;
   customerMobile: string;
   customerEmail: string;
-  amount: number;
+  customerProfileId?: string;
   description: string;
-  language: string;
-  currencyCode: string;
   chargeItems: Array<{
     itemId: string;
     description: string;
     price: number;
     quantity: number;
   }>;
-  enable3DS: boolean;
-  authCaptureModePayment: boolean;
-  returnUrl: string;
-  orderWebHookUrl?: string;
-  saveCardInfo?: boolean;
-  signature: string;
+  
+  // Optional fields (will be auto-filled)
+  merchantCode?: string;        // Auto-filled from secureCredentials
+  merchantRefNum?: string;      // Auto-generated
+  paymentMethod?: string;       // Default: "CARD"
+  language?: string;            // Default: "en-gb"
+  currencyCode?: string;        // Default: "EGP"
+  enable3DS?: boolean;         // Default: true
+  authCaptureModePayment?: boolean; // Default: false
+  returnUrl?: string;          // Auto-filled from current page
+  orderWebHookUrl?: string;    // Optional webhook URL
+  saveCardInfo?: boolean;      // Default: false
+  signature?: string;          // Auto-generated
 }
 
 export interface Fawry3dsPaymentResponse {
@@ -69,8 +74,8 @@ export interface Fawry3dsCallbackResponse {
 
 export const fawry3dsService = {
   /**
-   * Create a 3DS payment request
-   * This is the main 3DS payment API call according to Fawry documentation
+   * Create a 3DS payment request using Fawry's redirect flow
+   * This redirects users to Fawry's hosted payment page (no CORS issues)
    */
   create3dsPayment: async (paymentData: Fawry3dsPaymentRequest): Promise<Fawry3dsPaymentResponse> => {
     try {
@@ -94,49 +99,78 @@ export const fawry3dsService = {
       const signatureString = 
         credentials.merchantCode + 
         merchantRefNum + 
-        paymentData.customerProfileId + 
-        paymentData.paymentMethod + 
+        (paymentData.customerProfileId || '') + 
+        (paymentData.paymentMethod || 'CARD') + 
         formattedAmount + 
         cleanCardNumber + 
         cardExpiryYear + 
         cardExpiryMonth + 
         cvv + 
-        paymentData.returnUrl + 
+        (paymentData.returnUrl || window.location.href) + 
         credentials.securityKey;
       
       const signature = await generateSHA256(signatureString);
       
-      const payload = {
-        merchantCode: credentials.merchantCode,
-        merchantRefNum: merchantRefNum,
+      // Build Fawry payment URL with all parameters
+      const paymentUrl = new URL(FAWRY_PAYMENT_URL);
+      
+      // Add required parameters for redirect flow
+      paymentUrl.searchParams.set('merchantCode', credentials.merchantCode);
+      paymentUrl.searchParams.set('merchantRefNum', merchantRefNum);
+      paymentUrl.searchParams.set('customerProfileId', paymentData.customerProfileId || '');
+      paymentUrl.searchParams.set('customerName', paymentData.customerName || '');
+      paymentUrl.searchParams.set('customerMobile', paymentData.customerMobile);
+      paymentUrl.searchParams.set('customerEmail', paymentData.customerEmail);
+      paymentUrl.searchParams.set('amount', formattedAmount);
+      paymentUrl.searchParams.set('currencyCode', 'EGP');
+      paymentUrl.searchParams.set('language', 'en-gb');
+      paymentUrl.searchParams.set('paymentMethod', paymentData.paymentMethod || 'CARD');
+      paymentUrl.searchParams.set('cardNumber', cleanCardNumber);
+      paymentUrl.searchParams.set('cardExpiryYear', cardExpiryYear);
+      paymentUrl.searchParams.set('cardExpiryMonth', cardExpiryMonth);
+      paymentUrl.searchParams.set('cvv', cvv);
+      paymentUrl.searchParams.set('returnUrl', paymentData.returnUrl || window.location.href);
+      paymentUrl.searchParams.set('enable3DS', 'true');
+      paymentUrl.searchParams.set('authCaptureModePayment', 'false');
+      paymentUrl.searchParams.set('signature', signature);
+      
+      // Add charge items as JSON string
+      if (paymentData.chargeItems && paymentData.chargeItems.length > 0) {
+        paymentUrl.searchParams.set('chargeItems', JSON.stringify(paymentData.chargeItems));
+      }
+      
+      console.log('Redirecting to Fawry payment page:', paymentUrl.toString());
+      
+      // Store transaction info for callback handling
+      localStorage.setItem('pending_3ds_transaction', JSON.stringify({
+        merchantRefNum,
+        amount: paymentData.amount,
         customerProfileId: paymentData.customerProfileId,
         customerName: paymentData.customerName,
         customerMobile: paymentData.customerMobile,
         customerEmail: paymentData.customerEmail,
-        amount: formattedAmount,
-        currencyCode: 'EGP',
-        language: 'en-gb',
-        paymentMethod: paymentData.paymentMethod,
-        cardNumber: cleanCardNumber,
-        cardExpiryYear: cardExpiryYear,
-        cardExpiryMonth: cardExpiryMonth,
-        cvv: cvv,
-        returnUrl: paymentData.returnUrl,
-        chargeItems: paymentData.chargeItems,
-        enable3DS: true,
-        authCaptureModePayment: false,
-        signature: signature
-      };
-
-      const response = await axios.post(FAWRY_3DS_API_URL, payload, {
-        headers: {
-          'Content-Type': 'application/json',
+        step: 'redirect_to_fawry',
+        signature: signature,
+        returnUrl: paymentData.returnUrl || window.location.href
+      }));
+      
+      // Redirect to Fawry's hosted payment page
+      window.location.href = paymentUrl.toString();
+      
+      // Return a response indicating redirect (this won't be reached due to redirect)
+      return {
+        type: 'redirect',
+        statusCode: 200,
+        statusDescription: 'Redirecting to Fawry payment page',
+        basketPayment: false,
+        nextAction: {
+          type: 'REDIRECT',
+          redirectUrl: paymentUrl.toString()
         }
-      });
-
-      return response.data;
+      };
+      
     } catch (error) {
-      console.error('Error creating 3DS payment:', error);
+      console.error('Error creating 3DS payment redirect:', error);
       throw error;
     }
   },
