@@ -21,7 +21,7 @@ export const initializeMobileApp = async () => {
 
     // Check network status
     const networkStatus = await mobileUtils.checkNetworkStatus();
-    
+
     // Mobile app initialized successfully
   } catch (error) {
     // Silent fail for mobile features

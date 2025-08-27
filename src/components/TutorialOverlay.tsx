@@ -144,12 +144,12 @@ const TutorialOverlay: React.FC = () => {
           const width = isMobile ? Math.min(window.innerWidth - 40, 320) : 400;
           const height = isMobile ? 280 : 300;
           
-          setOverlayPosition({
+      setOverlayPosition({
             top: window.innerHeight / 2 - height / 2,
             left: window.innerWidth / 2 - width / 2,
             width,
             height,
-          });
+      });
         }
       }
     }
@@ -244,7 +244,7 @@ const TutorialOverlay: React.FC = () => {
         <div
           ref={overlayRef}
           className={`absolute pointer-events-auto ${isMobile ? 'touch-manipulation' : ''}`}
-          style={{
+        style={{
             top: `${overlayPosition.top}px`,
             left: `${overlayPosition.left}px`,
             width: `${overlayPosition.width}px`,
@@ -252,40 +252,40 @@ const TutorialOverlay: React.FC = () => {
             // Ensure overlay is above all other content on mobile
             zIndex: isMobile ? 9999 : 'auto',
           }}
-        >
+      >
           
           <Card className={`w-full h-full bg-white shadow-2xl border-0 ${isMobile ? 'border-2 border-brand-orange/20' : ''}`}>
             <div className="p-4 sm:p-6 h-full flex flex-col">
-              {/* Header */}
+          {/* Header */}
               <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3">
                   <div className="w-2 h-2 sm:w-3 sm:h-3 bg-brand-orange rounded-full animate-pulse" />
                   <span className="text-xs sm:text-sm font-semibold text-brand-orange">
-                    Step {currentStepIndex + 1} of {tutorialSteps.length}
-                  </span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={skipTutorial}
+                Step {currentStepIndex + 1} of {tutorialSteps.length}
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={skipTutorial}
                   onTouchStart={(e) => {
                     // Prevent double-tap zoom on mobile
                     e.preventDefault();
                   }}
                   className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100 touch-manipulation"
-                >
+            >
                   <X className="h-4 w-4 sm:h-5 sm:w-5" />
-                </Button>
-              </div>
+            </Button>
+          </div>
 
-              {/* Content */}
+          {/* Content */}
               <div className="flex-1 mb-4 sm:mb-6 overflow-y-auto">
                 <h3 className="font-bold text-lg sm:text-xl mb-2 sm:mb-3 text-gray-900">
-                  {currentStep.title}
-                </h3>
+              {currentStep.title}
+            </h3>
                 <div className="text-gray-700 text-xs sm:text-sm leading-relaxed whitespace-pre-line">
-                  {currentStep.description}
-                </div>
+              {currentStep.description}
+            </div>
                 
                 {/* Navigation indicator */}
                 {currentStep.route && (
@@ -324,72 +324,72 @@ const TutorialOverlay: React.FC = () => {
                     </div>
                   </div>
                 )}
-              </div>
+          </div>
 
-              {/* Progress bar */}
+          {/* Progress bar */}
               <div className="mb-4 sm:mb-6">
                 <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3">
-                  <div 
+              <div 
                     className="bg-gradient-to-r from-brand-red to-brand-orange h-2 sm:h-3 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
+                style={{ width: `${progress}%` }}
+              />
+            </div>
                 <div className="flex justify-between text-xs text-gray-500 mt-1 sm:mt-2">
                   <span>{currentStepIndex + 1} of {tutorialSteps.length} steps</span>
                   <span>{Math.round(tutorialProgress * 100)}% complete</span>
-                </div>
-              </div>
+            </div>
+          </div>
 
-              {/* Actions */}
+          {/* Actions */}
               <div className="flex items-center justify-between gap-2">
-                <div className="flex space-x-2">
-                  {!isFirstStep && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={previousStep}
+            <div className="flex space-x-2">
+              {!isFirstStep && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={previousStep}
                       onTouchStart={(e) => {
                         // Prevent double-tap zoom on mobile
                         e.preventDefault();
                       }}
                       className="text-xs sm:text-sm text-brand-orange border-brand-orange hover:bg-brand-orange hover:text-white px-3 sm:px-4 touch-manipulation"
-                    >
+                >
                       <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                      Previous
-                    </Button>
-                  )}
-                </div>
-
-                <div className="flex space-x-2">
-                  {isLastStep ? (
-                    <Button
-                      onClick={() => completeStep(currentStep.id)}
-                      onTouchStart={(e) => {
-                        // Prevent double-tap zoom on mobile
-                        e.preventDefault();
-                      }}
-                      className="text-xs sm:text-sm bg-gradient-to-r from-brand-red to-brand-orange text-white hover:from-brand-orange hover:to-brand-red px-4 sm:px-6 touch-manipulation"
-                    >
-                      <Play className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                      Get Started!
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => completeStep(currentStep.id)}
-                      onTouchStart={(e) => {
-                        // Prevent double-tap zoom on mobile
-                        e.preventDefault();
-                      }}
-                      className="text-xs sm:text-sm bg-gradient-to-r from-brand-red to-brand-orange text-white hover:from-brand-orange hover:to-brand-red px-4 sm:px-6 touch-manipulation"
-                    >
-                      Next
-                      <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
-                    </Button>
-                  )}
-                </div>
-              </div>
+                  Previous
+                </Button>
+              )}
             </div>
-          </Card>
+
+            <div className="flex space-x-2">
+              {isLastStep ? (
+                <Button
+                  onClick={() => completeStep(currentStep.id)}
+                      onTouchStart={(e) => {
+                        // Prevent double-tap zoom on mobile
+                        e.preventDefault();
+                      }}
+                      className="text-xs sm:text-sm bg-gradient-to-r from-brand-red to-brand-orange text-white hover:from-brand-orange hover:to-brand-red px-4 sm:px-6 touch-manipulation"
+                >
+                      <Play className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  Get Started!
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => completeStep(currentStep.id)}
+                      onTouchStart={(e) => {
+                        // Prevent double-tap zoom on mobile
+                        e.preventDefault();
+                      }}
+                      className="text-xs sm:text-sm bg-gradient-to-r from-brand-red to-brand-orange text-white hover:from-brand-orange hover:to-brand-red px-4 sm:px-6 touch-manipulation"
+                >
+                  Next
+                      <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
+                </Button>
+              )}
+                </div>
+            </div>
+          </div>
+        </Card>
         </div>
 
         {/* Directional arrow pointing to highlighted element */}

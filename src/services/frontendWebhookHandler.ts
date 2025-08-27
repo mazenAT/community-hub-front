@@ -116,7 +116,7 @@ export const frontendWebhookHandler = {
         orderStatus,
         threeDSInfo
       } = webhookData;
-      
+
       // Find transaction by Fawry reference numbers
       const transactions = frontendTransactionTracker.getAllTransactions();
       const transaction = transactions.find(t => 
@@ -125,7 +125,7 @@ export const frontendWebhookHandler = {
         t.fawry_reference === webhookData.merchantRefNum || // Fallback for legacy
         t.fawry_reference === webhookData.orderReference    // Fallback for legacy
       );
-      
+
       if (!transaction) {
         // No transaction found - this might be a duplicate webhook
         return false;
@@ -144,7 +144,7 @@ export const frontendWebhookHandler = {
             frontendWebhookHandler.updateWalletBalance(transaction.amount, transaction.user_id, fawryRefNumber || merchantRefNumber, orderStatus);
             
             break;
-            
+
         case FAWRY_ORDER_STATUSES.CANCELLED:
         case FAWRY_ORDER_STATUSES.EXPIRED:
         case FAWRY_ORDER_STATUSES.FAILED:
@@ -155,7 +155,7 @@ export const frontendWebhookHandler = {
             `FAWRY_${orderStatus?.toUpperCase() || 'FAILED'}`
           );
           break;
-          
+
         case FAWRY_ORDER_STATUSES.CREATED:
         case FAWRY_ORDER_STATUSES.PENDING:
         case FAWRY_ORDER_STATUSES.PROCESSING:
@@ -170,12 +170,12 @@ export const frontendWebhookHandler = {
             updated_at: new Date().toISOString()
           });
           break;
-          
+
         default:
           // Unknown status - log for investigation
           return false;
       }
-      
+
       // Process 3DS information if available
       if (threeDSInfo) {
         // 3DS authentication info processed silently

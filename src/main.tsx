@@ -5,13 +5,13 @@ import './index.css';
 import { initializeMobileApp } from './services/mobileInit';
 import { frontendWebhookHandler } from './services/frontendWebhookHandler';
 
-// Initialize mobile app features
+    // Initialize mobile app features
 initializeMobileApp().catch(() => {
   // Silent fail for mobile features
 });
 
 // Initialize frontend webhook handler
-frontendWebhookHandler.initialize();
+    frontendWebhookHandler.initialize();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

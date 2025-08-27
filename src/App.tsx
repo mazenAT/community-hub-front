@@ -34,7 +34,7 @@ const AppContent = () => {
       {/* Initialize deep linking for mobile app - now inside Router context */}
       <DeepLinkingInitializer />
       <TutorialProvider>
-        <Routes>
+      <Routes>
           {/* Public Routes */}
           <Route path="/" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
