@@ -525,7 +525,7 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
   const startTutorial = () => {
     // Check if we're on a mobile device
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
+      
     // For mobile devices, add a small delay to ensure DOM is ready
     if (isMobile) {
       setTimeout(() => {
@@ -586,7 +586,7 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
           if (targetElement) {
             // Scroll element into view if needed
             targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
+    }
         }, 500);
       }
     }
@@ -594,10 +594,10 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const completeStep = (stepId: string) => {
     const updatedSteps = tutorialSteps.map(step =>
-      step.id === stepId ? { ...step, completed: true } : step
+        step.id === stepId ? { ...step, completed: true } : step
     );
     setTutorialSteps(updatedSteps);
-
+    
     // Move to next step or complete tutorial
     if (currentStepIndex < tutorialSteps.length - 1) {
       nextStep();

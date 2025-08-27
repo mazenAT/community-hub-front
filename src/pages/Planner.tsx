@@ -275,6 +275,10 @@ const Planner = () => {
   const [selectedDateForAddOns, setSelectedDateForAddOns] = useState<Date | null>(null);
   const [selectedAddOns, setSelectedAddOns] = useState<{[key: number]: number}>({});
   
+  // Daily Items Order Modal state
+  const [selectedDailyItemDate, setSelectedDailyItemDate] = useState<Date | null>(null);
+  const [selectedDailyItemCategory, setSelectedDailyItemCategory] = useState<string>("");
+  
   // Store daily-items for each meal (key: mealId_date, value: array of daily-items)
   const [mealAddOns, setMealAddOns] = useState<{[key: string]: {daily_item_id: number, quantity: number}[]}>({});
 
@@ -604,7 +608,7 @@ const Planner = () => {
       if (selectedWeek !== "1") {
         setSelectedWeek("1");
       }
-      return normalizedPlans[0];
+    return normalizedPlans[0];
     }
     
     return null;
@@ -629,18 +633,28 @@ const Planner = () => {
   const navigate = useNavigate();
 
   const dailyItemOrderMutation = useMutation({
-    mutationFn: (payload: any) => dailyItemOrderApi.createOrder(payload.daily_item_id, payload.quantity, parseInt(selectedFamilyMember)),
+    mutationFn: (payload: any) => dailyItemOrderApi.createOrder(
+      payload.daily_item_id, 
+      payload.quantity, 
+      parseInt(selectedFamilyMember),
+      payload.delivery_date,
+      payload.weekly_plan_id
+    ),
     onSuccess: (response) => {
-      toast.success("Daily Item order placed successfully!");
+      const orderType = response.data.order_type === 'pre_order' ? 'pre-order' : 'order';
+      toast.success(`Daily Item ${orderType} placed successfully!`);
       
       // Show order confirmation with details
       const orderDetails = response.data;
       if (orderDetails) {
+        // Navigate to order confirmation or show modal with details
         showOrderConfirmation(orderDetails);
       }
       
-      // Clear selected daily-items
+      // Clear selected daily-items and reset modal state
       setSelectedAddOnsForOrder({});
+      setSelectedDailyItemDate(null);
+      setSelectedDailyItemCategory("");
       setShowAddOnOrderModal(false);
       
       refetch(); // Update the UI after order
@@ -656,11 +670,18 @@ const Planner = () => {
       return;
     }
 
+    if (!selectedDailyItemDate) {
+      toast.error("Please select a delivery date for your daily items");
+      return;
+    }
+
     const selectedItems = Object.entries(selectedAddOnsForOrder)
       .filter(([_, quantity]) => quantity > 0)
       .map(([addonId, quantity]) => ({
         daily_item_id: parseInt(addonId),
-        quantity
+        quantity,
+        delivery_date: format(selectedDailyItemDate, 'yyyy-MM-dd'),
+        weekly_plan_id: activePlan?.id || null
       }));
 
     if (selectedItems.length === 0) {
@@ -719,7 +740,7 @@ const Planner = () => {
   
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-32">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-24">
       {/* Header */}
       <div 
         className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 py-4 border-b-2 border-brand-red"
@@ -933,44 +954,44 @@ const Planner = () => {
         {/* Meal Filters */}
         <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="planner-meal-filters">
           <h3 className="text-sm font-semibold text-brand-black mb-3">Meal Type</h3>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { key: 'all', label: 'All Meals' },
-              { key: 'hot_meal', label: 'Hot Meal' },
-              { key: 'sandwich', label: 'Sandwich' },
-              { key: 'sandwich_xl', label: 'Sandwich XL' },
-              { key: 'burger', label: 'Burger' },
-              { key: 'crepe', label: 'Crepe' },
-              { key: 'nursery', label: 'Nursery' }
-            ].map(({ key, label }) => (
-              <Button
-                key={key}
-                variant={selectedType === key ? 'default' : 'outline'}
-                size="sm"
-                className={`${
-                  selectedType === key 
-                    ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
-                    : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
-                } rounded-full px-3 py-1 text-xs font-medium`}
-                onClick={() => setSelectedType(key as 'all' | 'hot_meal' | 'sandwich' | 'sandwich_xl' | 'burger' | 'crepe' | 'nursery')}
-              >
-                {label}
-              </Button>
-            ))}
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: 'all', label: 'All Meals' },
+                { key: 'hot_meal', label: 'Hot Meal' },
+                { key: 'sandwich', label: 'Sandwich' },
+                { key: 'sandwich_xl', label: 'Sandwich XL' },
+                { key: 'burger', label: 'Burger' },
+                { key: 'crepe', label: 'Crepe' },
+                { key: 'nursery', label: 'Nursery' }
+              ].map(({ key, label }) => (
+                <Button
+                  key={key}
+                  variant={selectedType === key ? 'default' : 'outline'}
+                  size="sm"
+                  className={`${
+                    selectedType === key 
+                      ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
+                      : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
+                  } rounded-full px-3 py-1 text-xs font-medium`}
+                  onClick={() => setSelectedType(key as 'all' | 'hot_meal' | 'sandwich' | 'sandwich_xl' | 'burger' | 'crepe' | 'nursery')}
+                >
+                  {label}
+                </Button>
+              ))}
           </div>
         </div>
 
         {/* View Full Menu Button */}
         <div className="mb-6 flex justify-center" data-tutorial="planner-order-button">
-          <Button
+            <Button
             onClick={handleViewGeneralPdf}
             className="bg-brand-orange hover:bg-brand-orange/90 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow-lg"
-            disabled={loadingPdf}
-          >
-            <FileText className="w-5 h-5 mr-2" />
+              disabled={loadingPdf}
+            >
+              <FileText className="w-5 h-5 mr-2" />
             View Full Menu
-          </Button>
-        </div>
+            </Button>
+          </div>
 
         {/* Meal Planner Cards */}
         {activePlan ? (
@@ -1061,87 +1082,68 @@ const Planner = () => {
                         </div>
                         
                         {/* Meals Grid - Talabat Style */}
-                        <div className="p-6">
+                        <div className="p-3 sm:p-4 md:p-6">
                           <div 
-                            className="grid grid-cols-2 gap-6 sm:gap-8"
+                            className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6"
                             data-tutorial="meal-list"
                           >
                             {mealsForDay.map((meal: any, mealIndex: number) => (
                               <div 
                                 key={`${date.toISOString()}-${meal.id}-${mealIndex}`} 
-                                className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-3xl border border-gray-200/60 hover:border-brand-orange/60 hover:shadow-2xl hover:shadow-brand-orange/10 transition-all duration-500 overflow-hidden group relative cursor-pointer"
+                                className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-2xl border-0 hover:border hover:border-brand-orange/40 hover:shadow-lg transition-all duration-200 overflow-hidden group relative cursor-pointer"
                                 onClick={() => handlePreOrder(meal, date)}
                               >
-                                {/* Premium Glow Effect */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-brand-orange/5 via-transparent to-brand-red/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                                
-                                {/* Top Accent Bar */}
-                                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-orange via-brand-red to-brand-orange opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                                
-                                {/* Click to Order Indicator */}
-                                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                  <div className="bg-gradient-to-r from-brand-orange to-brand-red text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                                    Click to Order
-                                  </div>
-                                </div>
+
                                 
                                 {/* Meal Content */}
-                                <div className="p-8 relative z-10">
+                                <div className="p-4 sm:p-6 relative z-10">
                                   {/* Meal Header */}
-                                  <div className="flex items-start justify-between mb-6">
-                                    <div className="flex-1 pr-6">
-                                      <div className="flex items-center gap-3 mb-3">
-                                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                                        <span className="text-xs font-semibold text-green-600 uppercase tracking-wide">Available</span>
-                                      </div>
-                                      <h4 className="font-extrabold text-brand-black text-2xl leading-tight line-clamp-2 mb-4 bg-gradient-to-r from-brand-black to-brand-black/80 bg-clip-text">
-                                        {meal.title || meal.name}
-                                      </h4>
-                                      <p className="text-gray-600 text-base leading-relaxed line-clamp-2 mb-4 font-medium">
+                                  <div className="mb-4">
+                                    <div className="flex-1">
+                                      <h4 className="font-bold text-brand-black text-lg sm:text-xl leading-tight line-clamp-2 mb-2 bg-gradient-to-r from-brand-black to-brand-black/80 bg-clip-text">
+                                    {meal.title || meal.name}
+                                  </h4>
+                                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-2 font-medium">
                                         {meal.description || 'Delicious meal prepared with fresh ingredients'}
-                                      </p>
-                                    </div>
-                                    <div className="ml-4 text-right flex-shrink-0">
-                                      <div className="bg-gradient-to-br from-brand-orange to-brand-red p-4 rounded-3xl shadow-xl">
-                                        <span className="text-3xl font-black text-white">
-                                          {meal.price ? formatCurrency(meal.price) : 'N/A'}
-                                        </span>
+                                  </p>
+                                      {/* Price under description */}
+                                      <div className="inline-flex items-center">
+                                        <span className="text-sm font-semibold text-brand-orange">
+                                      {meal.price ? formatCurrency(meal.price) : 'N/A'}
+                                    </span>
                                       </div>
                                     </div>
                                   </div>
                                   
                                   {/* Meal Category Badge */}
-                                  <div className="mb-6">
-                                    <div className="inline-flex items-center gap-3 px-6 py-4 rounded-2xl bg-gradient-to-r from-brand-orange/10 via-brand-orange/20 to-brand-red/10 border-2 border-brand-orange/30 shadow-lg backdrop-blur-sm">
-                                      <div className="w-2 h-2 bg-brand-orange rounded-full animate-pulse"></div>
-                                      <span className="text-sm font-bold text-brand-orange uppercase tracking-wide">
+                                  <div className="mb-4">
+                                    <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-brand-orange/10 via-brand-orange/20 to-brand-red/10 border border-brand-orange/30 shadow-md backdrop-blur-sm">
+                                      <div className="w-1.5 h-1.5 bg-brand-orange rounded-full animate-pulse"></div>
+                                      <span className="text-xs font-semibold text-brand-orange uppercase tracking-wide">
                                         {CATEGORY_LABELS[meal.category as MealCategory] || meal.category || 'N/A'}
-                                      </span>
-                                    </div>
+                                        </span>
+                                      </div>
                                   </div>
                                   
 
                                   
                                   {/* Action Buttons */}
-                                  <div className="flex gap-4">
+                                  <div className="flex gap-3">
                                     {meal.pdf_path && (
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="flex-1 h-14 border-2 border-brand-blue/60 text-brand-blue hover:bg-gradient-to-r hover:from-brand-blue/10 hover:to-blue-500/10 hover:border-brand-blue/80 rounded-2xl font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                                        className="flex-1 h-10 border-2 border-brand-blue/60 text-brand-blue hover:bg-gradient-to-r hover:from-brand-blue/10 hover:to-blue-500/10 hover:border-brand-blue/80 rounded-xl font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           handleViewPdf(meal);
                                         }}
                                         disabled={loadingPdf}
                                       >
-                                        <FileText className="w-5 h-5 mr-2" />
+                                        <FileText className="w-4 h-4 mr-2" />
                                         View PDF
                                       </Button>
                                     )}
-                                    <div className="flex-1 h-14 bg-gradient-to-r from-brand-red via-brand-orange to-brand-red rounded-2xl flex items-center justify-center text-white font-black shadow-xl">
-                                      <span className="text-lg">Click to Order</span>
-                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -1160,23 +1162,28 @@ const Planner = () => {
         )}
 
         {/* Dedicated Daily Items Ordering Card */}
-        <div className="mb-8">
-          <div className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-3xl border border-gray-200/60 shadow-xl overflow-hidden">
+        <div className="mb-6">
+          <div className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-2xl border border-gray-200/60 shadow-lg overflow-hidden">
             {/* Card Header */}
-            <div className="bg-gradient-to-r from-brand-orange/10 via-brand-red/10 to-brand-orange/10 p-6 border-b border-gray-200/30">
+            <div className="bg-gradient-to-r from-brand-orange/10 via-brand-red/10 to-brand-orange/10 p-4 sm:p-6 border-b border-gray-200/30">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-brand-orange to-brand-red rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-2xl">🍽️</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-brand-orange to-brand-red rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
+                    <span className="text-xl sm:text-2xl">🍽️</span>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-brand-black">Daily Items</h2>
-                    <p className="text-gray-600 font-medium">Order fresh daily items for today</p>
+                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-brand-black">Daily Items</h2>
+                    <p className="text-gray-600 text-sm sm:text-base font-medium">Order fresh daily items for specific dates</p>
                   </div>
                 </div>
                 <Button
-                  onClick={() => setShowAddOnOrderModal(true)}
-                  className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-red hover:from-brand-red/80 hover:via-brand-orange/80 hover:to-brand-red/80 text-white font-bold px-8 py-3 rounded-2xl shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                  onClick={() => {
+                    setSelectedDailyItemCategory("");
+                    setSelectedDailyItemDate(null);
+                    setSelectedAddOnsForOrder({});
+                    setShowAddOnOrderModal(true);
+                  }}
+                  className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-red hover:from-brand-red/80 hover:via-brand-orange/80 hover:to-brand-red/80 text-white font-bold px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl text-sm sm:text-base"
                 >
                   Order Now
                 </Button>
@@ -1184,13 +1191,13 @@ const Planner = () => {
             </div>
             
             {/* Card Content */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <p className="text-gray-600 mb-6 text-center">
-                Order fresh daily items independently of meals. These will be available for pickup on the same day.
+                Order fresh daily items independently of meals. Choose the date you want them delivered.
               </p>
 
               {/* Daily Item Categories Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                 {[
                   { name: 'Bakery', emoji: '🥐', color: 'from-yellow-400 to-orange-400' },
                   { name: 'Snacks', emoji: '🍿', color: 'from-orange-400 to-red-400' },
@@ -1208,13 +1215,16 @@ const Planner = () => {
                   }).length;
                   
                   return (
-                    <div key={category.name} className="group cursor-pointer" onClick={() => setShowAddOnOrderModal(true)}>
-                      <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border border-gray-200/60 hover:border-brand-orange/40 hover:shadow-lg transition-all duration-300 hover:scale-105">
+                    <div key={category.name} className="group cursor-pointer" onClick={() => {
+                      setSelectedAddOnCategory(category.name);
+                      setShowAddOnOrderModal(true);
+                    }}>
+                      <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-200/60 hover:border-brand-orange/40 hover:shadow-lg transition-all duration-300 hover:scale-105">
                         <div className="text-center">
-                          <div className={`w-16 h-16 bg-gradient-to-br ${category.color} rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg group-hover:shadow-xl transition-all duration-300`}>
-                            <span className="text-3xl">{category.emoji}</span>
+                          <div className={`w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br ${category.color} rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg group-hover:shadow-xl transition-all duration-300`}>
+                            <span className="text-2xl sm:text-3xl">{category.emoji}</span>
                           </div>
-                          <div className="text-sm font-bold text-brand-black mb-1">{category.name}</div>
+                          <div className="text-xs sm:text-sm font-bold text-brand-black mb-1">{category.name}</div>
                           <div className="text-xs text-gray-600">
                             {itemCount} item{itemCount !== 1 ? 's' : ''} available
                           </div>
@@ -1258,13 +1268,13 @@ const Planner = () => {
               </div>
               <DialogTitle className="text-3xl font-bold text-brand-black mb-2">
                 {selectedAddOnCategory} Items
-              </DialogTitle>
+            </DialogTitle>
               <p className="text-xl text-brand-black/70 mb-2">
                 {selectedMealForAddOns?.title || selectedMealForAddOns?.name}
               </p>
               <p className="text-lg text-brand-orange font-semibold">
-                {selectedDateForAddOns && format(selectedDateForAddOns, 'EEEE, MMMM dd, yyyy')}
-              </p>
+              {selectedDateForAddOns && format(selectedDateForAddOns, 'EEEE, MMMM dd, yyyy')}
+            </p>
             </div>
           </DialogHeader>
           
@@ -1305,9 +1315,9 @@ const Planner = () => {
                           {dailyItem.description && (
                             <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-4 font-medium">
                               {dailyItem.description}
-                            </p>
+                    </p>
                           )}
-                        </div>
+                  </div>
                         
                         {/* Price */}
                         <div className="mb-6">
@@ -1322,38 +1332,38 @@ const Planner = () => {
                         <div className="flex items-center justify-between mb-4">
                           <span className="text-sm font-medium text-brand-black">Quantity:</span>
                           <div className="flex items-center space-x-4">
-                            <Button
-                              size="sm"
-                              variant="outline"
+                    <Button
+                      size="sm"
+                      variant="outline"
                               className="w-12 h-12 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/600 rounded-xl transition-all duration-200 hover:scale-105"
-                              onClick={() => {
-                                setSelectedAddOns(prev => ({
-                                  ...prev,
+                      onClick={() => {
+                        setSelectedAddOns(prev => ({
+                          ...prev,
                                   [dailyItem.id]: Math.max(0, (prev[dailyItem.id] || 0) - 1)
-                                }));
-                              }}
+                        }));
+                      }}
                               disabled={!selectedAddOns[dailyItem.id] || selectedAddOns[dailyItem.id] === 0}
-                            >
+                    >
                               <span className="text-xl font-bold">−</span>
-                            </Button>
+                    </Button>
                             <span className="w-16 text-center text-2xl font-bold text-brand-black">
                               {selectedAddOns[dailyItem.id] || 0}
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="outline"
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
                               className="w-12 h-12 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/600 rounded-xl transition-all duration-200 hover:scale-105"
-                              onClick={() => {
-                                setSelectedAddOns(prev => ({
-                                  ...prev,
+                      onClick={() => {
+                        setSelectedAddOns(prev => ({
+                          ...prev,
                                   [dailyItem.id]: (prev[dailyItem.id] || 0) + 1
-                                }));
-                              }}
-                            >
+                        }));
+                      }}
+                    >
                               <span className="text-xl font-bold">+</span>
-                            </Button>
-                          </div>
-                        </div>
+                    </Button>
+                  </div>
+                </div>
                       </div>
                     </div>
                   ))}
@@ -1365,52 +1375,52 @@ const Planner = () => {
           <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 border-t border-gray-200/30">
             <div className="flex justify-between items-center">
               <div className="text-lg font-semibold text-brand-black">
-                Total: {formatCurrency(
-                  Object.entries(selectedAddOns).reduce((total, [addonId, quantity]) => {
+              Total: {formatCurrency(
+                Object.entries(selectedAddOns).reduce((total, [addonId, quantity]) => {
                     const addon = dailyItems.find(a => a.id === parseInt(addonId));
-                    return total + (addon ? addon.price * quantity : 0);
-                  }, 0)
-                )}
-              </div>
+                  return total + (addon ? addon.price * quantity : 0);
+                }, 0)
+              )}
+            </div>
               <div className="space-x-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAddOnsModal(false)}
+              <Button
+                variant="outline"
+                onClick={() => setShowAddOnsModal(false)}
                   className="px-8 py-3 border-2 border-gray-300 text-gray-700 hover:bg-gray-100 rounded-2xl font-semibold transition-all duration-300"
-                >
-                  Cancel
-                </Button>
-                <Button
+              >
+                Cancel
+              </Button>
+              <Button
                   className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-red hover:from-brand-red/80 hover:via-brand-orange/80 hover:to-brand-red/80 text-white font-bold px-8 py-3 rounded-2xl shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-                  onClick={() => {
+                onClick={() => {
                     // Store selected daily-items for this meal
-                    const selectedItems = Object.entries(selectedAddOns)
-                      .filter(([_, quantity]) => quantity > 0)
-                      .map(([addonId, quantity]) => ({
+                  const selectedItems = Object.entries(selectedAddOns)
+                    .filter(([_, quantity]) => quantity > 0)
+                    .map(([addonId, quantity]) => ({
                         daily_item_id: parseInt(addonId),
-                        quantity
-                      }));
+                      quantity
+                    }));
+                  
+                  if (selectedItems.length > 0 && selectedMealForAddOns && selectedDateForAddOns) {
+                    // Create a unique key for this meal and date
+                    const mealKey = `${selectedMealForAddOns.id}_${format(selectedDateForAddOns, 'yyyy-MM-dd')}`;
                     
-                    if (selectedItems.length > 0 && selectedMealForAddOns && selectedDateForAddOns) {
-                      // Create a unique key for this meal and date
-                      const mealKey = `${selectedMealForAddOns.id}_${format(selectedDateForAddOns, 'yyyy-MM-dd')}`;
-                      
                       // Store daily-items for this specific meal and date
-                      setMealAddOns(prev => ({
-                        ...prev,
-                        [mealKey]: selectedItems
-                      }));
-                      
-                      toast.success(`Selected ${selectedItems.length} ${selectedAddOnCategory.toLowerCase()} item(s) for ${selectedMealForAddOns?.title || selectedMealForAddOns?.name}. They will be included when you order this meal.`);
-                    } else {
+                    setMealAddOns(prev => ({
+                      ...prev,
+                      [mealKey]: selectedItems
+                    }));
+                    
+                    toast.success(`Selected ${selectedItems.length} ${selectedAddOnCategory.toLowerCase()} item(s) for ${selectedMealForAddOns?.title || selectedMealForAddOns?.name}. They will be included when you order this meal.`);
+                  } else {
                       toast.info("No daily-items selected");
-                    }
-                    setShowAddOnsModal(false);
-                  }}
-                  disabled={Object.values(selectedAddOns).every(qty => qty === 0)}
-                >
+                  }
+                  setShowAddOnsModal(false);
+                }}
+                disabled={Object.values(selectedAddOns).every(qty => qty === 0)}
+              >
                   Select Daily Items
-                </Button>
+              </Button>
               </div>
             </div>
           </div>
@@ -1426,113 +1436,151 @@ const Planner = () => {
                 <span className="text-4xl">🍽️</span>
               </div>
               <DialogTitle className="text-3xl font-bold text-brand-black mb-2">
-                Order Daily Items Separately
+                Order Daily Items - {selectedDailyItemCategory || 'All Categories'}
               </DialogTitle>
               <p className="text-xl text-brand-black/70 mb-2">
                 Select daily items to order independently of meals
               </p>
               <p className="text-lg text-brand-orange font-semibold">
-                These will be available for pickup on the same day
+                Choose the date you want them delivered
               </p>
             </div>
           </DialogHeader>
           
           <div className="p-8">
-            {/* Daily Item Categories */}
-            {['Bakery', 'Snacks', 'Drinks', 'Greek Yogurt Popsicle'].map((category) => {
-              const categoryAddOns = filteredDailyItems.filter(dailyItem => {
-                switch (category) {
-                  case 'Bakery': return dailyItem.category === 'bakery';
-                  case 'Snacks': return dailyItem.category === 'snacks';
-                  case 'Drinks': return dailyItem.category === 'drinks';
-                  case 'Greek Yogurt Popsicle': return dailyItem.category === 'greek_yoghurt_popsicle';
-                  default: return false;
-                }
-              });
+            {/* Date Selection */}
+            <div className="mb-8 bg-gray-50 rounded-xl p-6">
+              <h3 className="text-xl font-bold text-brand-black mb-4 flex items-center">
+                <CalendarIcon className="w-5 h-5 mr-2 text-brand-orange" />
+                Select Delivery Date
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal bg-white border-2 border-brand-orange/30 hover:border-brand-orange/50"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {selectedDailyItemDate ? format(selectedDailyItemDate, 'EEEE, MMMM dd, yyyy') : 'Choose a date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDailyItemDate || undefined}
+                        onSelect={(date) => setSelectedDailyItemDate(date || null)}
+                        disabled={(date) => isBefore(date, startOfDay(new Date()))}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Category Filter</label>
+                  <Select value={selectedDailyItemCategory} onValueChange={setSelectedDailyItemCategory}>
+                    <SelectTrigger className="w-full bg-white border-2 border-brand-orange/30 hover:border-brand-orange/50">
+                      <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Categories</SelectItem>
+                      <SelectItem value="bakery">Bakery</SelectItem>
+                      <SelectItem value="snacks">Snacks</SelectItem>
+                      <SelectItem value="drinks">Drinks</SelectItem>
+                      <SelectItem value="greek_yoghurt_popsicle">Popsicles</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
 
-              if (categoryAddOns.length === 0) return null;
+            {/* Daily Items Display */}
+            {(() => {
+              // Filter by selected category if any
+              let filteredItems = filteredDailyItems;
+              if (selectedDailyItemCategory) {
+                filteredItems = filteredDailyItems.filter(dailyItem => dailyItem.category === selectedDailyItemCategory);
+              }
+
+              if (filteredItems.length === 0) {
+                return (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500 text-lg">No items available in the selected category.</p>
+                  </div>
+                );
+              }
 
               return (
-                <div key={category} className="mb-8">
-                  <h3 className="text-2xl font-bold text-brand-black mb-6 flex items-center">
-                    <div className="w-3 h-3 bg-gradient-to-r from-brand-orange to-brand-red rounded-full mr-3 animate-pulse"></div>
-                    <span className="bg-gradient-to-r from-brand-orange to-brand-red bg-clip-text text-transparent">{category}</span>
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {categoryAddOns.map((dailyItem) => (
-                      <div key={dailyItem.id} className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-3xl border border-gray-200/60 hover:border-brand-orange/60 hover:shadow-2xl hover:shadow-brand-orange/10 transition-all duration-500 overflow-hidden group relative">
-                        {/* Premium Glow Effect */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-brand-orange/5 via-transparent to-brand-red/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredItems.map((dailyItem) => (
+                    <div key={dailyItem.id} className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-2xl border border-gray-200/60 hover:border-brand-orange/60 hover:shadow-xl hover:shadow-brand-orange/10 transition-all duration-300 overflow-hidden group relative">
+                      {/* Item Content */}
+                      <div className="p-6 relative z-10">
+                        {/* Item Header */}
+                        <div className="mb-4">
+                          <h4 className="font-bold text-brand-black text-lg leading-tight line-clamp-2 mb-3">
+                            {dailyItem.name}
+                          </h4>
+                          {dailyItem.description && (
+                            <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-4 font-medium">
+                              {dailyItem.description}
+                            </p>
+                          )}
+                        </div>
                         
-                        {/* Top Accent Bar */}
-                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-orange via-brand-red to-brand-orange opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        {/* Price */}
+                        <div className="mb-5">
+                          <div className="bg-gradient-to-br from-brand-orange to-brand-red p-3 rounded-xl shadow-lg">
+                            <span className="text-xl font-black text-white">
+                              {formatCurrency(dailyItem.price)}
+                            </span>
+                          </div>
+                        </div>
                         
-                        {/* Item Content */}
-                        <div className="p-6 relative z-10">
-                          {/* Item Header */}
-                          <div className="mb-4">
-                            <h4 className="font-extrabold text-brand-black text-lg leading-tight line-clamp-2 mb-3 bg-gradient-to-r from-brand-black to-brand-black/80 bg-clip-text">
-                              {dailyItem.name}
-                            </h4>
-                            {dailyItem.description && (
-                              <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-4 font-medium">
-                                {dailyItem.description}
-                              </p>
-                            )}
-                          </div>
-                          
-                          {/* Price */}
-                          <div className="mb-5">
-                            <div className="bg-gradient-to-br from-brand-orange to-brand-red p-3 rounded-2xl shadow-lg">
-                              <span className="text-2xl font-black text-white">
-                                {formatCurrency(dailyItem.price)}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {/* Quantity Controls */}
-                          <div className="flex items-center justify-between mb-4">
-                            <span className="text-sm font-medium text-brand-black">Quantity:</span>
-                            <div className="flex items-center space-x-4">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-12 h-12 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/600 rounded-xl transition-all duration-200 hover:scale-105"
-                                onClick={() => {
-                                  setSelectedAddOnsForOrder(prev => ({
-                                    ...prev,
-                                    [dailyItem.id]: Math.max(0, (prev[dailyItem.id] || 0) - 1)
-                                  }));
-                                }}
-                                disabled={!selectedAddOnsForOrder[dailyItem.id] || selectedAddOnsForOrder[dailyItem.id] === 0}
-                              >
-                                <span className="text-xl font-bold">−</span>
-                              </Button>
-                              <span className="w-16 text-center text-2xl font-bold text-brand-black">
-                                {selectedAddOnsForOrder[dailyItem.id] || 0}
-                              </span>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-12 h-12 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/600 rounded-xl transition-all duration-200 hover:scale-105"
-                                onClick={() => {
-                                  setSelectedAddOnsForOrder(prev => ({
-                                    ...prev,
-                                    [dailyItem.id]: (prev[dailyItem.id] || 0) + 1
-                                  }));
-                                }}
-                              >
-                                <span className="text-xl font-bold">+</span>
-                              </Button>
-                            </div>
+                        {/* Quantity Controls */}
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-sm font-medium text-brand-black">Quantity:</span>
+                          <div className="flex items-center space-x-4">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-10 h-10 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/600 rounded-lg transition-all duration-200 hover:scale-105"
+                              onClick={() => {
+                                setSelectedAddOnsForOrder(prev => ({
+                                  ...prev,
+                                  [dailyItem.id]: Math.max(0, (prev[dailyItem.id] || 0) - 1)
+                                }));
+                              }}
+                              disabled={!selectedAddOnsForOrder[dailyItem.id] || selectedAddOnsForOrder[dailyItem.id] === 0}
+                            >
+                              <span className="text-lg font-bold">−</span>
+                            </Button>
+                            <span className="w-12 text-center text-xl font-bold text-brand-black">
+                              {selectedAddOnsForOrder[dailyItem.id] || 0}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-10 h-10 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/600 rounded-lg transition-all duration-200 hover:scale-105"
+                              onClick={() => {
+                                setSelectedAddOnsForOrder(prev => ({
+                                  ...prev,
+                                  [dailyItem.id]: (prev[dailyItem.id] || 0) + 1
+                                }));
+                              }}
+                            >
+                              <span className="text-lg font-bold">+</span>
+                            </Button>
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               );
-            })}
+            })()}
 
             {/* Order Summary and Actions */}
             <div className="border-t border-gray-200 pt-4">

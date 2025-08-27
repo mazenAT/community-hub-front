@@ -148,10 +148,12 @@ export const dailyItemsApi = {
 };
 
 export const dailyItemOrderApi = {
-  createOrder: (daily_item_id: number, quantity: number, family_member_id?: number) => 
-    api.post('/add-on-orders', { add_on_id: daily_item_id, quantity, family_member_id }),
+  createOrder: (daily_item_id: number, quantity: number, family_member_id?: number, delivery_date?: string, weekly_plan_id?: number) => 
+    api.post('/add-on-orders', { add_on_id: daily_item_id, quantity, family_member_id, delivery_date, weekly_plan_id }),
   getMyOrders: () => api.get('/add-on-orders'),
   getOrder: (id: number) => api.get(`/add-on-orders/${id}`),
+  getByDeliveryDate: (delivery_date: string, category?: string) => 
+    api.get('/add-on-orders/by-delivery-date', { params: { delivery_date, category } }),
 };
 
 export const schoolApi = {

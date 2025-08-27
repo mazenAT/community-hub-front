@@ -37,7 +37,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeTab }) => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow border-t border-gray-200">
+    <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow border-t border-gray-200 z-50">
       <div className="flex justify-around items-center h-16">
         {tabs.map((tab) => (
           <button

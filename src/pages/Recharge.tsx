@@ -272,7 +272,7 @@ const Recharge = () => {
           `3DS_PAYMENT_${paymentResponse.statusCode || 'UNKNOWN'}`
         );
         
-        toast.error(errorMessage);
+          toast.error(errorMessage);
         setIsSubmitting(false);
       }
 
@@ -480,7 +480,7 @@ const Recharge = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 py-4 border-b-2 border-brand-red">
         <div className="flex items-center justify-between">
-          <button
+          <button 
             onClick={() => navigate(-1)}
             className="text-white hover:text-white/80 transition-colors"
           >
@@ -501,35 +501,35 @@ const Recharge = () => {
             <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
             Select Amount
           </h3>
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            {[50, 100, 200, 500].map((amount) => (
-              <Button
-                key={amount}
-                variant={selectedAmount === amount ? "default" : "outline"}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {[50, 100, 200, 500].map((amount) => (
+                <Button 
+                  key={amount} 
+                  variant={selectedAmount === amount ? "default" : "outline"} 
                 className={`${
-                  selectedAmount === amount
+                    selectedAmount === amount 
                     ? "bg-brand-orange hover:bg-brand-orange/90 text-white border-brand-orange"
                     : "border-brand-orange text-brand-orange hover:bg-brand-orange/10"
                 } rounded-xl`}
                 onClick={() => setSelectedAmount(amount)}
-              >
-                {amount} EGP
-              </Button>
-            ))}
-          </div>
-          <div className="space-y-2">
+                >
+                  {amount} EGP
+                </Button>
+              ))}
+            </div>
+            <div className="space-y-2">
             <label className="text-sm font-medium text-brand-black">Custom Amount</label>
-            <Input
-              type="number"
-              placeholder="Enter amount in EGP"
-              value={customAmount}
+              <Input 
+                type="number" 
+                placeholder="Enter amount in EGP" 
+                value={customAmount} 
               onChange={(e) => {
                 setCustomAmount(e.target.value);
                 setSelectedAmount(null);
               }}
               className="border-brand-orange/30 focus:border-brand-orange"
-            />
-          </div>
+              />
+            </div>
         </div>
 
         {/* Payment Method */}
@@ -540,12 +540,12 @@ const Recharge = () => {
           </h3>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-3">
             <CreditCard className="w-5 h-5 text-blue-600" />
-            <div>
+                <div>
               <p className="font-medium text-blue-900">Fawry Payment Gateway</p>
               <p className="text-sm text-blue-700">Secure payment processing via Fawry with 3DS authentication</p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
         {/* Card Information */}
         <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="recharge-card-info">
@@ -554,90 +554,90 @@ const Recharge = () => {
             Card Information
           </h3>
           <div className="flex gap-2 mb-4">
-            <Button
+              <Button
               variant={paymentMode === 'saved' ? "default" : "outline"}
               className={`${
                 paymentMode === 'saved'
                   ? "bg-brand-orange hover:bg-brand-orange/90 text-white border-brand-orange"
                   : "border-brand-orange text-brand-orange hover:bg-brand-orange/10"
               } rounded-xl`}
-              onClick={() => setPaymentMode('saved')}
-            >
-              Saved Card
-            </Button>
-            <Button
+                onClick={() => setPaymentMode('saved')}
+              >
+                Saved Card
+              </Button>
+              <Button
               variant={paymentMode === 'new' ? "default" : "outline"}
               className={`${
                 paymentMode === 'new'
                   ? "bg-brand-orange hover:bg-brand-orange/90 text-white border-brand-orange"
                   : "border-brand-orange text-brand-orange hover:bg-brand-orange/10"
               } rounded-xl`}
-              onClick={() => setPaymentMode('new')}
-            >
-              New Card
-            </Button>
-          </div>
+                onClick={() => setPaymentMode('new')}
+              >
+                New Card
+              </Button>
+            </div>
 
-          {paymentMode === 'saved' ? (
-            <SavedCards
-              onCardSelect={(card: SavedCard) => setSelectedCard(card)}
-              selectedCardId={selectedCard?.id}
-            />
-          ) : (
-            <div className="space-y-3">
-              <Input 
-                placeholder="Mobile Number" 
-                value={mobile} 
-                onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, '').slice(0,11))} 
-                maxLength={11} 
-                autoComplete="off"
-                className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
-              />
-              <Input 
-                placeholder="Name on Card" 
-                value={cardAlias} 
-                onChange={(e) => setCardAlias(e.target.value)} 
-                autoComplete="off"
-                className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
-              />
-              <Input 
-                placeholder="Card Number" 
-                value={cardNumber} 
-                onChange={(e) => setCardNumber(e.target.value)} 
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck="false"
-                className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
-              />
-              <div className="grid grid-cols-2 gap-3">
+            {paymentMode === 'saved' ? (
+                <SavedCards
+                  onCardSelect={(card: SavedCard) => setSelectedCard(card)}
+                  selectedCardId={selectedCard?.id}
+                />
+            ) : (
+              <div className="space-y-3">
                 <Input 
-                  placeholder="MM" 
-                  value={expiryMonth} 
-                  onChange={(e) => setExpiryMonth(e.target.value)} 
+                  placeholder="Mobile Number" 
+                  value={mobile} 
+                  onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, '').slice(0,11))} 
+                  maxLength={11} 
                   autoComplete="off"
-                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl text-center"
+                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
                 />
                 <Input 
-                  placeholder="YY" 
-                  value={expiryYear} 
-                  onChange={(e) => setExpiryYear(e.target.value)} 
+                  placeholder="Name on Card" 
+                  value={cardAlias} 
+                  onChange={(e) => setCardAlias(e.target.value)} 
                   autoComplete="off"
-                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl text-center"
+                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
+                />
+                <Input 
+                  placeholder="Card Number" 
+                  value={cardNumber} 
+                  onChange={(e) => setCardNumber(e.target.value)} 
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <Input 
+                    placeholder="MM" 
+                    value={expiryMonth} 
+                    onChange={(e) => setExpiryMonth(e.target.value)} 
+                    autoComplete="off"
+                    className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl text-center"
+                  />
+                  <Input 
+                    placeholder="YY" 
+                    value={expiryYear} 
+                    onChange={(e) => setExpiryYear(e.target.value)} 
+                    autoComplete="off"
+                    className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl text-center"
+                  />
+                </div>
+                <Input 
+                  placeholder="CVV" 
+                  value={cvv} 
+                  onChange={(e) => setCvv(e.target.value)} 
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
                 />
               </div>
-              <Input 
-                placeholder="CVV" 
-                value={cvv} 
-                onChange={(e) => setCvv(e.target.value)} 
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck="false"
-                className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
-              />
-            </div>
-          )}
+            )}
         </div>
 
         {/* Total Amount Display */}
