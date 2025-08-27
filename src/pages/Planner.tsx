@@ -719,7 +719,7 @@ const Planner = () => {
   
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-32">
       {/* Header */}
       <div 
         className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 py-4 border-b-2 border-brand-red"
@@ -1071,21 +1071,28 @@ const Planner = () => {
                                 {/* Premium Glow Effect */}
                                 <div className="absolute inset-0 bg-gradient-to-br from-brand-orange/5 via-transparent to-brand-red/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                                 
+                                {/* Top Accent Bar */}
+                                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-orange via-brand-red to-brand-orange opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                
                                 {/* Meal Content */}
-                                <div className="p-6 relative z-10">
+                                <div className="p-8 relative z-10">
                                   {/* Meal Header */}
-                                  <div className="flex items-start justify-between mb-5">
-                                    <div className="flex-1 pr-4">
-                                      <h4 className="font-extrabold text-brand-black text-xl leading-tight line-clamp-2 mb-3 bg-gradient-to-r from-brand-black to-brand-black/80 bg-clip-text">
+                                  <div className="flex items-start justify-between mb-6">
+                                    <div className="flex-1 pr-6">
+                                      <div className="flex items-center gap-3 mb-3">
+                                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                        <span className="text-xs font-semibold text-green-600 uppercase tracking-wide">Available</span>
+                                      </div>
+                                      <h4 className="font-extrabold text-brand-black text-2xl leading-tight line-clamp-2 mb-4 bg-gradient-to-r from-brand-black to-brand-black/80 bg-clip-text">
                                         {meal.title || meal.name}
                                       </h4>
-                                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-3 font-medium">
+                                      <p className="text-gray-600 text-base leading-relaxed line-clamp-2 mb-4 font-medium">
                                         {meal.description || 'Delicious meal prepared with fresh ingredients'}
                                       </p>
                                     </div>
-                                    <div className="ml-3 text-right flex-shrink-0">
-                                      <div className="bg-gradient-to-br from-brand-orange to-brand-red p-3 rounded-2xl shadow-lg">
-                                        <span className="text-2xl font-black text-white">
+                                    <div className="ml-4 text-right flex-shrink-0">
+                                      <div className="bg-gradient-to-br from-brand-orange to-brand-red p-4 rounded-3xl shadow-xl">
+                                        <span className="text-3xl font-black text-white">
                                           {meal.price ? formatCurrency(meal.price) : 'N/A'}
                                         </span>
                                       </div>
@@ -1093,73 +1100,16 @@ const Planner = () => {
                                   </div>
                                   
                                   {/* Meal Category Badge */}
-                                  <div className="mb-5">
-                                    <span className="inline-block px-5 py-3 rounded-2xl text-sm font-bold bg-gradient-to-r from-brand-orange/10 via-brand-orange/20 to-brand-red/10 text-brand-orange border-2 border-brand-orange/30 shadow-lg backdrop-blur-sm">
-                                      {CATEGORY_LABELS[meal.category as MealCategory] || meal.category || 'N/A'}
-                                    </span>
-                                  </div>
-                                  
-                                  {/* Daily Items Selected Indicator */}
-                                  {(() => {
-                                    const mealKey = `${meal.id}_${format(date, 'yyyy-MM-dd')}`;
-                                    const selectedMealAddOns = mealAddOns[mealKey] || [];
-                                    return selectedMealAddOns.length > 0 && (
-                                      <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
-                                        <div className="flex items-center gap-2">
-                                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                          <span className="text-xs font-medium text-green-800">
-                                            {selectedMealAddOns.length} daily-item{selectedMealAddOns.length !== 1 ? 's' : ''} selected
-                                          </span>
-                                        </div>
-                                      </div>
-                                    );
-                                  })()}
-                                  
-                                  {/* Daily Items Section */}
                                   <div className="mb-6">
-                                    <h5 className="text-sm font-bold text-brand-black mb-4 flex items-center">
-                                      <div className="w-3 h-3 bg-gradient-to-r from-brand-orange to-brand-red rounded-full mr-3 animate-pulse"></div>
-                                      <span className="bg-gradient-to-r from-brand-orange to-brand-red bg-clip-text text-transparent">Add Daily Items</span>
-                                    </h5>
-                                    <div className="grid grid-cols-2 gap-3">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-12 px-4 border-2 border-brand-yellow/60 text-brand-black hover:bg-gradient-to-r hover:from-brand-yellow/20 hover:to-brand-orange/20 hover:border-brand-yellow/80 text-xs font-bold rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg"
-                                        onClick={() => handleAddOnsClick(date, meal, 'Bakery')}
-                                      >
-                                        <span className="mr-2 text-lg">🥐</span>
-                                        Bakery
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-12 px-4 border-2 border-brand-yellow/60 text-brand-black hover:bg-gradient-to-r hover:from-brand-yellow/20 hover:to-brand-orange/20 hover:border-brand-yellow/80 text-xs font-bold rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg"
-                                        onClick={() => handleAddOnsClick(date, meal, 'Snacks')}
-                                      >
-                                        <span className="mr-2 text-lg">🍿</span>
-                                        Snacks
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-12 px-4 border-2 border-brand-yellow/60 text-brand-black hover:bg-gradient-to-r hover:from-brand-yellow/20 hover:to-brand-orange/20 hover:border-brand-yellow/80 text-xs font-bold rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg"
-                                        onClick={() => handleAddOnsClick(date, meal, 'Drinks')}
-                                      >
-                                        <span className="mr-2 text-lg">🥤</span>
-                                        Drinks
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-12 px-4 border-2 border-brand-yellow/60 text-brand-black hover:bg-gradient-to-r hover:from-brand-yellow/20 hover:to-brand-orange/20 hover:border-brand-yellow/80 text-xs font-bold rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg"
-                                        onClick={() => handleAddOnsClick(date, meal, 'Greek Yogurt Popsicle')}
-                                      >
-                                        <span className="mr-2 text-lg">🍦</span>
-                                        Popsicle
-                                      </Button>
+                                    <div className="inline-flex items-center gap-3 px-6 py-4 rounded-2xl bg-gradient-to-r from-brand-orange/10 via-brand-orange/20 to-brand-red/10 border-2 border-brand-orange/30 shadow-lg backdrop-blur-sm">
+                                      <div className="w-2 h-2 bg-brand-orange rounded-full animate-pulse"></div>
+                                      <span className="text-sm font-bold text-brand-orange uppercase tracking-wide">
+                                        {CATEGORY_LABELS[meal.category as MealCategory] || meal.category || 'N/A'}
+                                      </span>
                                     </div>
                                   </div>
+                                  
+
                                   
                                   {/* Action Buttons */}
                                   <div className="flex gap-4">
@@ -1200,40 +1150,72 @@ const Planner = () => {
           <EmptyState message="No active weekly plan found for your school." />
         )}
 
-        {/* Separate Daily Item Ordering Section */}
-        <div className="mb-8 bg-white rounded-xl border border-brand-yellow/30 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-brand-black">Order Daily Items Separately</h2>
-            <Button
-              onClick={() => setShowAddOnOrderModal(true)}
-              className="bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white"
-            >
-              Order Daily Items
-            </Button>
-          </div>
-          
-          <p className="text-sm text-gray-600 mb-4">
-            You can order daily-items independently of meals. These will be available for pickup on the same day.
-          </p>
+        {/* Dedicated Daily Items Ordering Card */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-3xl border border-gray-200/60 shadow-xl overflow-hidden">
+            {/* Card Header */}
+            <div className="bg-gradient-to-r from-brand-orange/10 via-brand-red/10 to-brand-orange/10 p-6 border-b border-gray-200/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-brand-orange to-brand-red rounded-2xl flex items-center justify-center shadow-lg">
+                    <span className="text-2xl">🍽️</span>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-brand-black">Daily Items</h2>
+                    <p className="text-gray-600 font-medium">Order fresh daily items for today</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setShowAddOnOrderModal(true)}
+                  className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-red hover:from-brand-red/80 hover:via-brand-orange/80 hover:to-brand-red/80 text-white font-bold px-8 py-3 rounded-2xl shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                >
+                  Order Now
+                </Button>
+              </div>
+            </div>
+            
+            {/* Card Content */}
+            <div className="p-6">
+              <p className="text-gray-600 mb-6 text-center">
+                Order fresh daily items independently of meals. These will be available for pickup on the same day.
+              </p>
 
-          {/* Quick Daily Item Categories */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-            {['Bakery', 'Snacks', 'Drinks', 'Greek Yogurt Popsicle'].map((category) => (
-              <div key={category} className="text-center p-3 bg-brand-yellow/10 rounded-lg border border-brand-yellow/30">
-                <div className="text-sm font-medium text-brand-black">{category}</div>
-                <div className="text-xs text-gray-600 mt-1">
-                  {filteredDailyItems.filter(dailyItem => {
-                    switch (category) {
+              {/* Daily Item Categories Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { name: 'Bakery', emoji: '🥐', color: 'from-yellow-400 to-orange-400' },
+                  { name: 'Snacks', emoji: '🍿', color: 'from-orange-400 to-red-400' },
+                  { name: 'Drinks', emoji: '🥤', color: 'from-blue-400 to-purple-400' },
+                  { name: 'Popsicles', emoji: '🍦', color: 'from-pink-400 to-red-400' }
+                ].map((category) => {
+                  const itemCount = filteredDailyItems.filter(dailyItem => {
+                    switch (category.name) {
                       case 'Bakery': return dailyItem.category === 'bakery';
                       case 'Snacks': return dailyItem.category === 'snacks';
                       case 'Drinks': return dailyItem.category === 'drinks';
-                      case 'Greek Yogurt Popsicle': return dailyItem.category === 'greek_yoghurt_popsicle';
+                      case 'Popsicles': return dailyItem.category === 'greek_yoghurt_popsicle';
                       default: return false;
                     }
-                  }).length} items
-                </div>
+                  }).length;
+                  
+                  return (
+                    <div key={category.name} className="group cursor-pointer" onClick={() => setShowAddOnOrderModal(true)}>
+                      <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border border-gray-200/60 hover:border-brand-orange/40 hover:shadow-lg transition-all duration-300 hover:scale-105">
+                        <div className="text-center">
+                          <div className={`w-16 h-16 bg-gradient-to-br ${category.color} rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg group-hover:shadow-xl transition-all duration-300`}>
+                            <span className="text-3xl">{category.emoji}</span>
+                          </div>
+                          <div className="text-sm font-bold text-brand-black mb-1">{category.name}</div>
+                          <div className="text-xs text-gray-600">
+                            {itemCount} item{itemCount !== 1 ? 's' : ''} available
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
+            </div>
           </div>
         </div>
 
