@@ -523,10 +523,32 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
   const tutorialProgress = tutorialSteps.filter(step => step.completed).length / tutorialSteps.length;
 
   const startTutorial = () => {
-    setIsTutorialActive(true);
-    setCurrentStepIndex(0);
-    setCurrentStep(tutorialSteps[0]);
-    setCurrentPage('welcome');
+    // Check if we're on a mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // For mobile devices, add a small delay to ensure DOM is ready
+    if (isMobile) {
+      setTimeout(() => {
+        setIsTutorialActive(true);
+        setCurrentStepIndex(0);
+        setCurrentStep(tutorialSteps[0]);
+        setCurrentPage(tutorialSteps[0].page);
+        
+        // Ensure the first step is visible on mobile
+        setTimeout(() => {
+          const targetElement = document.querySelector(tutorialSteps[0].target);
+          if (targetElement) {
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 300);
+      }, 100);
+    } else {
+      // Desktop - immediate start
+      setIsTutorialActive(true);
+      setCurrentStepIndex(0);
+      setCurrentStep(tutorialSteps[0]);
+      setCurrentPage(tutorialSteps[0].page);
+    }
   };
 
   const startPageTutorial = (page: string) => {

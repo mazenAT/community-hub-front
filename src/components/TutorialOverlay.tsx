@@ -21,7 +21,20 @@ const TutorialOverlay: React.FC = () => {
   const [overlayPosition, setOverlayPosition] = useState({ top: 0, left: 0, width: 400, height: 300 });
   const [highlightedElement, setHighlightedElement] = useState<DOMRect | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Calculate overlay position and highlight element
   useEffect(() => {
@@ -61,16 +74,15 @@ const TutorialOverlay: React.FC = () => {
           const overlayHeight = isMobile ? 280 : 300; // Slightly smaller height on mobile
           const padding = isMobile ? 10 : 20; // Less padding on mobile
           
-          // Simple, direct positioning relative to the target element
+          // Mobile-optimized positioning: Always prefer top/bottom on mobile for better UX
           let overlayTop, overlayLeft;
           
-          // Smart positioning: For very wide elements or mobile, prefer top/bottom over left/right
-          const isElementVeryWide = rect.width > viewportWidth * 0.8;
-          const preferVertical = isMobile || isElementVeryWide;
-          
+          // On mobile, always use top/bottom positioning for better visibility
           let preferredPosition = currentStep.position;
-          if (preferVertical && (currentStep.position === 'left' || currentStep.position === 'right')) {
-            // On mobile or for wide elements, use top/bottom instead of left/right
+          if (isMobile) {
+            preferredPosition = rect.top > viewportHeight / 2 ? 'top' : 'bottom';
+          } else if (rect.width > viewportWidth * 0.8) {
+            // For very wide elements on desktop, prefer top/bottom
             preferredPosition = rect.top > viewportHeight / 2 ? 'top' : 'bottom';
           }
           
@@ -227,20 +239,22 @@ const TutorialOverlay: React.FC = () => {
       )}
 
       {/* Tutorial content overlay - Using absolute positioning in a fixed container */}
-      <div className="fixed inset-0 z-50 pointer-events-none">
+      <div className={`fixed inset-0 ${isMobile ? 'z-50' : 'z-50'} pointer-events-none`}>
         
         <div
           ref={overlayRef}
-          className="absolute pointer-events-auto"
+          className={`absolute pointer-events-auto ${isMobile ? 'touch-manipulation' : ''}`}
           style={{
             top: `${overlayPosition.top}px`,
             left: `${overlayPosition.left}px`,
             width: `${overlayPosition.width}px`,
             height: `${overlayPosition.height}px`,
+            // Ensure overlay is above all other content on mobile
+            zIndex: isMobile ? 9999 : 'auto',
           }}
         >
           
-          <Card className="w-full h-full bg-white shadow-2xl border-0">
+          <Card className={`w-full h-full bg-white shadow-2xl border-0 ${isMobile ? 'border-2 border-brand-orange/20' : ''}`}>
             <div className="p-4 sm:p-6 h-full flex flex-col">
               {/* Header */}
               <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -254,7 +268,11 @@ const TutorialOverlay: React.FC = () => {
                   variant="ghost"
                   size="sm"
                   onClick={skipTutorial}
-                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100"
+                  onTouchStart={(e) => {
+                    // Prevent double-tap zoom on mobile
+                    e.preventDefault();
+                  }}
+                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100 touch-manipulation"
                 >
                   <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
@@ -330,7 +348,11 @@ const TutorialOverlay: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={previousStep}
-                      className="text-xs sm:text-sm text-brand-orange border-brand-orange hover:bg-brand-orange hover:text-white px-3 sm:px-4"
+                      onTouchStart={(e) => {
+                        // Prevent double-tap zoom on mobile
+                        e.preventDefault();
+                      }}
+                      className="text-xs sm:text-sm text-brand-orange border-brand-orange hover:bg-brand-orange hover:text-white px-3 sm:px-4 touch-manipulation"
                     >
                       <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                       Previous
@@ -342,7 +364,11 @@ const TutorialOverlay: React.FC = () => {
                   {isLastStep ? (
                     <Button
                       onClick={() => completeStep(currentStep.id)}
-                      className="text-xs sm:text-sm bg-gradient-to-r from-brand-red to-brand-orange text-white hover:from-brand-orange hover:to-brand-red px-4 sm:px-6"
+                      onTouchStart={(e) => {
+                        // Prevent double-tap zoom on mobile
+                        e.preventDefault();
+                      }}
+                      className="text-xs sm:text-sm bg-gradient-to-r from-brand-red to-brand-orange text-white hover:from-brand-orange hover:to-brand-red px-4 sm:px-6 touch-manipulation"
                     >
                       <Play className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                       Get Started!
@@ -350,7 +376,11 @@ const TutorialOverlay: React.FC = () => {
                   ) : (
                     <Button
                       onClick={() => completeStep(currentStep.id)}
-                      className="text-xs sm:text-sm bg-gradient-to-r from-brand-red to-brand-orange text-white hover:from-brand-orange hover:to-brand-red px-4 sm:px-6"
+                      onTouchStart={(e) => {
+                        // Prevent double-tap zoom on mobile
+                        e.preventDefault();
+                      }}
+                      className="text-xs sm:text-sm bg-gradient-to-r from-brand-red to-brand-orange text-white hover:from-brand-orange hover:to-brand-red px-4 sm:px-6 touch-manipulation"
                     >
                       Next
                       <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
