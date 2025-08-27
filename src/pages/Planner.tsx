@@ -1067,12 +1067,23 @@ const Planner = () => {
                             data-tutorial="meal-list"
                           >
                             {mealsForDay.map((meal: any, mealIndex: number) => (
-                              <div key={`${date.toISOString()}-${meal.id}-${mealIndex}`} className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-3xl border border-gray-200/60 hover:border-brand-orange/60 hover:shadow-2xl hover:shadow-brand-orange/10 transition-all duration-500 overflow-hidden group relative">
+                              <div 
+                                key={`${date.toISOString()}-${meal.id}-${mealIndex}`} 
+                                className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-3xl border border-gray-200/60 hover:border-brand-orange/60 hover:shadow-2xl hover:shadow-brand-orange/10 transition-all duration-500 overflow-hidden group relative cursor-pointer"
+                                onClick={() => handlePreOrder(meal, date)}
+                              >
                                 {/* Premium Glow Effect */}
                                 <div className="absolute inset-0 bg-gradient-to-br from-brand-orange/5 via-transparent to-brand-red/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                                 
                                 {/* Top Accent Bar */}
                                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-orange via-brand-red to-brand-orange opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                
+                                {/* Click to Order Indicator */}
+                                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                  <div className="bg-gradient-to-r from-brand-orange to-brand-red text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                    Click to Order
+                                  </div>
+                                </div>
                                 
                                 {/* Meal Content */}
                                 <div className="p-8 relative z-10">
@@ -1118,7 +1129,10 @@ const Planner = () => {
                                         size="sm"
                                         variant="outline"
                                         className="flex-1 h-14 border-2 border-brand-blue/60 text-brand-blue hover:bg-gradient-to-r hover:from-brand-blue/10 hover:to-blue-500/10 hover:border-brand-blue/80 rounded-2xl font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg"
-                                        onClick={() => handleViewPdf(meal)}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleViewPdf(meal);
+                                        }}
                                         disabled={loadingPdf}
                                       >
                                         <FileText className="w-5 h-5 mr-2" />
@@ -1128,7 +1142,10 @@ const Planner = () => {
                                     <Button
                                       size="sm"
                                       className="flex-1 h-14 bg-gradient-to-r from-brand-red via-brand-orange to-brand-red hover:from-brand-red/80 hover:via-brand-orange/80 hover:to-brand-red/80 text-white font-black rounded-2xl shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-brand-orange/20"
-                                      onClick={() => handlePreOrder(meal, date)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handlePreOrder(meal, date);
+                                      }}
                                       disabled={!isOrderingWindowOpen(date)}
                                     >
                                       {!isOrderingWindowOpen(date) ? "Order Closed" : "Order Now"}
@@ -1239,22 +1256,27 @@ const Planner = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Daily Items Modal - Talabat Style */}
+      {/* Daily Items Modal - Premium Style */}
       <Dialog open={showAddOnsModal} onOpenChange={setShowAddOnsModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="text-center">
-            <DialogTitle className="text-2xl font-bold text-brand-black">
-              🍽️ {selectedAddOnCategory} Items
-            </DialogTitle>
-            <p className="text-lg text-brand-black/70">
-              {selectedMealForAddOns?.title || selectedMealForAddOns?.name}
-            </p>
-            <p className="text-sm text-brand-orange font-medium">
-              {selectedDateForAddOns && format(selectedDateForAddOns, 'EEEE, MMMM dd, yyyy')}
-            </p>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+          <DialogHeader className="bg-gradient-to-r from-brand-orange/10 via-brand-red/10 to-brand-orange/10 p-8 border-b border-gray-200/30">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-brand-orange to-brand-red rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                <span className="text-4xl">🍽️</span>
+              </div>
+              <DialogTitle className="text-3xl font-bold text-brand-black mb-2">
+                {selectedAddOnCategory} Items
+              </DialogTitle>
+              <p className="text-xl text-brand-black/70 mb-2">
+                {selectedMealForAddOns?.title || selectedMealForAddOns?.name}
+              </p>
+              <p className="text-lg text-brand-orange font-semibold">
+                {selectedDateForAddOns && format(selectedDateForAddOns, 'EEEE, MMMM dd, yyyy')}
+              </p>
+            </div>
           </DialogHeader>
           
-          <div className="space-y-4">
+          <div className="p-8">
             {(() => {
               const categoryAddOns = filteredDailyItems.filter(dailyItem => {
                 switch (selectedAddOnCategory) {
@@ -1277,6 +1299,9 @@ const Planner = () => {
                     <div key={dailyItem.id} className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-3xl border border-gray-200/60 hover:border-brand-orange/60 hover:shadow-2xl hover:shadow-brand-orange/10 transition-all duration-500 overflow-hidden group relative">
                       {/* Premium Glow Effect */}
                       <div className="absolute inset-0 bg-gradient-to-br from-brand-orange/5 via-transparent to-brand-red/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                      
+                      {/* Top Accent Bar */}
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-orange via-brand-red to-brand-orange opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                       
                       {/* Item Content */}
                       <div className="p-6 relative z-10">
@@ -1345,53 +1370,56 @@ const Planner = () => {
             })()}
           </div>
 
-          <div className="flex justify-between items-center pt-4 border-t">
-            <div className="text-sm text-gray-600">
-              Total: {formatCurrency(
-                Object.entries(selectedAddOns).reduce((total, [addonId, quantity]) => {
-                  const addon = dailyItems.find(a => a.id === parseInt(addonId));
-                  return total + (addon ? addon.price * quantity : 0);
-                }, 0)
-              )}
-            </div>
-            <div className="space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowAddOnsModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white"
-                onClick={() => {
-                  // Store selected daily-items for this meal
-                  const selectedItems = Object.entries(selectedAddOns)
-                    .filter(([_, quantity]) => quantity > 0)
-                    .map(([addonId, quantity]) => ({
-                      daily_item_id: parseInt(addonId),
-                      quantity
-                    }));
-                  
-                  if (selectedItems.length > 0 && selectedMealForAddOns && selectedDateForAddOns) {
-                    // Create a unique key for this meal and date
-                    const mealKey = `${selectedMealForAddOns.id}_${format(selectedDateForAddOns, 'yyyy-MM-dd')}`;
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 border-t border-gray-200/30">
+            <div className="flex justify-between items-center">
+              <div className="text-lg font-semibold text-brand-black">
+                Total: {formatCurrency(
+                  Object.entries(selectedAddOns).reduce((total, [addonId, quantity]) => {
+                    const addon = dailyItems.find(a => a.id === parseInt(addonId));
+                    return total + (addon ? addon.price * quantity : 0);
+                  }, 0)
+                )}
+              </div>
+              <div className="space-x-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddOnsModal(false)}
+                  className="px-8 py-3 border-2 border-gray-300 text-gray-700 hover:bg-gray-100 rounded-2xl font-semibold transition-all duration-300"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-red hover:from-brand-red/80 hover:via-brand-orange/80 hover:to-brand-red/80 text-white font-bold px-8 py-3 rounded-2xl shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                  onClick={() => {
+                    // Store selected daily-items for this meal
+                    const selectedItems = Object.entries(selectedAddOns)
+                      .filter(([_, quantity]) => quantity > 0)
+                      .map(([addonId, quantity]) => ({
+                        daily_item_id: parseInt(addonId),
+                        quantity
+                      }));
                     
-                    // Store daily-items for this specific meal and date
-                    setMealAddOns(prev => ({
-                      ...prev,
-                      [mealKey]: selectedItems
-                    }));
-                    
-                    toast.success(`Selected ${selectedItems.length} ${selectedAddOnCategory.toLowerCase()} item(s) for ${selectedMealForAddOns?.title || selectedMealForAddOns?.name}. They will be included when you order this meal.`);
-                  } else {
-                    toast.info("No daily-items selected");
-                  }
-                  setShowAddOnsModal(false);
-                }}
-                disabled={Object.values(selectedAddOns).every(qty => qty === 0)}
-              >
-                Select Daily Items
-              </Button>
+                    if (selectedItems.length > 0 && selectedMealForAddOns && selectedDateForAddOns) {
+                      // Create a unique key for this meal and date
+                      const mealKey = `${selectedMealForAddOns.id}_${format(selectedDateForAddOns, 'yyyy-MM-dd')}`;
+                      
+                      // Store daily-items for this specific meal and date
+                      setMealAddOns(prev => ({
+                        ...prev,
+                        [mealKey]: selectedItems
+                      }));
+                      
+                      toast.success(`Selected ${selectedItems.length} ${selectedAddOnCategory.toLowerCase()} item(s) for ${selectedMealForAddOns?.title || selectedMealForAddOns?.name}. They will be included when you order this meal.`);
+                    } else {
+                      toast.info("No daily-items selected");
+                    }
+                    setShowAddOnsModal(false);
+                  }}
+                  disabled={Object.values(selectedAddOns).every(qty => qty === 0)}
+                >
+                  Select Daily Items
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>
