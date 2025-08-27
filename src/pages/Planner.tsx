@@ -1063,29 +1063,11 @@ const Planner = () => {
                         {/* Meals Grid - Talabat Style */}
                         <div className="p-4">
                           <div 
-                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6"
                             data-tutorial="meal-list"
                           >
                             {mealsForDay.map((meal: any, mealIndex: number) => (
                               <div key={`${date.toISOString()}-${meal.id}-${mealIndex}`} className="bg-white rounded-xl border border-gray-200 hover:border-brand-orange/50 hover:shadow-lg transition-all duration-300 overflow-hidden">
-                                {/* Meal Image Placeholder */}
-                                <div className="w-full h-32 bg-gradient-to-br from-brand-red/10 to-brand-orange/10 flex items-center justify-center">
-                                  {meal.image ? (
-                                    <img 
-                                      src={meal.image} 
-                                      alt={meal.title || meal.name} 
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="text-center text-brand-orange/60">
-                                      <div className="w-12 h-12 bg-brand-orange/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                                        <span className="text-2xl">🍽️</span>
-                                      </div>
-                                      <p className="text-xs font-medium">Meal Image</p>
-                                    </div>
-                                  )}
-                                </div>
-                                
                                 {/* Meal Content */}
                                 <div className="p-4">
                                   {/* Meal Header */}
@@ -1299,20 +1281,6 @@ const Planner = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {categoryAddOns.map((dailyItem) => (
                     <div key={dailyItem.id} className="bg-white rounded-xl border border-gray-200 hover:border-brand-orange/50 hover:shadow-lg transition-all duration-300 overflow-hidden">
-                      {/* Item Image Placeholder */}
-                      <div className="w-full h-32 bg-gradient-to-br from-brand-yellow/10 to-brand-orange/10 flex items-center justify-center">
-                        <div className="text-center text-brand-orange/60">
-                          <div className="w-16 h-16 bg-brand-orange/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <span className="text-3xl">
-                              {selectedAddOnCategory === 'Bakery' ? '🥐' : 
-                               selectedAddOnCategory === 'Snacks' ? '🍿' : 
-                               selectedAddOnCategory === 'Drinks' ? '🥤' : '🍦'}
-                            </span>
-                          </div>
-                          <p className="text-xs font-medium">Daily Item</p>
-                        </div>
-                      </div>
-                      
                       {/* Item Content */}
                       <div className="p-4">
                         {/* Item Header */}
