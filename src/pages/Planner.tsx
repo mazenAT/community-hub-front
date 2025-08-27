@@ -1218,67 +1218,89 @@ const Planner = () => {
             </p>
           </DialogHeader>
           
-          <div className="space-y-4">
-            {(() => {
-              const categoryAddOns = filteredDailyItems.filter(dailyItem => {
-                switch (selectedAddOnCategory) {
-                  case 'Bakery':
-                    return dailyItem.category === 'bakery';
-                  case 'Snacks':
-                    return dailyItem.category === 'snacks';
-                  case 'Drinks':
-                    return dailyItem.category === 'drinks';
-                  case 'Greek Yogurt Popsicle':
-                    return dailyItem.category === 'greek_yoghurt_popsicle';
-                  default:
-                    return true;
-                }
-              });
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-brand-yellow/30">
+                  <th className="text-left p-3 text-sm font-semibold text-brand-black">Item</th>
+                  <th className="text-center p-3 text-sm font-semibold text-brand-black">Price</th>
+                  <th className="text-center p-3 text-sm font-semibold text-brand-black">Quantity</th>
+                  <th className="text-center p-3 text-sm font-semibold text-brand-black">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(() => {
+                  const categoryAddOns = filteredDailyItems.filter(dailyItem => {
+                    switch (selectedAddOnCategory) {
+                      case 'Bakery':
+                        return dailyItem.category === 'bakery';
+                      case 'Snacks':
+                        return dailyItem.category === 'snacks';
+                      case 'Drinks':
+                        return dailyItem.category === 'drinks';
+                      case 'Greek Yogurt Popsicle':
+                        return dailyItem.category === 'greek_yoghurt_popsicle';
+                      default:
+                        return true;
+                    }
+                  });
 
-              return categoryAddOns.map((addon) => (
-                <div key={dailyItem.id} className="flex items-center justify-between p-4 border border-brand-yellow/30 rounded-lg bg-brand-yellow/5">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-brand-black">{dailyItem.name}</h4>
-                    <p className="text-sm text-brand-black/70">{dailyItem.description}</p>
-                    <p className="text-sm font-medium text-brand-orange mt-1">
-                      {formatCurrency(dailyItem.price)}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-8 h-8 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
-                      onClick={() => {
-                        setSelectedAddOns(prev => ({
-                          ...prev,
-                          [dailyItem.id]: Math.max(0, (prev[dailyItem.id] || 0) - 1)
-                        }));
-                      }}
-                      disabled={!selectedAddOns[dailyItem.id] || selectedAddOns[dailyItem.id] === 0}
-                    >
-                      -
-                    </Button>
-                    <span className="w-8 text-center text-sm font-medium">
-                      {selectedAddOns[dailyItem.id] || 0}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-8 h-8 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
-                      onClick={() => {
-                        setSelectedAddOns(prev => ({
-                          ...prev,
-                          [dailyItem.id]: (prev[dailyItem.id] || 0) + 1
-                        }));
-                      }}
-                    >
-                      +
-                    </Button>
-                  </div>
-                </div>
-              ));
-            })()}
+                  return categoryAddOns.map((dailyItem) => (
+                    <tr key={dailyItem.id} className="border-b border-brand-yellow/20 hover:bg-brand-yellow/5 transition-colors">
+                      <td className="p-3">
+                        <div>
+                          <h4 className="font-semibold text-brand-black text-sm">{dailyItem.name}</h4>
+                          {dailyItem.description && (
+                            <p className="text-xs text-brand-black/60 mt-1">{dailyItem.description}</p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3 text-center">
+                        <span className="text-sm font-medium text-brand-orange">
+                          {formatCurrency(dailyItem.price)}
+                        </span>
+                      </td>
+                      <td className="p-3 text-center">
+                        <span className="text-sm font-medium text-brand-black">
+                          {selectedAddOns[dailyItem.id] || 0}
+                        </span>
+                      </td>
+                      <td className="p-3 text-center">
+                        <div className="flex items-center justify-center space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-7 h-7 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
+                            onClick={() => {
+                              setSelectedAddOns(prev => ({
+                                ...prev,
+                                [dailyItem.id]: Math.max(0, (prev[dailyItem.id] || 0) - 1)
+                              }));
+                            }}
+                            disabled={!selectedAddOns[dailyItem.id] || selectedAddOns[dailyItem.id] === 0}
+                          >
+                            -
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-7 h-7 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
+                            onClick={() => {
+                              setSelectedAddOns(prev => ({
+                                ...prev,
+                                [dailyItem.id]: (prev[dailyItem.id] || 0) + 1
+                              }));
+                            }}
+                          >
+                            +
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ));
+                })()}
+              </tbody>
+            </table>
           </div>
 
           <div className="flex justify-between items-center pt-4 border-t">
@@ -1286,7 +1308,7 @@ const Planner = () => {
               Total: {formatCurrency(
                 Object.entries(selectedAddOns).reduce((total, [addonId, quantity]) => {
                   const addon = dailyItems.find(a => a.id === parseInt(addonId));
-                  return total + (addon ? dailyItem.price * quantity : 0);
+                  return total + (addon ? addon.price * quantity : 0);
                 }, 0)
               )}
             </div>
@@ -1363,52 +1385,72 @@ const Planner = () => {
               return (
                 <div key={category} className="border border-gray-200 rounded-lg p-4">
                   <h3 className="text-lg font-semibold text-brand-black mb-3">{category}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {categoryAddOns.map((addon) => (
-                      <div key={dailyItem.id} className="flex items-center justify-between p-3 border border-brand-yellow/30 rounded-lg bg-brand-yellow/5">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-brand-black">{dailyItem.name}</h4>
-                          {dailyItem.description && (
-                            <p className="text-sm text-brand-black/70">{dailyItem.description}</p>
-                          )}
-                          <p className="text-sm font-medium text-brand-orange mt-1">
-                            {formatCurrency(dailyItem.price)}
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-8 h-8 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
-                            onClick={() => {
-                              setSelectedAddOnsForOrder(prev => ({
-                                ...prev,
-                                [dailyItem.id]: Math.max(0, (prev[dailyItem.id] || 0) - 1)
-                              }));
-                            }}
-                            disabled={!selectedAddOnsForOrder[dailyItem.id] || selectedAddOnsForOrder[dailyItem.id] === 0}
-                          >
-                            -
-                          </Button>
-                          <span className="w-8 text-center text-sm font-medium">
-                            {selectedAddOnsForOrder[dailyItem.id] || 0}
-                          </span>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-8 h-8 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
-                            onClick={() => {
-                              setSelectedAddOnsForOrder(prev => ({
-                                ...prev,
-                                [dailyItem.id]: (prev[dailyItem.id] || 0) + 1
-                              }));
-                            }}
-                          >
-                            +
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-brand-yellow/30">
+                          <th className="text-left p-3 text-sm font-semibold text-brand-black">Item</th>
+                          <th className="text-center p-3 text-sm font-semibold text-brand-black">Price</th>
+                          <th className="text-center p-3 text-sm font-semibold text-brand-black">Quantity</th>
+                          <th className="text-center p-3 text-sm font-semibold text-brand-black">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {categoryAddOns.map((dailyItem) => (
+                          <tr key={dailyItem.id} className="border-b border-brand-yellow/20 hover:bg-brand-yellow/5 transition-colors">
+                            <td className="p-3">
+                              <div>
+                                <h4 className="font-semibold text-brand-black text-sm">{dailyItem.name}</h4>
+                                {dailyItem.description && (
+                                  <p className="text-xs text-brand-black/60 mt-1">{dailyItem.description}</p>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-3 text-center">
+                              <span className="text-sm font-medium text-brand-orange">
+                                {formatCurrency(dailyItem.price)}
+                              </span>
+                            </td>
+                            <td className="p-3 text-center">
+                              <span className="text-sm font-medium text-brand-black">
+                                {selectedAddOnsForOrder[dailyItem.id] || 0}
+                              </span>
+                            </td>
+                            <td className="p-3 text-center">
+                              <div className="flex items-center justify-center space-x-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-7 h-7 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
+                                  onClick={() => {
+                                    setSelectedAddOnsForOrder(prev => ({
+                                      ...prev,
+                                      [dailyItem.id]: Math.max(0, (prev[dailyItem.id] || 0) - 1)
+                                    }));
+                                  }}
+                                  disabled={!selectedAddOnsForOrder[dailyItem.id] || selectedAddOnsForOrder[dailyItem.id] === 0}
+                                >
+                                  -
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-7 h-7 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
+                                  onClick={() => {
+                                    setSelectedAddOnsForOrder(prev => ({
+                                      ...prev,
+                                      [dailyItem.id]: (prev[dailyItem.id] || 0) + 1
+                                    }));
+                                  }}
+                                >
+                                  +
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               );
@@ -1421,7 +1463,7 @@ const Planner = () => {
                   Total: {formatCurrency(
                     Object.entries(selectedAddOnsForOrder).reduce((total, [addonId, quantity]) => {
                       const addon = filteredDailyItems.find(a => a.id === parseInt(addonId));
-                      return total + (addon ? dailyItem.price * quantity : 0);
+                      return total + (addon ? addon.price * quantity : 0);
                     }, 0)
                   )}
                 </div>
@@ -1489,11 +1531,11 @@ const Planner = () => {
                       {item.meal && item.daily_items && item.daily_items.length > 0 && (
                         <div className="mt-1">
                           <div className="text-gray-600 text-xs">Daily Items:</div>
-                          {item.daily_items.map((addon: any, addonIndex: number) => (
-                            <div key={addonIndex} className="text-xs text-gray-500 ml-2">
-                              • {dailyItem.add_on?.name || 'Daily Item'} (x{dailyItem.quantity})
-                            </div>
-                          ))}
+                                                      {item.daily_items.map((addon: any, addonIndex: number) => (
+                              <div key={addonIndex} className="text-xs text-gray-500 ml-2">
+                                • {addon.add_on?.name || 'Daily Item'} (x{addon.quantity})
+                              </div>
+                            ))}
                         </div>
                       )}
                     </div>
