@@ -43,6 +43,12 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeTab }) => {
           <button
             key={tab.name}
             onClick={() => navigate(tab.path)}
+            data-tutorial={
+              tab.name === "Wallet" ? "wallet-nav" :
+              tab.name === "View Menu" ? "meal-nav" :
+              tab.name === "Profile" ? "profile-nav" :
+              "contact-nav"
+            }
             className={`flex flex-col items-center justify-center w-full h-full transition-colors duration-200 ${
               tab.active
                 ? "text-white"

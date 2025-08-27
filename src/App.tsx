@@ -8,6 +8,7 @@ import MobileErrorBoundary from "@/components/MobileErrorBoundary";
 import MobileNetworkStatus from "@/components/MobileNetworkStatus";
 import { TutorialProvider } from "@/contexts/TutorialContext";
 import TutorialOverlay from "@/components/TutorialOverlay";
+import TutorialTrigger from "@/components/TutorialTrigger";
 import { useDeepLinking } from "@/hooks/useDeepLinking";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
@@ -89,6 +90,7 @@ const App = () => (
           <TutorialProvider>
             <AppContent />
             <TutorialOverlay />
+            <TutorialTrigger variant="floating" />
           </TutorialProvider>
         </MobileErrorBoundary>
       </MobileErrorBoundary>

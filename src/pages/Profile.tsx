@@ -220,7 +220,10 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 sm:px-6 py-4 border-b-2 border-brand-red">
+      <div 
+        className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 sm:px-6 py-4 border-b-2 border-brand-red"
+        data-tutorial="profile-header"
+      >
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg sm:text-xl font-semibold text-white">Profile</h1>

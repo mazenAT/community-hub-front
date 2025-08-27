@@ -193,16 +193,19 @@ const Wallet = () => {
                 <User className="w-4 h-4 sm:w-5 sm:h-5 text-brand-red" />
               )}
             </button>
-            <Button
-              variant="outline"
-              className="ml-2 border-brand-red text-brand-red hover:bg-brand-red/10"
-              onClick={() => {
-                localStorage.removeItem('token');
-                navigate('/');
-              }}
-            >
-              Logout
-            </Button>
+            <div className="flex items-center space-x-2">
+              <TutorialTrigger variant="inline" />
+              <Button
+                variant="outline"
+                className="border-brand-red text-brand-red hover:bg-brand-red/10"
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  navigate('/');
+                }}
+              >
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -214,7 +217,10 @@ const Wallet = () => {
 
       <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Balance Card */}
-        <Card className="wallet-balance bg-brand-red text-white p-4 rounded-2xl border-0 w-full mb-4">
+        <Card 
+          className="wallet-balance bg-brand-red text-white p-4 rounded-2xl border-0 w-full mb-4"
+          data-tutorial="wallet-balance"
+        >
           <div className="space-y-2">
             <p className="text-white/80 text-xs">Total Balance</p>
             <h2 className="text-3xl font-bold">{loading ? <LoadingSpinner size={24} /> : formatCurrency(balance)}</h2>

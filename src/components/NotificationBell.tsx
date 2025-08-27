@@ -159,6 +159,7 @@ const NotificationBell: React.FC = () => {
         aria-haspopup="true"
         aria-expanded={open}
         tabIndex={0}
+        data-tutorial="notifications"
       >
         <Bell className="w-6 h-6 text-gray-600" aria-hidden="true" />
         {unreadCount > 0 && (
