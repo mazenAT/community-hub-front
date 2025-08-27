@@ -116,7 +116,7 @@ export const frontendWebhookHandler = {
         orderStatus,
         threeDSInfo
       } = webhookData;
-
+      
       // Find transaction by Fawry reference numbers
       const transactions = frontendTransactionTracker.getAllTransactions();
       const transaction = transactions.find(t => 
@@ -125,9 +125,9 @@ export const frontendWebhookHandler = {
         t.fawry_reference === webhookData.merchantRefNum || // Fallback for legacy
         t.fawry_reference === webhookData.orderReference    // Fallback for legacy
       );
-
+      
       if (!transaction) {
-        console.warn('No transaction found for Fawry references:', { fawryRefNumber, merchantRefNumber });
+        // No transaction found - this might be a duplicate webhook
         return false;
       }
 
@@ -144,7 +144,7 @@ export const frontendWebhookHandler = {
             frontendWebhookHandler.updateWalletBalance(transaction.amount, transaction.user_id, fawryRefNumber || merchantRefNumber, orderStatus);
             
             break;
-
+            
         case FAWRY_ORDER_STATUSES.CANCELLED:
         case FAWRY_ORDER_STATUSES.EXPIRED:
         case FAWRY_ORDER_STATUSES.FAILED:
@@ -155,7 +155,7 @@ export const frontendWebhookHandler = {
             `FAWRY_${orderStatus?.toUpperCase() || 'FAILED'}`
           );
           break;
-
+          
         case FAWRY_ORDER_STATUSES.CREATED:
         case FAWRY_ORDER_STATUSES.PENDING:
         case FAWRY_ORDER_STATUSES.PROCESSING:
@@ -170,24 +170,21 @@ export const frontendWebhookHandler = {
             updated_at: new Date().toISOString()
           });
           break;
-
+          
         default:
-          console.warn('Unknown Fawry order status:', orderStatus);
+          // Unknown status - log for investigation
           return false;
       }
-
-      // Log 3DS information if available
+      
+      // Process 3DS information if available
       if (threeDSInfo) {
-        console.log('3DS Authentication Info:', {
-          eci: threeDSInfo.eci,
-          verStatus: threeDSInfo.verStatus,
-          verStatusDescription: frontendWebhookHandler.get3DSVerStatusDescription(threeDSInfo.verStatus)
-        });
+        // 3DS authentication info processed silently
       }
 
       return true;
+      
     } catch (error) {
-      console.error('Error processing Fawry webhook data:', error);
+      // Error processing webhook data - handled silently
       return false;
     }
   },
@@ -285,7 +282,7 @@ export const frontendWebhookHandler = {
 
       return false;
     } catch (error) {
-      console.error('Error processing callback data:', error);
+      // Error processing callback data - handled silently
       return false;
     }
   },
@@ -320,7 +317,7 @@ export const frontendWebhookHandler = {
         // Wallet balance updated successfully
       }
     } catch (error) {
-      console.error('Error updating wallet balance in backend:', error);
+      // Error updating wallet balance in backend - handled silently
       
       // Don't throw error to prevent breaking the callback flow
       // The frontend transaction is already marked as completed
@@ -363,7 +360,7 @@ export const frontendWebhookHandler = {
 
       return webhookData;
     } catch (error) {
-      console.error('Error extracting webhook data from URL:', error);
+      // Error extracting webhook data from URL - handled silently
       return null;
     }
   },
@@ -395,7 +392,7 @@ export const frontendWebhookHandler = {
 
       return callbackData;
     } catch (error) {
-      console.error('Error extracting callback data from URL:', error);
+      // Error extracting callback data from URL - handled silently
       return null;
     }
   },
@@ -427,7 +424,7 @@ export const frontendWebhookHandler = {
         }
       }
     } catch (error) {
-      console.error('Error handling page load webhook:', error);
+      // Error handling page load webhook - handled silently
     }
   },
 
@@ -458,7 +455,7 @@ export const frontendWebhookHandler = {
     // Setup listeners for future navigation
     frontendWebhookHandler.setupURLChangeListener();
     
-    console.log('Frontend webhook handler initialized (Fawry Server Notification V2 compatible)');
+    // Frontend webhook handler initialized (Fawry Server Notification V2 compatible)
   }
 };
 
