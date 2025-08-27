@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { contactApi } from '../services/api';
 import { toast } from 'sonner';
-import { Send, CheckCircle } from 'lucide-react';
+import { Send, CheckCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import BottomNavigation from '../components/BottomNavigation';
+import { useNavigate } from 'react-router-dom';
 
 const ContactUs = () => {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -28,7 +30,7 @@ const ContactUs = () => {
     try {
       setLoading(true);
       await contactApi.submitContact(form);
-      toast.success('Message sent successfully! We will get back to you soon.');
+      toast.success('Message sent successfully! We will get back to you within 48 hours.');
       setSubmitted(true);
       setForm({ name: '', email: '', phone: '', message: '' });
     } catch (error) {
@@ -53,13 +55,19 @@ const ContactUs = () => {
           </div>
           <h2 className="text-2xl font-bold text-brand-black mb-4">Message Sent!</h2>
           <p className="text-brand-black/70 mb-6">
-            Thank you for contacting us. We have received your message and will get back to you as soon as possible.
+            Thank you for contacting us. We have received your message and will get back to you within 48 hours.
           </p>
           <Button
             onClick={() => setSubmitted(false)}
             className="w-full bg-brand-red hover:bg-brand-red/90 text-white"
           >
             Send Another Message
+          </Button>
+          <Button
+            onClick={() => navigate('/')}
+            className="w-full bg-gray-200 hover:bg-gray-300 text-brand-black mt-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Home
           </Button>
         </div>
       </div>
@@ -159,7 +167,7 @@ const ContactUs = () => {
           <div className="mt-6 p-4 bg-brand-yellow/10 rounded-xl border border-brand-yellow/30">
             <p className="text-sm text-brand-black/70">
               <strong>Note:</strong> For urgent matters, please call us directly. 
-              Email responses are typically sent within 24 hours during business days.
+              Email responses are typically sent within 48 hours during business days.
             </p>
           </div>
         </div>
