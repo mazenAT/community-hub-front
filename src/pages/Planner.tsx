@@ -1063,7 +1063,7 @@ const Planner = () => {
                         {/* Meals Grid - Talabat Style */}
                         <div className="p-6">
                           <div 
-                            className="grid grid-cols-3 gap-5 sm:gap-6"
+                            className="grid grid-cols-2 gap-6 sm:gap-8"
                             data-tutorial="meal-list"
                           >
                             {mealsForDay.map((meal: any, mealIndex: number) => (
@@ -1290,7 +1290,7 @@ const Planner = () => {
               });
 
               return (
-                <div className="grid grid-cols-3 gap-5 sm:gap-6">
+                <div className="grid grid-cols-2 gap-6 sm:gap-8">
                   {categoryAddOns.map((dailyItem) => (
                     <div key={dailyItem.id} className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-3xl border border-gray-200/60 hover:border-brand-orange/60 hover:shadow-2xl hover:shadow-brand-orange/10 transition-all duration-500 overflow-hidden group relative">
                       {/* Premium Glow Effect */}
