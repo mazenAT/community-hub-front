@@ -112,7 +112,7 @@ const CampaignSlider: React.FC = () => {
     return (
       <div className="w-full h-32 sm:h-48 bg-gradient-to-br from-brand-red to-brand-orange rounded-xl shadow-lg flex items-center justify-center p-4">
         <div className="text-center text-white">
-          <h3 className="text-base sm:text-xl font-bold mb-1 sm:mb-2">Welcome to Smart Community</h3>
+                          <h3 className="text-base sm:text-xl font-bold mb-1 sm:mb-2">Welcome to Cafeteria Smart System</h3>
           <p className="text-xs sm:text-sm opacity-90">Stay tuned for exciting updates and offers!</p>
         </div>
       </div>

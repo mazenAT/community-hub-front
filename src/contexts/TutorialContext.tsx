@@ -56,7 +56,7 @@ const defaultTutorialSteps: TutorialStep[] = [
   // WELCOME & OVERVIEW
   {
     id: 'welcome',
-    title: 'Welcome to Smart Community! 🎉',
+            title: 'Welcome to Cafeteria Smart System! 🎉',
     description: 'Your all-in-one app for managing school meals, payments, and family activities. Let\'s take a guided tour through each feature!',
     target: 'body',
     position: 'center',
@@ -466,7 +466,7 @@ const defaultTutorialSteps: TutorialStep[] = [
   {
     id: 'completion',
     title: 'Tutorial Complete! 🎓',
-    description: 'Excellent! You now know how to use Smart Community:\n\n• Navigate between features\n• Manage your wallet and recharge\n• Plan and order meals\n• Track orders and manage profile\n\nStart exploring and enjoy the convenience!',
+            description: 'Excellent! You now know how to use Cafeteria Smart System:\n\n• Navigate between features\n• Manage your wallet and recharge\n• Plan and order meals\n• Track orders and manage profile\n\nStart exploring and enjoy the convenience!',
     target: 'body',
     position: 'center',
     order: 24,

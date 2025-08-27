@@ -1,4 +1,4 @@
-// Cafeteria Types for ISE Smart Community App
+// Cafeteria Types for ISE Cafeteria Smart System App
 
 // Meal Categories
 export type MealCategory = 
