@@ -26,6 +26,8 @@ const TutorialOverlay: React.FC = () => {
   // Calculate overlay position and highlight element
   useEffect(() => {
     if (isTutorialActive && currentStep) {
+      console.log('Tutorial step:', currentStep);
+      
       if (currentStep.position === 'center') {
         // Center the overlay for welcome/completion steps
         setOverlayPosition({
@@ -38,8 +40,11 @@ const TutorialOverlay: React.FC = () => {
       } else {
         // Position relative to target element and highlight it
         const targetElement = document.querySelector(currentStep.target);
+        console.log('Target element:', currentStep.target, targetElement);
+        
         if (targetElement && currentStep.highlightElement) {
           const rect = targetElement.getBoundingClientRect();
+          console.log('Element rect:', rect);
           setHighlightedElement(rect);
           
           // Position overlay relative to target
@@ -73,6 +78,7 @@ const TutorialOverlay: React.FC = () => {
             height: 300,
           });
         } else {
+          console.log('No target element found or highlighting disabled');
           setHighlightedElement(null);
           // Fallback to center
           setOverlayPosition({
@@ -156,6 +162,23 @@ const TutorialOverlay: React.FC = () => {
             mask="url(#tutorial-mask)"
           />
         </svg>
+        
+        {/* Debug info - remove this after testing */}
+        {highlightedElement && (
+          <div 
+            className="absolute border-2 border-red-500 bg-red-500/20 pointer-events-none"
+            style={{
+              left: highlightedElement.left,
+              top: highlightedElement.top,
+              width: highlightedElement.width,
+              height: highlightedElement.height,
+            }}
+          >
+            <div className="absolute -top-6 left-0 bg-red-500 text-white text-xs px-2 py-1 rounded">
+              Highlighted: {currentStep?.target}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Loading overlay for navigation */}
