@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { secureStorage } from '@/services/native';
 
 interface TutorialStep {
@@ -480,11 +481,44 @@ const defaultTutorialSteps: TutorialStep[] = [
 const TutorialContext = createContext<TutorialContextType | undefined>(undefined);
 
 export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isTutorialActive, setIsTutorialActive] = useState(false);
   const [currentStep, setCurrentStep] = useState<TutorialStep | null>(null);
   const [tutorialSteps, setTutorialSteps] = useState<TutorialStep[]>(defaultTutorialSteps);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState<string>('welcome');
+
+  // Save tutorial state to localStorage when it changes
+  useEffect(() => {
+    if (isTutorialActive) {
+      localStorage.setItem('tutorial_active', 'true');
+      localStorage.setItem('tutorial_step_index', currentStepIndex.toString());
+      localStorage.setItem('tutorial_steps', JSON.stringify(tutorialSteps));
+    } else {
+      localStorage.removeItem('tutorial_active');
+      localStorage.removeItem('tutorial_step_index');
+      localStorage.removeItem('tutorial_steps');
+    }
+  }, [isTutorialActive, currentStepIndex, tutorialSteps]);
+
+  // Restore tutorial state on mount
+  useEffect(() => {
+    const isActive = localStorage.getItem('tutorial_active') === 'true';
+    const savedIndex = localStorage.getItem('tutorial_step_index');
+    const savedSteps = localStorage.getItem('tutorial_steps');
+    
+    if (isActive && savedIndex && savedSteps) {
+      const index = parseInt(savedIndex);
+      const steps = JSON.parse(savedSteps) as TutorialStep[];
+      
+      setIsTutorialActive(true);
+      setTutorialSteps(steps);
+      setCurrentStepIndex(index);
+      setCurrentStep(steps[index]);
+      setCurrentPage(steps[index].page);
+    }
+  }, []);
 
   const tutorialProgress = tutorialSteps.filter(step => step.completed).length / tutorialSteps.length;
 
@@ -510,11 +544,31 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const navigateToStep = (step: TutorialStep) => {
-    if (step.route && step.route !== window.location.pathname) {
+    // Check if we need to navigate to a different page
+    if (step.route && location.pathname !== step.route) {
       // Navigate to the required page
-      window.location.href = step.route;
+      navigate(step.route);
+      // The tutorial will continue on the new page
     }
   };
+  
+  // Watch for route changes to continue tutorial on new page
+  useEffect(() => {
+    if (isTutorialActive && currentStep) {
+      // Check if the current step matches the current route
+      if (currentStep.route === location.pathname) {
+        // We're on the correct page, ensure the step is visible
+        // Small delay to allow page to render
+        setTimeout(() => {
+          const targetElement = document.querySelector(currentStep.target);
+          if (targetElement) {
+            // Scroll element into view if needed
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 500);
+      }
+    }
+  }, [location.pathname, isTutorialActive, currentStep]);
 
   const completeStep = (stepId: string) => {
     const updatedSteps = tutorialSteps.map(step =>
@@ -565,6 +619,10 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     setCurrentPage('welcome');
     // Mark tutorial as completed
     secureStorage.set('tutorial_completed', 'true');
+    // Clear localStorage
+    localStorage.removeItem('tutorial_active');
+    localStorage.removeItem('tutorial_step_index');
+    localStorage.removeItem('tutorial_steps');
   };
 
   const resetTutorial = () => {
@@ -573,6 +631,10 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     setCurrentStepIndex(0);
     setCurrentStep(resetSteps[0]);
     setCurrentPage('welcome');
+    // Clear localStorage
+    localStorage.removeItem('tutorial_active');
+    localStorage.removeItem('tutorial_step_index');
+    localStorage.removeItem('tutorial_steps');
   };
 
   const completeTutorial = () => {
@@ -582,6 +644,10 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     setCurrentPage('welcome');
     // Save completion status
     secureStorage.set('tutorial_completed', 'true');
+    // Clear localStorage
+    localStorage.removeItem('tutorial_active');
+    localStorage.removeItem('tutorial_step_index');
+    localStorage.removeItem('tutorial_steps');
   };
 
   const highlightElement = (selector: string) => {

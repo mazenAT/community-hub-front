@@ -30,10 +30,11 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   return (
-    <BrowserRouter>
+    <>
       {/* Initialize deep linking for mobile app - now inside Router context */}
       <DeepLinkingInitializer />
-      <Routes>
+      <TutorialProvider>
+        <Routes>
           {/* Public Routes */}
           <Route path="/" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
@@ -55,7 +56,10 @@ const AppContent = () => {
           {/* 404 Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-    </BrowserRouter>
+        <TutorialOverlay />
+        <TutorialTrigger variant="floating" />
+      </TutorialProvider>
+    </>
   );
 };
 
@@ -87,11 +91,9 @@ const App = () => (
             </div>
           </div>
         }>
-          <TutorialProvider>
+          <BrowserRouter>
             <AppContent />
-            <TutorialOverlay />
-            <TutorialTrigger variant="floating" />
-          </TutorialProvider>
+          </BrowserRouter>
         </MobileErrorBoundary>
       </MobileErrorBoundary>
     </TooltipProvider>

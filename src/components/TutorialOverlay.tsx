@@ -275,8 +275,11 @@ const TutorialOverlay: React.FC = () => {
         >
           {/* Debug indicator - remove after testing */}
           <div className="absolute -top-8 left-0 bg-red-500 text-white text-xs px-2 py-1 rounded z-10">
-            Position: ({overlayPosition.left}, {overlayPosition.top})
+            Position: ({Math.round(overlayPosition.left)}, {Math.round(overlayPosition.top)})
           </div>
+          
+          {/* Additional debug border */}
+          <div className="absolute inset-0 border-2 border-red-500 pointer-events-none" />
           
           <Card className="w-full h-full bg-white shadow-2xl border-0">
             <div className="p-4 sm:p-6 h-full flex flex-col">
