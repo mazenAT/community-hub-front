@@ -26,9 +26,6 @@ const TutorialOverlay: React.FC = () => {
   // Calculate overlay position and highlight element
   useEffect(() => {
     if (isTutorialActive && currentStep) {
-      console.log('=== TUTORIAL DEBUGGING ===');
-      console.log('Current step:', currentStep);
-      
       if (currentStep.position === 'center') {
         // Center the overlay for welcome/completion steps with responsive sizing
         const isMobile = window.innerWidth < 768;
@@ -45,21 +42,15 @@ const TutorialOverlay: React.FC = () => {
       } else {
         // Position relative to target element and highlight it
         const targetElement = document.querySelector(currentStep.target);
-        console.log('Target selector:', currentStep.target);
-        console.log('Target element found:', !!targetElement);
-        console.log('Target element:', targetElement);
         
         if (targetElement && currentStep.highlightElement) {
           const rect = targetElement.getBoundingClientRect();
-          console.log('Element rect:', rect);
-          console.log('Element dimensions:', { width: rect.width, height: rect.height });
-          console.log('Element position:', { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom });
           setHighlightedElement(rect);
           
           // Responsive overlay dimensions based on screen size
           const viewportWidth = window.innerWidth;
           const viewportHeight = window.innerHeight;
-          const isMobile = viewportWidth < 768; // Mobile breakpoint
+          const isMobile = viewportWidth < 768;
           const isTablet = viewportWidth >= 768 && viewportWidth < 1024;
           
           // Adaptive overlay size based on device
@@ -69,9 +60,6 @@ const TutorialOverlay: React.FC = () => {
           
           const overlayHeight = isMobile ? 280 : 300; // Slightly smaller height on mobile
           const padding = isMobile ? 10 : 20; // Less padding on mobile
-          
-          console.log('Device info:', { isMobile, isTablet, viewportWidth, viewportHeight });
-          console.log('Overlay dimensions:', { overlayWidth, overlayHeight, padding });
           
           // Simple, direct positioning relative to the target element
           let overlayTop, overlayLeft;
@@ -84,7 +72,6 @@ const TutorialOverlay: React.FC = () => {
           if (preferVertical && (currentStep.position === 'left' || currentStep.position === 'right')) {
             // On mobile or for wide elements, use top/bottom instead of left/right
             preferredPosition = rect.top > viewportHeight / 2 ? 'top' : 'bottom';
-            console.log('Switching to vertical positioning for mobile/wide element');
           }
           
           switch (preferredPosition) {
@@ -96,7 +83,6 @@ const TutorialOverlay: React.FC = () => {
               // If it would go off-screen at top, position below instead
               if (overlayTop < padding) {
                 overlayTop = rect.bottom + padding;
-                console.log('Switching from top to bottom due to space constraint');
               }
               break;
               
@@ -108,7 +94,6 @@ const TutorialOverlay: React.FC = () => {
               // If it would go off-screen at bottom, position above instead
               if (overlayTop + overlayHeight > viewportHeight - padding) {
                 overlayTop = rect.top - overlayHeight - padding;
-                console.log('Switching from bottom to top due to space constraint');
               }
               break;
               
@@ -134,8 +119,6 @@ const TutorialOverlay: React.FC = () => {
           overlayLeft = Math.max(padding, Math.min(overlayLeft, viewportWidth - overlayWidth - padding));
           overlayTop = Math.max(padding, Math.min(overlayTop, viewportHeight - overlayHeight - padding));
           
-          console.log('Final overlay position:', { overlayTop, overlayLeft, overlayWidth, overlayHeight });
-          
           setOverlayPosition({
             top: overlayTop,
             left: overlayLeft,
@@ -143,7 +126,6 @@ const TutorialOverlay: React.FC = () => {
             height: overlayHeight,
           });
         } else {
-          console.log('No target element found or highlighting disabled');
           setHighlightedElement(null);
           // Fallback to center with responsive sizing
           const isMobile = window.innerWidth < 768;
@@ -246,22 +228,6 @@ const TutorialOverlay: React.FC = () => {
 
       {/* Tutorial content overlay - Using absolute positioning in a fixed container */}
       <div className="fixed inset-0 z-50 pointer-events-none">
-        {/* Debug: Show target element position */}
-        {highlightedElement && (
-          <div 
-            className="absolute border-2 border-green-500 bg-green-500/20"
-            style={{
-              left: `${highlightedElement.left}px`,
-              top: `${highlightedElement.top}px`,
-              width: `${highlightedElement.width}px`,
-              height: `${highlightedElement.height}px`,
-            }}
-          >
-            <div className="absolute -top-6 left-0 bg-green-500 text-white text-xs px-2 py-1 rounded">
-              Target: {currentStep?.target} ({Math.round(highlightedElement.left)}, {Math.round(highlightedElement.top)})
-            </div>
-          </div>
-        )}
         
         <div
           ref={overlayRef}
@@ -273,13 +239,6 @@ const TutorialOverlay: React.FC = () => {
             height: `${overlayPosition.height}px`,
           }}
         >
-          {/* Debug indicator - remove after testing */}
-          <div className="absolute -top-8 left-0 bg-red-500 text-white text-xs px-2 py-1 rounded z-10">
-            Position: ({Math.round(overlayPosition.left)}, {Math.round(overlayPosition.top)})
-          </div>
-          
-          {/* Additional debug border */}
-          <div className="absolute inset-0 border-2 border-red-500 pointer-events-none" />
           
           <Card className="w-full h-full bg-white shadow-2xl border-0">
             <div className="p-4 sm:p-6 h-full flex flex-col">

@@ -652,12 +652,10 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const highlightElement = (selector: string) => {
     // This will be implemented in the enhanced overlay
-    console.log('Highlighting element:', selector);
   };
 
   const clearHighlight = () => {
     // This will be implemented in the enhanced overlay
-    console.log('Clearing highlight');
   };
 
   const getElementPosition = (selector: string): DOMRect | null => {
@@ -665,7 +663,6 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
       const element = document.querySelector(selector);
       return element ? element.getBoundingClientRect() : null;
     } catch (error) {
-      console.error('Error getting element position:', error);
       return null;
     }
   };
@@ -698,7 +695,7 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
         startTutorial();
       }
     } catch (error) {
-      console.error('Error checking tutorial status:', error);
+      // Silent error handling
     }
   };
 
