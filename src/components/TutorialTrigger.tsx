@@ -19,13 +19,13 @@ const TutorialTrigger: React.FC<TutorialTriggerProps> = ({
   const renderContent = () => {
     switch (variant) {
       case 'floating':
-        return (
+    return (
           <div className="fixed bottom-24 right-4 z-30">
-            <Button
+      <Button
               onClick={startTutorial}
               className="bg-gradient-to-r from-brand-red to-brand-orange text-white rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
-              title="Start Tutorial"
-            >
+        title="Start Tutorial"
+      >
               <Play className="w-6 h-6" />
             </Button>
           </div>
@@ -40,20 +40,20 @@ const TutorialTrigger: React.FC<TutorialTriggerProps> = ({
           >
             <BookOpen className="w-4 h-4 mr-2" />
             Take Tour
-          </Button>
-        );
-      
+      </Button>
+    );
+
       default:
-        return (
-          <Button
+    return (
+      <Button
             onClick={startTutorial}
             className="bg-gradient-to-r from-brand-red to-brand-orange text-white hover:from-brand-orange hover:to-brand-red transition-all duration-200"
-          >
-            <Play className="w-4 h-4 mr-2" />
+      >
+        <Play className="w-4 h-4 mr-2" />
             Start Tutorial
-          </Button>
-        );
-    }
+      </Button>
+    );
+  }
   };
 
   return (

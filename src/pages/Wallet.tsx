@@ -170,37 +170,38 @@ const Wallet = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-24">
       {/* Header */}
       <div 
-        className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 sm:px-6 py-4 border-b-2 border-brand-red"
+        className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 py-3 sm:py-4 border-b-2 border-brand-red"
         data-tutorial="wallet-header"
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src="/Logo.jpg" alt="App Logo" className="w-10 h-10 rounded" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <img src="/Logo.jpg" alt="App Logo" className="w-8 h-8 sm:w-10 sm:h-10 rounded" />
             <div>
-              <h1 className="text-lg sm:text-xl font-semibold text-white">Wallet</h1>
-              <p className="text-xs sm:text-sm text-white/90">Welcome back, {userProfile?.name || 'User'}</p>
+              <h1 className="text-base sm:text-lg font-semibold text-white">Wallet</h1>
+              <p className="text-xs text-white/90 hidden sm:block">Welcome back, {userProfile?.name || 'User'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <NotificationBell />
             <button 
               onClick={() => navigate("/profile")}
-              className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-yellow/20 rounded-full flex items-center justify-center overflow-hidden border border-brand-yellow/30"
+              className="w-8 h-8 bg-brand-yellow/20 rounded-full flex items-center justify-center overflow-hidden border border-brand-yellow/30"
             >
               {userProfile?.profile_image ? (
                 <img src={userProfile.profile_image} alt={userProfile.name || 'User Avatar'} className="w-full h-full object-cover" />
               ) : (
-                <User className="w-4 h-4 sm:w-5 sm:h-5 text-brand-red" />
+                <User className="w-4 h-4 text-brand-red" />
               )}
             </button>
-            <div className="flex items-center space-x-2">
+            <div className="hidden sm:flex items-center space-x-2">
               <TutorialTrigger variant="inline" />
               <Button
                 variant="outline"
-                className="border-brand-red text-brand-red hover:bg-brand-red/10"
+                size="sm"
+                className="border-brand-red text-brand-red hover:bg-brand-red/10 text-xs"
                 onClick={() => {
                   localStorage.removeItem('token');
                   navigate('/');
@@ -214,23 +215,23 @@ const Wallet = () => {
       </div>
 
       {/* Campaign Slider */}
-      <div className="px-4 py-4">
+      <div className="px-4 py-3 sm:py-4">
         <CampaignSlider />
       </div>
 
-      <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="px-4 py-2 space-y-4">
         {/* Balance Card */}
         <Card 
-          className="wallet-balance bg-brand-red text-white p-4 rounded-2xl border-0 w-full mb-4"
+          className="wallet-balance bg-gradient-to-br from-brand-red to-brand-orange text-white p-4 sm:p-5 rounded-2xl border-0 w-full shadow-lg"
           data-tutorial="wallet-balance"
         >
-          <div className="space-y-2">
-            <p className="text-white/80 text-xs">Total Balance</p>
-            <h2 className="text-3xl font-bold">{loading ? <LoadingSpinner size={24} /> : formatCurrency(balance)}</h2>
-            <div className="flex flex-col xs:flex-row gap-2 mt-2">
+          <div className="space-y-3">
+            <p className="text-white/90 text-xs sm:text-sm font-medium">Total Balance</p>
+            <h2 className="text-2xl sm:text-3xl font-bold">{loading ? <LoadingSpinner size={24} /> : formatCurrency(balance)}</h2>
+            <div className="flex flex-col sm:flex-row gap-2 mt-3">
               <Button
                 onClick={() => navigate("/recharge")}
-                className="add-money-btn bg-brand-orange hover:bg-brand-orange/90 text-white border-0 rounded-xl text-base w-full xs:w-auto"
+                className="bg-white/20 hover:bg-white/30 backdrop-blur text-white border border-white/30 rounded-xl text-sm sm:text-base w-full sm:w-auto px-4 py-2"
                 disabled={loading}
                 data-tutorial="wallet-recharge"
               >
@@ -238,7 +239,7 @@ const Wallet = () => {
               </Button>
               <Button
                 onClick={() => setRefundModalOpen(true)}
-                className="bg-white text-brand-red border-0 rounded-xl text-base w-full xs:w-auto shadow"
+                className="bg-white text-brand-red hover:bg-white/90 border-0 rounded-xl text-sm sm:text-base w-full sm:w-auto shadow px-4 py-2"
                 disabled={loading}
                 variant="outline"
               >
@@ -278,10 +279,10 @@ const Wallet = () => {
         </Dialog>
 
         {/* Recent Transactions */}
-        <div className="transactions-section space-y-3 sm:space-y-4" data-tutorial="wallet-transactions">
-          <h3 className="text-base sm:text-lg font-semibold text-brand-black">Recent Transactions</h3>
+        <div className="transactions-section space-y-3" data-tutorial="wallet-transactions">
+          <h3 className="text-base font-semibold text-gray-800">Recent Transactions</h3>
           {loading && transactions.length === 0 ? (
-            <div className="text-center py-4">
+            <div className="text-center py-8">
               <LoadingSpinner size={32} />
             </div>
           ) : (
@@ -294,37 +295,60 @@ const Wallet = () => {
                 return (
                   <div
                     key={transaction.id}
-                    className="bg-white rounded-xl shadow p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between"
+                    className="bg-white rounded-xl shadow-sm p-3 sm:p-4"
                   >
-                    <div>
-                      <div className="text-xs text-gray-400">{new Date(transaction.created_at).toLocaleDateString()}</div>
-                      <div className="font-semibold text-base">{transaction.note || '-'}</div>
-                      {transaction.isFamilyMemberOrder && transaction.familyMemberName && (
-                        <div className="text-sm text-blue-600 font-medium mt-1">
-                          👤 Ordered by: {transaction.familyMemberName}
-                        </div>
-                      )}
-                      <div className="text-sm mt-1 flex flex-wrap items-center gap-2">
-                        <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${transaction.type === 'credit' ? 'bg-green-100 text-green-800' : transaction.type === 'debit' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>{transaction.type.replace('_', ' ').toUpperCase()}</span>
-                        <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${transaction.status === 'completed' ? 'bg-green-100 text-green-800' : transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{transaction.status.toUpperCase()}</span>
-                        {transaction.isFamilyMemberOrder && (
-                          <span className="inline-block rounded px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800">FAMILY ORDER</span>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <div className="text-xs text-gray-500">{new Date(transaction.created_at).toLocaleDateString()}</div>
+                        <div className="font-medium text-sm sm:text-base text-gray-900 mt-1">{transaction.note || 'Transaction'}</div>
+                        {transaction.isFamilyMemberOrder && transaction.familyMemberName && (
+                          <div className="text-xs sm:text-sm text-blue-600 font-medium mt-1">
+                            👤 {transaction.familyMemberName}
+                          </div>
                         )}
-                        {isRefundable ? (
+                        <div className="flex flex-wrap items-center gap-1 mt-2">
+                          <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                            transaction.type === 'credit' ? 'bg-green-100 text-green-700' : 
+                            transaction.type === 'debit' ? 'bg-red-100 text-red-700' : 
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {transaction.type === 'credit' ? '+' : '-'}{transaction.type}
+                          </span>
+                          <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                            transaction.status === 'completed' ? 'bg-green-100 text-green-700' : 
+                            transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            {transaction.status}
+                          </span>
+                          {transaction.isFamilyMemberOrder && (
+                            <span className="inline-block rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700">
+                              Family
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-base sm:text-lg font-bold ${
+                          transaction.type === 'credit' ? 'text-green-600' : 
+                          transaction.type === 'debit' ? 'text-red-600' : 
+                          'text-gray-900'
+                        }`}>
+                          {transaction.type === 'credit' ? '+' : '-'}{formatCurrency(Math.abs(Number(transaction.amount)))}
+                        </div>
+                        {isRefundable && (
                           <button
-                            className="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded disabled:opacity-50 text-xs"
+                            className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium"
                             disabled={refundLoading === transaction.id}
                             onClick={() => handleRefundTransaction(transaction.id)}
                           >
-                            {refundLoading === transaction.id ? 'Refunding...' : 'Refund'}
+                            {refundLoading === transaction.id ? 'Processing...' : 'Refund'}
                           </button>
-                        ) : transaction.refunded_at ? (
-                          <span className="ml-2 text-green-600 font-semibold text-xs">Refunded</span>
-                        ) : null}
+                        )}
+                        {transaction.refunded_at && (
+                          <div className="mt-1 text-xs text-green-600 font-medium">Refunded</div>
+                        )}
                       </div>
-                    </div>
-                    <div className="mt-2 sm:mt-0 text-right">
-                      <div className="text-lg font-bold">{Number(transaction.amount).toFixed(2)}</div>
                     </div>
                   </div>
                 );
@@ -332,7 +356,9 @@ const Wallet = () => {
             </div>
           )}
           {!loading && transactions.length === 0 && (
-            <EmptyState icon={<AlertCircle />} message="No transactions found." />
+            <div className="text-center py-8">
+              <p className="text-gray-500 text-sm">No transactions found</p>
+            </div>
           )}
         </div>
       </div>
