@@ -40,56 +40,75 @@ const TutorialOverlay: React.FC = () => {
       } else {
         // Position relative to target element and highlight it
         const targetElement = document.querySelector(currentStep.target);
-        console.log('Target element:', currentStep.target, targetElement);
+        console.log('=== TUTORIAL DEBUGGING ===');
+        console.log('Current step:', currentStep);
+        console.log('Target selector:', currentStep.target);
+        console.log('Target element found:', !!targetElement);
+        console.log('Target element:', targetElement);
         
         if (targetElement && currentStep.highlightElement) {
           const rect = targetElement.getBoundingClientRect();
           console.log('Element rect:', rect);
+          console.log('Element dimensions:', { width: rect.width, height: rect.height });
+          console.log('Element position:', { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom });
           setHighlightedElement(rect);
           
-          // Position overlay relative to target
-          let overlayTop, overlayLeft;
-          switch (currentStep.position) {
-            case 'top':
-              overlayTop = rect.top - 350;
-              overlayLeft = rect.left + rect.width / 2 - 200;
-              break;
-            case 'bottom':
-              overlayTop = rect.bottom + 20;
-              overlayLeft = rect.left + rect.width / 2 - 200;
-              break;
-            case 'left':
-              overlayTop = rect.top + rect.height / 2 - 150;
-              overlayLeft = rect.left - 420;
-              break;
-            case 'right':
-              overlayTop = rect.top + rect.height / 2 - 150;
-              overlayLeft = rect.right + 20;
-              break;
-            default:
-              overlayTop = rect.top + rect.height / 2 - 150;
-              overlayLeft = rect.left + rect.width / 2 - 200;
-          }
-          
-          // Ensure overlay stays within viewport bounds
-          const viewportWidth = window.innerWidth;
-          const viewportHeight = window.innerHeight;
+          // Calculate overlay position based on step position
           const overlayWidth = 400;
           const overlayHeight = 300;
+          const padding = 20;
           
-          // Adjust horizontal position to stay within viewport
-          if (overlayLeft < 20) {
-            overlayLeft = 20;
-          } else if (overlayLeft + overlayWidth > viewportWidth - 20) {
-            overlayLeft = viewportWidth - overlayWidth - 20;
+          // Simple, direct positioning relative to the target element
+          let overlayTop, overlayLeft;
+          
+          // Smart positioning: For very wide elements, prefer top/bottom over left/right
+          const isElementVeryWide = rect.width > window.innerWidth * 0.8; // If element is >80% of viewport width
+          const preferredPosition = isElementVeryWide && (currentStep.position === 'left' || currentStep.position === 'right') 
+            ? 'top' // Use top instead of left/right for wide elements
+            : currentStep.position;
+          
+          console.log('Element width vs viewport:', { elementWidth: rect.width, viewportWidth: window.innerWidth, isElementVeryWide });
+          console.log('Original position vs preferred:', { original: currentStep.position, preferred: preferredPosition });
+          
+          switch (preferredPosition) {
+            case 'top':
+              // Position above the element
+              overlayTop = rect.top - overlayHeight - padding;
+              overlayLeft = rect.left + (rect.width / 2) - (overlayWidth / 2);
+              break;
+            case 'bottom':
+              // Position below the element
+              overlayTop = rect.bottom + padding;
+              overlayLeft = rect.left + (rect.width / 2) - (overlayWidth / 2);
+              break;
+            case 'left':
+              // Position to the left of the element
+              overlayTop = rect.top + (rect.height / 2) - (overlayHeight / 2);
+              overlayLeft = rect.left - overlayWidth - padding;
+              break;
+            case 'right':
+              // Position to the right of the element
+              overlayTop = rect.top + (rect.height / 2) - (overlayHeight / 2);
+              overlayLeft = rect.right + padding;
+              break;
+            default:
+              // Center relative to the element
+              overlayTop = rect.top + (rect.height / 2) - (overlayHeight / 2);
+              overlayLeft = rect.left + (rect.width / 2) - (overlayWidth / 2);
           }
           
-          // Adjust vertical position to stay within viewport
-          if (overlayTop < 20) {
-            overlayTop = 20;
-          } else if (overlayTop + overlayHeight > viewportHeight - 20) {
-            overlayTop = viewportHeight - overlayHeight - 20;
-          }
+          // Simple bounds checking - just ensure it's not completely off-screen
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+          
+          // CRITICAL: Clamp the overlay position to stay within viewport bounds
+          overlayLeft = Math.max(padding, Math.min(overlayLeft, viewportWidth - overlayWidth - padding));
+          overlayTop = Math.max(padding, Math.min(overlayTop, viewportHeight - overlayHeight - padding));
+          
+          console.log('Target element rect:', rect);
+          console.log('Calculated overlay position (BEFORE clamping):', { overlayTop, overlayLeft, overlayWidth, overlayHeight });
+          console.log('Viewport dimensions:', { viewportWidth, viewportHeight });
+          console.log('Final overlay position (AFTER clamping):', { overlayTop, overlayLeft, overlayWidth, overlayHeight });
           
           setOverlayPosition({
             top: overlayTop,
@@ -162,10 +181,10 @@ const TutorialOverlay: React.FC = () => {
               {/* Cut out the highlighted element (transparent) */}
               {highlightedElement && (
                 <rect
-                  x={highlightedElement.left}
-                  y={highlightedElement.top}
-                  width={highlightedElement.width}
-                  height={highlightedElement.height}
+                  x={Math.max(0, highlightedElement.left)}
+                  y={Math.max(0, highlightedElement.top)}
+                  width={Math.min(highlightedElement.width, window.innerWidth - highlightedElement.left)}
+                  height={Math.min(highlightedElement.height, window.innerHeight - highlightedElement.top)}
                   fill="black"
                   rx="8"
                   ry="8"
@@ -203,7 +222,7 @@ const TutorialOverlay: React.FC = () => {
 
       {/* Loading overlay for navigation */}
       {isNavigating && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+        <div className="fixed inset-0 z-60 bg-black/50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 text-center">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-brand-orange" />
             <p className="text-lg font-semibold">Navigating...</p>
@@ -223,6 +242,11 @@ const TutorialOverlay: React.FC = () => {
           height: overlayPosition.height,
         }}
       >
+        {/* Debug indicator - remove after testing */}
+        <div className="absolute -top-8 left-0 bg-red-500 text-white text-xs px-2 py-1 rounded">
+          Position: ({overlayPosition.left}, {overlayPosition.top})
+        </div>
+        
         <Card className="w-full h-full bg-white shadow-2xl border-0">
           <div className="p-6 h-full flex flex-col">
             {/* Header */}
