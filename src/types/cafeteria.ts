@@ -14,8 +14,8 @@ export type MealSubcategory =
   | 'rice' | 'pasta' | 'noodles' | 'egyptian' | 'potatoes' | 'chicken'
   | 'wrap' | 'bun' | 'beef' | 'hot_dog' | 'fries' | 'premium' | 'special';
 
-// Add-on Categories
-export type AddOnCategory = 
+// Daily Item Categories
+export type DailyItemCategory = 
   | 'snacks'                    // Everyday snacks (30LE - 90LE)
   | 'bakery'                    // Bakery items (30LE - 65LE)
   | 'greek_yoghurt_popsicle'    // Greek yogurt popsicles (60LE - 70LE)
@@ -33,17 +33,17 @@ export interface Meal {
   status: 'active' | 'inactive';
   image?: string;
   pdf_path?: string;
-  add_ons?: number[];
+  daily_items?: number[];
   created_at: string;
   updated_at: string;
 }
 
-// Add-on Interface
-export interface AddOn {
+// Daily Item Interface
+export interface DailyItem {
   id: number;
   name: string;
   description?: string;
-  category: AddOnCategory;
+  category: DailyItemCategory;
   price: number;
   is_active: boolean;
   created_at: string;
@@ -105,8 +105,8 @@ export const CATEGORY_LABELS: Record<MealCategory, string> = {
   nursery: 'Nursery'
 };
 
-// Add-on Category Labels for UI
-export const ADDON_CATEGORY_LABELS: Record<AddOnCategory, string> = {
+// Daily Item Category Labels for UI
+export const DAILY_ITEM_CATEGORY_LABELS: Record<DailyItemCategory, string> = {
   snacks: 'Snacks',
   bakery: 'Bakery',
   greek_yoghurt_popsicle: 'Greek Yogurt Popsicle',

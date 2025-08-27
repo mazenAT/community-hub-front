@@ -5,7 +5,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
 import { useToast } from '@/components/ui/use-toast';
 import { AlertCircle } from 'lucide-react';
-import { studentPreOrdersApi, mealApi, addOnOrderApi, familyMembersApi } from '@/services/api';
+import { studentPreOrdersApi, mealApi, dailyItemOrderApi, familyMembersApi } from '@/services/api';
 import BottomNavigation from '@/components/BottomNavigation';
 
 interface PreOrderItem {
@@ -137,7 +137,7 @@ const MyOrders: React.FC = () => {
 
   const fetchAddOnOrders = async () => {
     try {
-      const response = await addOnOrderApi.getMyOrders();
+      const response = await dailyItemOrderApi.getMyOrders();
       setAddOnOrders(response.data);
     } catch (err) {
       // Handle error silently

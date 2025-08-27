@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { plannerApi, profileApi, addOnApi, familyMembersApi, addOnOrderApi } from "@/services/api";
+import { plannerApi, profileApi, dailyItemsApi, familyMembersApi, dailyItemOrderApi } from "@/services/api";
 import { format, parseISO, getDay, isBefore, startOfDay, endOfDay, subDays, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameDay } from "date-fns";
 import { CalendarIcon, AlertCircle, FileText, ChevronDown, Users } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -13,7 +13,7 @@ import NotificationBell from "@/components/NotificationBell";
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
 import { formatCurrency } from "@/utils/format";
-import { MealCategory, AddOnCategory, CATEGORY_LABELS, ADDON_CATEGORY_LABELS, getMealPrice, getPriceDisplay } from "@/types/cafeteria";
+import { MealCategory, DailyItemCategory, CATEGORY_LABELS, DAILY_ITEM_CATEGORY_LABELS, getMealPrice, getPriceDisplay } from "@/types/cafeteria";
 import {
   Dialog,
   DialogContent,
@@ -39,7 +39,7 @@ interface Meal {
   status: 'active' | 'inactive';
   image?: string;
   pdf_path?: string;
-  add_ons?: number[];
+  daily_items?: number[];
   created_at: string;
   updated_at: string;
 }
@@ -69,11 +69,11 @@ interface WeeklyPlan {
   pre_orders: PreOrder[];
 }
 
-interface AddOn {
+interface DailyItem {
   id: number;
   name: string;
   description?: string;
-  category: AddOnCategory;
+  category: DailyItemCategory;
   price: number;
   is_active: boolean;
   created_at: string;
@@ -250,26 +250,26 @@ const Planner = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
-  const [addOns, setAddOns] = useState<AddOn[]>([]);
+  const [dailyItems, setDailyItems] = useState<DailyItem[]>([]);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [selectedPdfUrl, setSelectedPdfUrl] = useState<string>('');
   const [loadingPdf, setLoadingPdf] = useState(false);
   const [selectedAddOnType, setSelectedAddOnType] = useState<"all" | "drinks" | "sides" | "condiments" | "desserts">("all");
   const [selectedAddOnPriceRange, setSelectedAddOnPriceRange] = useState<"all" | "low" | "medium" | "high">("all");
-  const [addOnSearchTerm, setAddOnSearchTerm] = useState<string>("");
+  const [dailyItemSearchTerm, setAddOnSearchTerm] = useState<string>("");
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [selectedFamilyMember, setSelectedFamilyMember] = useState<string>("");
   const [selectedWeek, setSelectedWeek] = useState<string>("1");
 
-  // Add-ons modal state
+  // Daily Items modal state
   const [showAddOnsModal, setShowAddOnsModal] = useState(false);
   const [selectedAddOnCategory, setSelectedAddOnCategory] = useState<string>("");
   const [selectedMealForAddOns, setSelectedMealForAddOns] = useState<any>(null);
   const [selectedDateForAddOns, setSelectedDateForAddOns] = useState<Date | null>(null);
   const [selectedAddOns, setSelectedAddOns] = useState<{[key: number]: number}>({});
   
-  // Store add-ons for each meal (key: mealId_date, value: array of add-ons)
-  const [mealAddOns, setMealAddOns] = useState<{[key: string]: {add_on_id: number, quantity: number}[]}>({});
+  // Store daily-items for each meal (key: mealId_date, value: array of daily-items)
+  const [mealAddOns, setMealAddOns] = useState<{[key: string]: {daily_item_id: number, quantity: number}[]}>({});
 
   const { data: profile, isLoading: isLoadingProfile, error: profileError } = useQuery({
     queryKey: ["profile"],
@@ -313,14 +313,14 @@ const Planner = () => {
     }
   }, [familyMembersResponse]);
 
-  // Filter add-ons based on selected filters (Frontend-only filtering)
-  const filteredAddOns = addOns.filter((addon) => {
+  // Filter daily-items based on selected filters (Frontend-only filtering)
+  const filteredDailyItems = dailyItems.filter((dailyItem) => {
     // Filter by search term
     const addonName = addon.name.toLowerCase();
     const addonDescription = (addon.description || '').toLowerCase();
     const searchText = `${addonName} ${addonDescription}`;
     
-    const searchMatch = !addOnSearchTerm || searchText.includes(addOnSearchTerm.toLowerCase());
+    const searchMatch = !dailyItemSearchTerm || searchText.includes(dailyItemSearchTerm.toLowerCase());
     
     // Filter by type (based on name/description - more flexible matching)
     const typeMatch = selectedAddOnType === "all" || 
@@ -458,7 +458,7 @@ const Planner = () => {
       return;
     }
     
-    // Check if there are selected add-ons for this meal and date
+    // Check if there are selected daily-items for this meal and date
     const mealKey = `${meal.id}_${format(date, 'yyyy-MM-dd')}`;
     const selectedMealAddOns = mealAddOns[mealKey] || [];
     
@@ -470,12 +470,12 @@ const Planner = () => {
           meal_id: meal.id,
           meal_date: format(date, 'yyyy-MM-dd'),
           quantity: 1,
-          add_ons: selectedMealAddOns.length > 0 ? selectedMealAddOns : undefined,
+          daily_items: selectedMealAddOns.length > 0 ? selectedMealAddOns : undefined,
         },
       ],
     };
     
-    // Clear the selected add-ons for this meal after ordering
+    // Clear the selected daily-items for this meal after ordering
     if (selectedMealAddOns.length > 0) {
       setMealAddOns(prev => {
         const newState = { ...prev };
@@ -493,7 +493,7 @@ const Planner = () => {
       return;
     }
     
-    // Filter add-ons by their actual category field
+    // Filter daily-items by their actual category field
     const categoryAddOns = filteredAddOns.filter(addon => {
       // Direct category matching for more accurate filtering
       switch (category) {
@@ -597,23 +597,23 @@ const Planner = () => {
 
 
   useEffect(() => {
-    // Handle add-ons with error handling
-    addOnApi.getAddOns()
+    // Handle daily-items with error handling
+    dailyItemsApi.getDailyItems()
       .then((res) => {
-        setAddOns(res.data.filter((addon: AddOn) => addon.is_active));
+        setAddOns(res.data.filter((addon: DailyItem) => addon.is_active));
       })
       .catch((error) => {
-        // Failed to load add-ons
+        // Failed to load daily-items
         setAddOns([]);
       });
   }, []);
 
   const navigate = useNavigate();
 
-  const addOnOrderMutation = useMutation({
-    mutationFn: (payload: any) => addOnOrderApi.createOrder(payload.add_on_id, payload.quantity, parseInt(selectedFamilyMember)),
+  const dailyItemOrderMutation = useMutation({
+    mutationFn: (payload: any) => dailyItemOrderApi.createOrder(payload.daily_item_id, payload.quantity, parseInt(selectedFamilyMember)),
     onSuccess: (response) => {
-      toast.success("Add-on order placed successfully!");
+      toast.success("Daily Item order placed successfully!");
       
       // Show order confirmation with details
       const orderDetails = response.data;
@@ -621,14 +621,14 @@ const Planner = () => {
         showOrderConfirmation(orderDetails);
       }
       
-      // Clear selected add-ons
+      // Clear selected daily-items
       setSelectedAddOnsForOrder({});
       setShowAddOnOrderModal(false);
       
       refetch(); // Update the UI after order
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to place add-on order");
+      toast.error(error.response?.data?.message || "Failed to place daily-item order");
     },
   });
 
@@ -641,18 +641,18 @@ const Planner = () => {
     const selectedItems = Object.entries(selectedAddOnsForOrder)
       .filter(([_, quantity]) => quantity > 0)
       .map(([addonId, quantity]) => ({
-        add_on_id: parseInt(addonId),
+        daily_item_id: parseInt(addonId),
         quantity
       }));
 
     if (selectedItems.length === 0) {
-      toast.error("Please select at least one add-on item");
+      toast.error("Please select at least one daily-item item");
       return;
     }
 
-    // Place order for each selected add-on
+    // Place order for each selected daily-item
     selectedItems.forEach(item => {
-      addOnOrderMutation.mutate(item);
+      dailyItemOrderMutation.mutate(item);
     });
   };
 
@@ -1058,14 +1058,14 @@ const Planner = () => {
                                     </span>
                                   </div>
                                   
-                                  {/* Add-ons Selected Indicator */}
+                                  {/* Daily Items Selected Indicator */}
                                   {(() => {
                                     const mealKey = `${meal.id}_${format(date, 'yyyy-MM-dd')}`;
                                     const selectedMealAddOns = mealAddOns[mealKey] || [];
                                     return selectedMealAddOns.length > 0 && (
                                       <div className="mt-1">
                                         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                                          {selectedMealAddOns.length} add-on{selectedMealAddOns.length !== 1 ? 's' : ''} selected
+                                          {selectedMealAddOns.length} daily-item{selectedMealAddOns.length !== 1 ? 's' : ''} selected
                                         </span>
                                       </div>
                                     );
@@ -1095,7 +1095,7 @@ const Planner = () => {
                                     </Button>
                                   </div>
                                   
-                                  {/* Add-ons Section */}
+                                  {/* Daily Items Section */}
                                   <div className="mt-2 pt-2 border-t border-brand-yellow/20">
                                     <h5 className="text-xs font-medium text-brand-black mb-1">Daily Items</h5>
                                     <div className="grid grid-cols-3 gap-1">
@@ -1149,23 +1149,23 @@ const Planner = () => {
           <EmptyState message="No active weekly plan found for your school." />
         )}
 
-        {/* Separate Add-on Ordering Section */}
+        {/* Separate Daily Item Ordering Section */}
         <div className="mb-8 bg-white rounded-xl border border-brand-yellow/30 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-brand-black">Order Add-ons Separately</h2>
+            <h2 className="text-xl font-semibold text-brand-black">Order Daily Items Separately</h2>
             <Button
               onClick={() => setShowAddOnOrderModal(true)}
               className="bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white"
             >
-              Order Add-ons
+              Order Daily Items
             </Button>
           </div>
           
           <p className="text-sm text-gray-600 mb-4">
-            You can order add-ons independently of meals. These will be available for pickup on the same day.
+            You can order daily-items independently of meals. These will be available for pickup on the same day.
           </p>
 
-          {/* Quick Add-on Categories */}
+          {/* Quick Daily Item Categories */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {['Bakery', 'Snacks', 'Drinks', 'Greek Yogurt Popsicle'].map((category) => (
               <div key={category} className="text-center p-3 bg-brand-yellow/10 rounded-lg border border-brand-yellow/30">
@@ -1206,7 +1206,7 @@ const Planner = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Add-ons Modal */}
+      {/* Daily Items Modal */}
       <Dialog open={showAddOnsModal} onOpenChange={setShowAddOnsModal}>
         <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -1285,7 +1285,7 @@ const Planner = () => {
             <div className="text-sm text-gray-600">
               Total: {formatCurrency(
                 Object.entries(selectedAddOns).reduce((total, [addonId, quantity]) => {
-                  const addon = addOns.find(a => a.id === parseInt(addonId));
+                  const addon = dailyItems.find(a => a.id === parseInt(addonId));
                   return total + (addon ? addon.price * quantity : 0);
                 }, 0)
               )}
@@ -1300,11 +1300,11 @@ const Planner = () => {
               <Button
                 className="bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white"
                 onClick={() => {
-                  // Store selected add-ons for this meal
+                  // Store selected daily-items for this meal
                   const selectedItems = Object.entries(selectedAddOns)
                     .filter(([_, quantity]) => quantity > 0)
                     .map(([addonId, quantity]) => ({
-                      add_on_id: parseInt(addonId),
+                      daily_item_id: parseInt(addonId),
                       quantity
                     }));
                   
@@ -1312,7 +1312,7 @@ const Planner = () => {
                     // Create a unique key for this meal and date
                     const mealKey = `${selectedMealForAddOns.id}_${format(selectedDateForAddOns, 'yyyy-MM-dd')}`;
                     
-                    // Store add-ons for this specific meal and date
+                    // Store daily-items for this specific meal and date
                     setMealAddOns(prev => ({
                       ...prev,
                       [mealKey]: selectedItems
@@ -1320,33 +1320,33 @@ const Planner = () => {
                     
                     toast.success(`Selected ${selectedItems.length} ${selectedAddOnCategory.toLowerCase()} item(s) for ${selectedMealForAddOns?.title || selectedMealForAddOns?.name}. They will be included when you order this meal.`);
                   } else {
-                    toast.info("No add-ons selected");
+                    toast.info("No daily-items selected");
                   }
                   setShowAddOnsModal(false);
                 }}
                 disabled={Object.values(selectedAddOns).every(qty => qty === 0)}
               >
-                Select Add-ons
+                Select Daily Items
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Add-on Order Modal */}
+      {/* Daily Item Order Modal */}
       <Dialog open={showAddOnOrderModal} onOpenChange={setShowAddOnOrderModal}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-center text-brand-black">
-              🍽️ Order Add-ons Separately
+              🍽️ Order Daily Items Separately
             </DialogTitle>
             <p className="text-sm text-gray-600 text-center">
-              Select add-ons to order independently of meals
+              Select daily-items to order independently of meals
             </p>
           </DialogHeader>
           
           <div className="space-y-6">
-            {/* Add-on Categories */}
+            {/* Daily Item Categories */}
             {['Bakery', 'Snacks', 'Drinks', 'Greek Yogurt Popsicle'].map((category) => {
               const categoryAddOns = filteredAddOns.filter(addon => {
                 switch (category) {
@@ -1440,7 +1440,7 @@ const Planner = () => {
                     onClick={handleAddOnOrder}
                     disabled={Object.values(selectedAddOnsForOrder).every(qty => qty === 0)}
                   >
-                    Place Add-on Order
+                    Place Daily Item Order
                   </Button>
                 </div>
               </div>
@@ -1476,7 +1476,7 @@ const Planner = () => {
                         {item.meal?.name || item.meal?.title || item.add_on?.name || 'Item'}
                       </div>
                       <div className="text-gray-600">
-                        Type: {item.meal ? 'Meal' : 'Add-on'}
+                        Type: {item.meal ? 'Meal' : 'Daily Item'}
                       </div>
                       {item.meal_date && (
                         <div className="text-gray-600">
@@ -1486,12 +1486,12 @@ const Planner = () => {
                       <div className="text-gray-600">
                         Quantity: {item.quantity}
                       </div>
-                      {item.meal && item.add_ons && item.add_ons.length > 0 && (
+                      {item.meal && item.daily_items && item.daily_items.length > 0 && (
                         <div className="mt-1">
-                          <div className="text-gray-600 text-xs">Add-ons:</div>
-                          {item.add_ons.map((addon: any, addonIndex: number) => (
+                          <div className="text-gray-600 text-xs">Daily Items:</div>
+                          {item.daily_items.map((addon: any, addonIndex: number) => (
                             <div key={addonIndex} className="text-xs text-gray-500 ml-2">
-                              • {addon.add_on?.name || 'Add-on'} (x{addon.quantity})
+                              • {addon.add_on?.name || 'Daily Item'} (x{addon.quantity})
                             </div>
                           ))}
                         </div>
@@ -1499,14 +1499,14 @@ const Planner = () => {
                     </div>
                   ))}
                   
-                  {/* Handle add-on only orders */}
+                  {/* Handle daily-item only orders */}
                   {!orderConfirmationData.items && orderConfirmationData.add_on && (
                     <div className="border-l-2 border-green-300 pl-3">
                       <div className="font-medium text-gray-800">
-                        {orderConfirmationData.add_on.name || 'Add-on'}
+                        {orderConfirmationData.add_on.name || 'Daily Item'}
                       </div>
                       <div className="text-gray-600">
-                        Type: Add-on
+                        Type: Daily Item
                       </div>
                       <div className="text-gray-600">
                         Quantity: {orderConfirmationData.quantity}
