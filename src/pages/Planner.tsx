@@ -494,7 +494,7 @@ const Planner = () => {
     }
     
     // Filter daily-items by their actual category field
-    const categoryAddOns = filteredAddOns.filter(addon => {
+    const categoryAddOns = filteredDailyItems.filter(addon => {
       // Direct category matching for more accurate filtering
       switch (category) {
         case 'Bakery':
@@ -1171,7 +1171,7 @@ const Planner = () => {
               <div key={category} className="text-center p-3 bg-brand-yellow/10 rounded-lg border border-brand-yellow/30">
                 <div className="text-sm font-medium text-brand-black">{category}</div>
                 <div className="text-xs text-gray-600 mt-1">
-                  {filteredAddOns.filter(addon => {
+                  {filteredDailyItems.filter(addon => {
                     switch (category) {
                       case 'Bakery': return addon.category === 'bakery';
                       case 'Snacks': return addon.category === 'snacks';
@@ -1220,7 +1220,7 @@ const Planner = () => {
           
           <div className="space-y-4">
             {(() => {
-              const categoryAddOns = filteredAddOns.filter(addon => {
+              const categoryAddOns = filteredDailyItems.filter(addon => {
                 switch (selectedAddOnCategory) {
                   case 'Bakery':
                     return addon.category === 'bakery';
@@ -1348,7 +1348,7 @@ const Planner = () => {
           <div className="space-y-6">
             {/* Daily Item Categories */}
             {['Bakery', 'Snacks', 'Drinks', 'Greek Yogurt Popsicle'].map((category) => {
-              const categoryAddOns = filteredAddOns.filter(addon => {
+              const categoryAddOns = filteredDailyItems.filter(addon => {
                 switch (category) {
                   case 'Bakery': return addon.category === 'bakery';
                   case 'Snacks': return addon.category === 'snacks';
@@ -1420,7 +1420,7 @@ const Planner = () => {
                 <div className="text-sm text-gray-600">
                   Total: {formatCurrency(
                     Object.entries(selectedAddOnsForOrder).reduce((total, [addonId, quantity]) => {
-                      const addon = filteredAddOns.find(a => a.id === parseInt(addonId));
+                      const addon = filteredDailyItems.find(a => a.id === parseInt(addonId));
                       return total + (addon ? addon.price * quantity : 0);
                     }, 0)
                   )}
