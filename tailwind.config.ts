@@ -101,9 +101,9 @@ export default {
 				},
 				// Lite Bite brand colors - Light Warm Orange Gradient (Updated to lighter tones)
 				brand: {
-					red: '#ffb380',      // Much lighter warm orange (softer)
-					yellow: '#ffa366',   // Lighter medium warm orange 
-					orange: '#ff8a65',   // Lighter deeper warm orange
+					red: '#ff8a40',      // Closer to logo orange (softer)
+					yellow: '#ff7f35',   // Closer to logo orange (medium)
+					orange: '#ff6b35',   // Closer to logo orange (deeper)
 					black: '#000000',
 					white: '#FFFFFF',
 				  }

@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import MobileErrorBoundary from "@/components/MobileErrorBoundary";
 import MobileNetworkStatus from "@/components/MobileNetworkStatus";
@@ -29,6 +29,9 @@ import Notifications from "./pages/Notifications";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
+  const location = useLocation();
+  const isOnSignInPage = location.pathname === '/' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/reset-password';
+
   return (
     <>
       {/* Initialize deep linking for mobile app - now inside Router context */}
@@ -57,7 +60,8 @@ const AppContent = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
         <TutorialOverlay />
-        <TutorialTrigger variant="floating" />
+        {/* Only show tutorial trigger when not on sign-in/auth pages */}
+        {!isOnSignInPage && <TutorialTrigger variant="floating" />}
       </TutorialProvider>
     </>
   );
