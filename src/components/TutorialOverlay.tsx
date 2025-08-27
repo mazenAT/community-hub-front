@@ -221,7 +221,7 @@ const TutorialOverlay: React.FC = () => {
           <rect
             width="100%"
             height="100%"
-            fill="rgba(0, 0, 0, 0.7)"
+            fill="rgba(0, 0, 0, 0.4)"
             mask="url(#tutorial-mask)"
           />
         </svg>
