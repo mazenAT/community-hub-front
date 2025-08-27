@@ -90,9 +90,10 @@ interface FamilyMember {
 }
 
 const isOrderingWindowOpen = (mealDate: Date): boolean => {
-  // Rule: Orders must be placed before 12:00 AM (midnight) of the meal date.
-  // For a meal on Wednesday, users can order until Tuesday 11:59 PM (Wednesday 00:00 is the deadline).
-  const orderingDeadline = startOfDay(mealDate); // 12:00 AM of the meal date
+  // Rule: Orders must be placed before 11:59 AM of the day before the meal date.
+  // For a meal on Wednesday, users can order until Tuesday 11:59 AM.
+  const dayBeforeMeal = subDays(mealDate, 1);
+  const orderingDeadline = new Date(dayBeforeMeal.getFullYear(), dayBeforeMeal.getMonth(), dayBeforeMeal.getDate(), 11, 59, 0);
   const now = new Date();
   
   // Check if the current time is before the deadline
@@ -851,7 +852,7 @@ const Planner = () => {
               <AlertCircle className="w-5 h-5 text-white mt-0.5 flex-shrink-0" />
               <div className="text-sm text-white">
                 <p className="font-medium mb-1">Pre-Order Deadline</p>
-                <p>Orders must be placed before <strong>12:00 AM (midnight)</strong> the day before each meal. After this time, ordering will be closed for that meal.</p>
+                <p>Orders must be placed before <strong>11:59 AM</strong> the day before each meal. After this time, ordering will be closed for that meal.</p>
               </div>
             </div>
           </div>
@@ -1052,7 +1053,7 @@ const Planner = () => {
                               )}
                               {isOrderingWindowOpen(date) && (
                                 <div className="text-green-200 text-xs mt-1">
-                                  Order until {format(startOfDay(date), 'MMM dd')} 12:00 AM
+                                  Order until {format(subDays(date, 1), 'MMM dd')} 11:59 AM
                                 </div>
                               )}
                             </div>
@@ -1262,101 +1263,119 @@ const Planner = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Daily Items Modal */}
+      {/* Daily Items Modal - Talabat Style */}
       <Dialog open={showAddOnsModal} onOpenChange={setShowAddOnsModal}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedAddOnCategory} Items for {selectedMealForAddOns?.title || selectedMealForAddOns?.name}
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="text-center">
+            <DialogTitle className="text-2xl font-bold text-brand-black">
+              🍽️ {selectedAddOnCategory} Items
             </DialogTitle>
-            <p className="text-sm text-gray-600">
+            <p className="text-lg text-brand-black/70">
+              {selectedMealForAddOns?.title || selectedMealForAddOns?.name}
+            </p>
+            <p className="text-sm text-brand-orange font-medium">
               {selectedDateForAddOns && format(selectedDateForAddOns, 'EEEE, MMMM dd, yyyy')}
             </p>
           </DialogHeader>
           
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-brand-yellow/30">
-                  <th className="text-left p-3 text-sm font-semibold text-brand-black">Item</th>
-                  <th className="text-center p-3 text-sm font-semibold text-brand-black">Price</th>
-                  <th className="text-center p-3 text-sm font-semibold text-brand-black">Quantity</th>
-                  <th className="text-center p-3 text-sm font-semibold text-brand-black">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(() => {
-                  const categoryAddOns = filteredDailyItems.filter(dailyItem => {
-                    switch (selectedAddOnCategory) {
-                      case 'Bakery':
-                        return dailyItem.category === 'bakery';
-                      case 'Snacks':
-                        return dailyItem.category === 'snacks';
-                      case 'Drinks':
-                        return dailyItem.category === 'drinks';
-                      case 'Greek Yogurt Popsicle':
-                        return dailyItem.category === 'greek_yoghurt_popsicle';
-                      default:
-                        return true;
-                    }
-                  });
+          <div className="space-y-4">
+            {(() => {
+              const categoryAddOns = filteredDailyItems.filter(dailyItem => {
+                switch (selectedAddOnCategory) {
+                  case 'Bakery':
+                    return dailyItem.category === 'bakery';
+                  case 'Snacks':
+                    return dailyItem.category === 'snacks';
+                  case 'Drinks':
+                    return dailyItem.category === 'drinks';
+                  case 'Greek Yogurt Popsicle':
+                    return dailyItem.category === 'greek_yoghurt_popsicle';
+                  default:
+                    return true;
+                }
+              });
 
-                  return categoryAddOns.map((dailyItem) => (
-                    <tr key={dailyItem.id} className="border-b border-brand-yellow/20 hover:bg-brand-yellow/5 transition-colors">
-                      <td className="p-3">
-                        <div>
-                          <h4 className="font-semibold text-brand-black text-sm">{dailyItem.name}</h4>
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {categoryAddOns.map((dailyItem) => (
+                    <div key={dailyItem.id} className="bg-white rounded-xl border border-gray-200 hover:border-brand-orange/50 hover:shadow-lg transition-all duration-300 overflow-hidden">
+                      {/* Item Image Placeholder */}
+                      <div className="w-full h-32 bg-gradient-to-br from-brand-yellow/10 to-brand-orange/10 flex items-center justify-center">
+                        <div className="text-center text-brand-orange/60">
+                          <div className="w-16 h-16 bg-brand-orange/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span className="text-3xl">
+                              {selectedAddOnCategory === 'Bakery' ? '🥐' : 
+                               selectedAddOnCategory === 'Snacks' ? '🍿' : 
+                               selectedAddOnCategory === 'Drinks' ? '🥤' : '🍦'}
+                            </span>
+                          </div>
+                          <p className="text-xs font-medium">Daily Item</p>
+                        </div>
+                      </div>
+                      
+                      {/* Item Content */}
+                      <div className="p-4">
+                        {/* Item Header */}
+                        <div className="mb-3">
+                          <h4 className="font-bold text-brand-black text-lg line-clamp-2 mb-2">
+                            {dailyItem.name}
+                          </h4>
                           {dailyItem.description && (
-                            <p className="text-xs text-brand-black/60 mt-1">{dailyItem.description}</p>
+                            <p className="text-gray-600 text-sm line-clamp-2 mb-3">
+                              {dailyItem.description}
+                            </p>
                           )}
                         </div>
-                      </td>
-                      <td className="p-3 text-center">
-                        <span className="text-sm font-medium text-brand-orange">
-                          {formatCurrency(dailyItem.price)}
-                        </span>
-                      </td>
-                      <td className="p-3 text-center">
-                        <span className="text-sm font-medium text-brand-black">
-                          {selectedAddOns[dailyItem.id] || 0}
-                        </span>
-                      </td>
-                      <td className="p-3 text-center">
-                        <div className="flex items-center justify-center space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-7 h-7 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
-                            onClick={() => {
-                              setSelectedAddOns(prev => ({
-                                ...prev,
-                                [dailyItem.id]: Math.max(0, (prev[dailyItem.id] || 0) - 1)
-                              }));
-                            }}
-                            disabled={!selectedAddOns[dailyItem.id] || selectedAddOns[dailyItem.id] === 0}
-                          >
-                            -
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-7 h-7 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
-                            onClick={() => {
-                              setSelectedAddOns(prev => ({
-                                ...prev,
-                                [dailyItem.id]: (prev[dailyItem.id] || 0) + 1
-                              }));
-                            }}
-                          >
-                            +
-                          </Button>
+                        
+                        {/* Price */}
+                        <div className="mb-4">
+                          <span className="text-2xl font-bold text-brand-orange">
+                            {formatCurrency(dailyItem.price)}
+                          </span>
                         </div>
-                      </td>
-                    </tr>
-                  ));
-                })()}
-              </tbody>
-            </table>
+                        
+                        {/* Quantity Controls */}
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-sm font-medium text-brand-black">Quantity:</span>
+                          <div className="flex items-center space-x-3">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-10 h-10 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/600"
+                              onClick={() => {
+                                setSelectedAddOns(prev => ({
+                                  ...prev,
+                                  [dailyItem.id]: Math.max(0, (prev[dailyItem.id] || 0) - 1)
+                                }));
+                              }}
+                              disabled={!selectedAddOns[dailyItem.id] || selectedAddOns[dailyItem.id] === 0}
+                            >
+                              <span className="text-lg font-bold">−</span>
+                            </Button>
+                            <span className="w-12 text-center text-xl font-bold text-brand-black">
+                              {selectedAddOns[dailyItem.id] || 0}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-10 h-10 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/600"
+                              onClick={() => {
+                                setSelectedAddOns(prev => ({
+                                  ...prev,
+                                  [dailyItem.id]: (prev[dailyItem.id] || 0) + 1
+                                }));
+                              }}
+                            >
+                              <span className="text-lg font-bold">+</span>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           <div className="flex justify-between items-center pt-4 border-t">
