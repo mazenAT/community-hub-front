@@ -1061,26 +1061,26 @@ const Planner = () => {
                         </div>
                         
                         {/* Meals Grid - Talabat Style */}
-                        <div className="p-4">
+                        <div className="p-6">
                           <div 
-                            className="grid grid-cols-3 gap-3 sm:gap-4"
+                            className="grid grid-cols-3 gap-4 sm:gap-6"
                             data-tutorial="meal-list"
                           >
                             {mealsForDay.map((meal: any, mealIndex: number) => (
-                              <div key={`${date.toISOString()}-${meal.id}-${mealIndex}`} className="bg-white rounded-xl border border-gray-200 hover:border-brand-orange/50 hover:shadow-lg transition-all duration-300 overflow-hidden">
+                              <div key={`${date.toISOString()}-${meal.id}-${mealIndex}`} className="bg-white rounded-2xl border border-gray-100 hover:border-brand-orange/40 hover:shadow-xl transition-all duration-300 overflow-hidden group">
                                 {/* Meal Content */}
-                                <div className="p-4">
+                                <div className="p-5">
                                   {/* Meal Header */}
-                                  <div className="flex items-start justify-between mb-3">
-                                    <div className="flex-1">
-                                      <h4 className="font-bold text-brand-black text-lg line-clamp-2 mb-1">
+                                  <div className="flex items-start justify-between mb-4">
+                                    <div className="flex-1 pr-3">
+                                      <h4 className="font-bold text-brand-black text-lg leading-tight line-clamp-2 mb-2">
                                         {meal.title || meal.name}
                                       </h4>
-                                      <p className="text-gray-600 text-sm line-clamp-2 mb-2">
+                                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-3">
                                         {meal.description || 'Delicious meal prepared with fresh ingredients'}
                                       </p>
                                     </div>
-                                    <div className="ml-3 text-right">
+                                    <div className="ml-2 text-right flex-shrink-0">
                                       <span className="text-2xl font-bold text-brand-orange">
                                         {meal.price ? formatCurrency(meal.price) : 'N/A'}
                                       </span>
@@ -1088,8 +1088,8 @@ const Planner = () => {
                                   </div>
                                   
                                   {/* Meal Category Badge */}
-                                  <div className="mb-3">
-                                    <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-brand-orange/20 text-brand-orange border border-brand-orange/30">
+                                  <div className="mb-4">
+                                    <span className="inline-block px-4 py-2 rounded-full text-xs font-semibold bg-gradient-to-r from-brand-orange/20 to-brand-red/20 text-brand-orange border border-brand-orange/40 shadow-sm">
                                       {CATEGORY_LABELS[meal.category as MealCategory] || meal.category || 'N/A'}
                                     </span>
                                   </div>
@@ -1111,51 +1111,58 @@ const Planner = () => {
                                   })()}
                                   
                                   {/* Daily Items Section */}
-                                  <div className="mb-4">
-                                    <h5 className="text-sm font-semibold text-brand-black mb-3">Add Daily Items</h5>
-                                    <div className="grid grid-cols-2 gap-2">
+                                  <div className="mb-5">
+                                    <h5 className="text-sm font-semibold text-brand-black mb-3 flex items-center">
+                                      <span className="w-2 h-2 bg-brand-orange rounded-full mr-2"></span>
+                                      Add Daily Items
+                                    </h5>
+                                    <div className="grid grid-cols-2 gap-3">
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-8 px-2 border-brand-yellow/40 text-brand-black hover:bg-brand-yellow/10 hover:border-brand-yellow/60 text-xs font-medium"
+                                        className="h-10 px-3 border-brand-yellow/50 text-brand-black hover:bg-brand-yellow/20 hover:border-brand-yellow/70 text-xs font-medium rounded-lg transition-all duration-200 hover:scale-105"
                                         onClick={() => handleAddOnsClick(date, meal, 'Bakery')}
                                       >
-                                        🥐 Bakery
+                                        <span className="mr-2">🥐</span>
+                                        Bakery
                                       </Button>
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-8 px-2 border-brand-yellow/40 text-brand-black hover:bg-brand-yellow/10 hover:border-brand-yellow/60 text-xs font-medium"
+                                        className="h-10 px-3 border-brand-yellow/50 text-brand-black hover:bg-brand-yellow/20 hover:border-brand-yellow/70 text-xs font-medium rounded-lg transition-all duration-200 hover:scale-105"
                                         onClick={() => handleAddOnsClick(date, meal, 'Snacks')}
                                       >
-                                        🍿 Snacks
+                                        <span className="mr-2">🍿</span>
+                                        Snacks
                                       </Button>
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-8 px-2 border-brand-yellow/40 text-brand-black hover:bg-brand-yellow/10 hover:border-brand-yellow/60 text-xs font-medium"
+                                        className="h-10 px-3 border-brand-yellow/50 text-brand-black hover:bg-brand-yellow/20 hover:border-brand-yellow/70 text-xs font-medium rounded-lg transition-all duration-200 hover:scale-105"
                                         onClick={() => handleAddOnsClick(date, meal, 'Drinks')}
                                       >
-                                        🥤 Drinks
+                                        <span className="mr-2">🥤</span>
+                                        Drinks
                                       </Button>
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-8 px-2 border-brand-yellow/40 text-brand-black hover:bg-brand-yellow/10 hover:border-brand-yellow/60 text-xs font-medium"
+                                        className="h-10 px-3 border-brand-yellow/50 text-brand-black hover:bg-brand-yellow/20 hover:border-brand-yellow/70 text-xs font-medium rounded-lg transition-all duration-200 hover:scale-105"
                                         onClick={() => handleAddOnsClick(date, meal, 'Greek Yogurt Popsicle')}
                                       >
-                                        🍦 Popsicle
+                                        <span className="mr-2">🍦</span>
+                                        Popsicle
                                       </Button>
                                     </div>
                                   </div>
                                   
                                   {/* Action Buttons */}
-                                  <div className="flex gap-2">
+                                  <div className="flex gap-3">
                                     {meal.pdf_path && (
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="flex-1 h-10 border-brand-blue text-brand-blue hover:bg-brand-blue/10 hover:border-brand-blue/600"
+                                        className="flex-1 h-12 border-brand-blue text-brand-blue hover:bg-brand-blue/10 hover:border-brand-blue/600 rounded-xl font-medium transition-all duration-200 hover:scale-105"
                                         onClick={() => handleViewPdf(meal)}
                                         disabled={loadingPdf}
                                       >
@@ -1165,7 +1172,7 @@ const Planner = () => {
                                     )}
                                     <Button
                                       size="sm"
-                                      className="flex-1 h-10 bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white font-semibold shadow-md"
+                                      className="flex-1 h-12 bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white font-bold rounded-xl shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl"
                                       onClick={() => handlePreOrder(meal, date)}
                                       disabled={!isOrderingWindowOpen(date)}
                                     >
@@ -1278,26 +1285,26 @@ const Planner = () => {
               });
 
               return (
-                <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                <div className="grid grid-cols-3 gap-4 sm:gap-6">
                   {categoryAddOns.map((dailyItem) => (
-                    <div key={dailyItem.id} className="bg-white rounded-xl border border-gray-200 hover:border-brand-orange/50 hover:shadow-lg transition-all duration-300 overflow-hidden">
+                    <div key={dailyItem.id} className="bg-white rounded-2xl border border-gray-100 hover:border-brand-orange/40 hover:shadow-xl transition-all duration-300 overflow-hidden group">
                       {/* Item Content */}
-                      <div className="p-4">
+                      <div className="p-5">
                         {/* Item Header */}
-                        <div className="mb-3">
-                          <h4 className="font-bold text-brand-black text-lg line-clamp-2 mb-2">
+                        <div className="mb-4">
+                          <h4 className="font-bold text-brand-black text-lg leading-tight line-clamp-2 mb-3">
                             {dailyItem.name}
                           </h4>
                           {dailyItem.description && (
-                            <p className="text-gray-600 text-sm line-clamp-2 mb-3">
+                            <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-4">
                               {dailyItem.description}
                             </p>
                           )}
                         </div>
                         
                         {/* Price */}
-                        <div className="mb-4">
-                          <span className="text-2xl font-bold text-brand-orange">
+                        <div className="mb-5">
+                          <span className="text-3xl font-bold text-brand-orange">
                             {formatCurrency(dailyItem.price)}
                           </span>
                         </div>
@@ -1305,11 +1312,11 @@ const Planner = () => {
                         {/* Quantity Controls */}
                         <div className="flex items-center justify-between mb-4">
                           <span className="text-sm font-medium text-brand-black">Quantity:</span>
-                          <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-4">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="w-10 h-10 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/600"
+                              className="w-12 h-12 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/600 rounded-xl transition-all duration-200 hover:scale-105"
                               onClick={() => {
                                 setSelectedAddOns(prev => ({
                                   ...prev,
@@ -1318,15 +1325,15 @@ const Planner = () => {
                               }}
                               disabled={!selectedAddOns[dailyItem.id] || selectedAddOns[dailyItem.id] === 0}
                             >
-                              <span className="text-lg font-bold">−</span>
+                              <span className="text-xl font-bold">−</span>
                             </Button>
-                            <span className="w-12 text-center text-xl font-bold text-brand-black">
+                            <span className="w-16 text-center text-2xl font-bold text-brand-black">
                               {selectedAddOns[dailyItem.id] || 0}
                             </span>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="w-10 h-10 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/600"
+                              className="w-12 h-12 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/600 rounded-xl transition-all duration-200 hover:scale-105"
                               onClick={() => {
                                 setSelectedAddOns(prev => ({
                                   ...prev,
@@ -1334,7 +1341,7 @@ const Planner = () => {
                                 }));
                               }}
                             >
-                              <span className="text-lg font-bold">+</span>
+                              <span className="text-xl font-bold">+</span>
                             </Button>
                           </div>
                         </div>
