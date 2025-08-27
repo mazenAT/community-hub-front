@@ -32,7 +32,6 @@ interface UserProfile {
     currency: string;
     is_active: boolean;
   };
-  allergies?: string[];
 }
 
 interface Transaction {
@@ -54,9 +53,6 @@ const Profile = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [allergies, setAllergies] = useState<string[]>([]);
-  const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
-  const [allergiesInput, setAllergiesInput] = useState("");
 
   const { data: profileResponse, isLoading: isLoadingProfile, error: profileError, refetch: refetchProfile } = useQuery<{ data: UserProfile }>({
     queryKey: ["profile"],
@@ -72,26 +68,11 @@ const Profile = () => {
   const profileData = profileResponse?.data;
 
   useEffect(() => {
-    setAllergies([
-      "Nuts",
-      "Dairy",
-      "Gluten",
-      "Eggs",
-      "Shellfish",
-      "Fish",
-      "Soy",
-      "Sesame",
-      "Peanuts",
-      "Tree Nuts",
-      "None"
-    ]);
     if (profileData) {
       setName(profileData.name || "");
       setEmail(profileData.email || "");
       setSchoolName(profileData.school?.name || "");
       setPhone(profileData.phone || "");
-      setSelectedAllergies(Array.isArray(profileData.allergies) ? profileData.allergies : []);
-      setAllergiesInput(Array.isArray(profileData.allergies) ? profileData.allergies.join(", ") : (profileData.allergies || ""));
     }
   }, [profileData]);
 
@@ -142,14 +123,6 @@ const Profile = () => {
     
     if (phone !== profileData?.phone) {
       updateData.phone = phone || null;
-    }
-
-    if (allergiesInput !== (profileData?.allergies?.join(", ") || "")) {
-      const allergiesArray = allergiesInput
-        .split(",")
-        .map(a => a.trim())
-        .filter(Boolean);
-      updateData.allergies = allergiesArray;
     }
 
     updateProfileMutation.mutate(updateData);
@@ -270,21 +243,7 @@ const Profile = () => {
               <span className="text-sm sm:text-base font-medium text-brand-black">{formatAmount(balance, 'credit')}</span>
             </div>
             {/* Allergies Badges (non-editable, no duplicates) */}
-            {allergiesInput && (
-              <div className="mt-4">
-                <div className="text-sm font-semibold text-brand-black mb-1">Allergies</div>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {[...new Set(allergiesInput.split(',').map(a => a.trim()).filter(Boolean))].map((allergy, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-block bg-brand-orange/20 text-brand-orange px-3 py-1 rounded-full text-xs font-semibold shadow-sm border border-brand-orange/30"
-                    >
-                      {allergy}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Removed allergies section as per edit hint */}
           </div>
         </Card>
 
@@ -317,17 +276,7 @@ const Profile = () => {
                 className="w-full"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-brand-black mb-2">Allergies</label>
-              <Input
-                type="text"
-                value={allergiesInput}
-                onChange={(e) => setAllergiesInput(e.target.value)}
-                placeholder="Enter allergies separated by commas"
-                className="w-full"
-              />
-              <p className="text-xs text-brand-black/60 mt-1">Separate multiple allergies with commas</p>
-            </div>
+            {/* Removed Allergies input field */}
             <Button 
               onClick={handleUpdateProfile}
               disabled={updateProfileMutation.isPending}
