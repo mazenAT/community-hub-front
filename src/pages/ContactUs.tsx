@@ -64,10 +64,10 @@ const ContactUs = () => {
             Send Another Message
           </Button>
           <Button
-            onClick={() => navigate('/')}
+            onClick={() => setSubmitted(false)}
             className="w-full bg-gray-200 hover:bg-gray-300 text-brand-black mt-4"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Home
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Form
           </Button>
         </div>
       </div>
