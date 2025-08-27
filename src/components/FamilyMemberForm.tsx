@@ -41,13 +41,36 @@ export const FamilyMemberForm: React.FC<FamilyMemberFormProps> = ({
   isLoading = false
 }) => {
   const [formData, setFormData] = useState<FamilyMember>({
-    name: member?.name || '',
-    grade: member?.grade || '',
-    class: member?.class || '',
-    allergies: member?.allergies || []
+    name: '',
+    grade: '',
+    class: '',
+    allergies: []
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Reset form when member prop changes (for editing vs adding new)
+  useEffect(() => {
+    if (member) {
+      // Editing existing member - populate form
+      setFormData({
+        name: member.name || '',
+        grade: member.grade || '',
+        class: member.class || '',
+        allergies: member.allergies || []
+      });
+    } else {
+      // Adding new member - reset form to empty state
+      setFormData({
+        name: '',
+        grade: '',
+        class: '',
+        allergies: []
+      });
+    }
+    // Clear any previous errors
+    setErrors({});
+  }, [member]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};

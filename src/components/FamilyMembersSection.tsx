@@ -81,6 +81,11 @@ export const FamilyMembersSection: React.FC = () => {
     setShowForm(true);
   };
 
+  const handleAddNew = () => {
+    setEditingMember(null); // Ensure we're not editing
+    setShowForm(true);
+  };
+
   const handleDelete = (id: number) => {
     if (window.confirm('Are you sure you want to delete this family member?')) {
       deleteMutation.mutate(id);
@@ -99,7 +104,7 @@ export const FamilyMembersSection: React.FC = () => {
           </h3>
         </div>
         <Button
-          onClick={() => setShowForm(true)}
+          onClick={handleAddNew}
           className="bg-brand-red hover:bg-brand-red/90 text-white rounded-full px-4 py-2 text-sm"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -117,7 +122,7 @@ export const FamilyMembersSection: React.FC = () => {
           <Users className="w-12 h-12 text-brand-black/30 mx-auto mb-3" />
           <p className="text-brand-black/70 mb-4">No family members added yet</p>
           <Button
-            onClick={() => setShowForm(true)}
+            onClick={handleAddNew}
             className="bg-brand-red hover:bg-brand-red/90 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
