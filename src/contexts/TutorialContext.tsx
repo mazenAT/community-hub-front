@@ -9,7 +9,7 @@ interface TutorialStep {
   position: 'top' | 'bottom' | 'left' | 'right' | 'center';
   order: number;
   completed: boolean;
-  // New interactive properties
+  // Interactive properties
   highlightElement?: boolean; // Whether to highlight the target element
   spotlightRadius?: number; // Radius of the spotlight effect
   animation?: 'pulse' | 'bounce' | 'shake' | 'glow' | 'none';
@@ -18,10 +18,6 @@ interface TutorialStep {
   hint?: string; // Additional hint text
   showArrow?: boolean; // Whether to show directional arrow
   arrowDirection?: 'up' | 'down' | 'left' | 'right';
-  // Game-like properties
-  points?: number; // Points earned for completing this step
-  difficulty?: 'easy' | 'medium' | 'hard';
-  timeLimit?: number; // Optional time limit in seconds
 }
 
 interface TutorialContextType {
@@ -37,36 +33,27 @@ interface TutorialContextType {
   previousStep: () => void;
   resetTutorial: () => void;
   checkTutorialStatus: () => Promise<void>;
-  // New interactive features
+  // Interactive features
   highlightElement: (selector: string) => void;
   clearHighlight: () => void;
   getElementPosition: (selector: string) => DOMRect | null;
-  // Game-like features
-  totalPoints: number;
-  earnedPoints: number;
+  // Tutorial progress
   tutorialProgress: number;
-  achievements: string[];
-  unlockAchievement: (achievement: string) => void;
   // Step validation
   validateStepCompletion: (stepId: string) => boolean;
-  // Tutorial modes
-  tutorialMode: 'guided' | 'exploration' | 'challenge';
-  setTutorialMode: (mode: 'guided' | 'exploration' | 'challenge') => void;
 }
 
 const defaultTutorialSteps: TutorialStep[] = [
   {
     id: 'welcome',
     title: 'Welcome to Smart Community! 🎉',
-    description: 'Your all-in-one app for managing school meals, payments, and family activities. Let\'s take an interactive tour!',
+    description: 'Your all-in-one app for managing school meals, payments, and family activities. Let\'s take a quick tour!',
     target: 'body',
     position: 'center',
     order: 1,
     completed: false,
     highlightElement: false,
-    animation: 'bounce',
-    points: 10,
-    difficulty: 'easy'
+    animation: 'bounce'
   },
   {
     id: 'wallet-tour',
@@ -83,9 +70,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     actionRequired: 'click',
     hint: 'Click the wallet icon in the bottom navigation',
     showArrow: true,
-    arrowDirection: 'up',
-    points: 20,
-    difficulty: 'easy'
+    arrowDirection: 'up'
   },
   {
     id: 'wallet-features',
@@ -98,9 +83,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     highlightElement: true,
     spotlightRadius: 80,
     animation: 'glow',
-    interactive: false,
-    points: 15,
-    difficulty: 'easy'
+    interactive: false
   },
   {
     id: 'meal-planning-intro',
@@ -117,9 +100,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     actionRequired: 'click',
     hint: 'Click the meal planning icon',
     showArrow: true,
-    arrowDirection: 'up',
-    points: 25,
-    difficulty: 'medium'
+    arrowDirection: 'up'
   },
   {
     id: 'meal-browsing',
@@ -134,9 +115,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     animation: 'glow',
     interactive: true,
     actionRequired: 'scroll',
-    hint: 'Scroll through the meal options',
-    points: 20,
-    difficulty: 'medium'
+    hint: 'Scroll through the meal options'
   },
   {
     id: 'family-setup',
@@ -153,9 +132,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     actionRequired: 'click',
     hint: 'Click the family icon to manage members',
     showArrow: true,
-    arrowDirection: 'up',
-    points: 30,
-    difficulty: 'medium'
+    arrowDirection: 'up'
   },
   {
     id: 'notifications',
@@ -168,9 +145,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     highlightElement: true,
     spotlightRadius: 50,
     animation: 'shake',
-    interactive: false,
-    points: 15,
-    difficulty: 'easy'
+    interactive: false
   },
   {
     id: 'profile-settings',
@@ -187,22 +162,18 @@ const defaultTutorialSteps: TutorialStep[] = [
     actionRequired: 'click',
     hint: 'Click your profile icon',
     showArrow: true,
-    arrowDirection: 'up',
-    points: 20,
-    difficulty: 'easy'
+    arrowDirection: 'up'
   },
   {
-    id: 'challenge-completion',
-    title: 'Tutorial Challenge Complete! 🏆',
-    description: 'Amazing job! You\'ve completed the interactive tour.\n\n🎯 Total Points: {points}\n🏅 Difficulty: {difficulty}\n⭐ Achievements: {achievements}\n\nYou\'re ready to explore Smart Community!',
+    id: 'completion',
+    title: 'You\'re All Set! 🚀',
+    description: 'Congratulations! You now know how to use Smart Community. Start exploring the features and enjoy the convenience of managing everything in one place!',
     target: 'body',
     position: 'center',
     order: 9,
     completed: false,
     highlightElement: false,
-    animation: 'bounce',
-    points: 50,
-    difficulty: 'hard'
+    animation: 'bounce'
   }
 ];
 
@@ -213,20 +184,6 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [currentStep, setCurrentStep] = useState<TutorialStep | null>(null);
   const [tutorialSteps, setTutorialSteps] = useState<TutorialStep[]>(defaultTutorialSteps);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [totalPoints, setTotalPoints] = useState(0);
-  const [earnedPoints, setEarnedPoints] = useState(0);
-  const [achievements, setAchievements] = useState<string[]>([]);
-  const [tutorialMode, setTutorialMode] = useState<'guided' | 'exploration' | 'challenge'>('guided');
-
-  // Calculate total points and progress
-  useEffect(() => {
-    const total = tutorialSteps.reduce((sum, step) => sum + (step.points || 0), 0);
-    setTotalPoints(total);
-    
-    const completed = tutorialSteps.filter(step => step.completed);
-    const earned = completed.reduce((sum, step) => sum + (step.points || 0), 0);
-    setEarnedPoints(earned);
-  }, [tutorialSteps]);
 
   const tutorialProgress = tutorialSteps.filter(step => step.completed).length / tutorialSteps.length;
 
@@ -234,8 +191,6 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     setIsTutorialActive(true);
     setCurrentStepIndex(0);
     setCurrentStep(tutorialSteps[0]);
-    setEarnedPoints(0);
-    setAchievements([]);
   };
 
   const completeStep = (stepId: string) => {
@@ -244,56 +199,11 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     );
     setTutorialSteps(updatedSteps);
 
-    // Award points
-    const step = tutorialSteps.find(s => s.id === stepId);
-    const points = step?.points || 0;
-    if (points > 0) {
-      setEarnedPoints(prev => prev + points);
-    }
-
-    // Check for achievements
-    checkAchievements(updatedSteps);
-
     // Move to next step or complete tutorial
     if (currentStepIndex < tutorialSteps.length - 1) {
       nextStep();
     } else {
       completeTutorial();
-    }
-  };
-
-  const checkAchievements = (steps: TutorialStep[]) => {
-    const newAchievements: string[] = [];
-    
-    // First step achievement
-    if (steps[0].completed && !achievements.includes('First Steps')) {
-      newAchievements.push('First Steps');
-    }
-    
-    // Halfway achievement
-    const completedCount = steps.filter(s => s.completed).length;
-    if (completedCount >= Math.ceil(steps.length / 2) && !achievements.includes('Halfway There')) {
-      newAchievements.push('Halfway There');
-    }
-    
-    // Speed achievement (if tutorial completed quickly)
-    if (completedCount === steps.length && !achievements.includes('Speed Runner')) {
-      newAchievements.push('Speed Runner');
-    }
-    
-    // Perfect score achievement
-    if (earnedPoints >= totalPoints * 0.9 && !achievements.includes('Perfect Score')) {
-      newAchievements.push('Perfect Score');
-    }
-
-    if (newAchievements.length > 0) {
-      setAchievements(prev => [...prev, ...newAchievements]);
-    }
-  };
-
-  const unlockAchievement = (achievement: string) => {
-    if (!achievements.includes(achievement)) {
-      setAchievements(prev => [...prev, achievement]);
     }
   };
 
@@ -317,6 +227,8 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     setIsTutorialActive(false);
     setCurrentStep(null);
     setCurrentStepIndex(0);
+    // Mark tutorial as completed
+    secureStorage.set('tutorial_completed', 'true');
   };
 
   const resetTutorial = () => {
@@ -324,17 +236,13 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     setTutorialSteps(resetSteps);
     setCurrentStepIndex(0);
     setCurrentStep(resetSteps[0]);
-    setEarnedPoints(0);
-    setAchievements([]);
   };
 
   const completeTutorial = () => {
     setIsTutorialActive(false);
     setCurrentStep(null);
-    unlockAchievement('Tutorial Master');
     // Save completion status
     secureStorage.set('tutorial_completed', 'true');
-    secureStorage.set('tutorial_score', earnedPoints.toString());
   };
 
   const highlightElement = (selector: string) => {
@@ -378,9 +286,10 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
         return;
       }
       
-      // Check if it's user's first time
-      const firstTime = await secureStorage.get('first_time_user');
-      if (firstTime === 'true') {
+      // Check if user is signed in and show tutorial
+      const token = await secureStorage.get('token');
+      if (token) {
+        // User is signed in, show tutorial
         startTutorial();
       }
     } catch (error) {
@@ -403,14 +312,8 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     highlightElement,
     clearHighlight,
     getElementPosition,
-    totalPoints,
-    earnedPoints,
     tutorialProgress,
-    achievements,
-    unlockAchievement,
-    validateStepCompletion,
-    tutorialMode,
-    setTutorialMode
+    validateStepCompletion
   };
 
   return (

@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useTutorial } from '@/contexts/TutorialContext';
-import { X, ChevronLeft, ChevronRight, Play, Star, Trophy, Target, Lightbulb } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Play, Target, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 
 const TutorialOverlay: React.FC = () => {
   const { 
@@ -15,17 +14,13 @@ const TutorialOverlay: React.FC = () => {
     previousStep,
     tutorialSteps,
     currentStepIndex,
-    totalPoints,
-    earnedPoints,
     tutorialProgress,
-    achievements,
     getElementPosition
   } = useTutorial();
   
   const [overlayPosition, setOverlayPosition] = useState({ top: 0, left: 0, width: 400, height: 300 });
   const [spotlightPosition, setSpotlightPosition] = useState({ x: 0, y: 0, radius: 0 });
   const [showSpotlight, setShowSpotlight] = useState(false);
-  const [showAchievement, setShowAchievement] = useState<string | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // Calculate overlay position based on current step
@@ -119,28 +114,11 @@ const TutorialOverlay: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [isTutorialActive, currentStep]);
 
-  // Show achievement notification
-  useEffect(() => {
-    if (achievements.length > 0) {
-      const latestAchievement = achievements[achievements.length - 1];
-      setShowAchievement(latestAchievement);
-      setTimeout(() => setShowAchievement(null), 3000);
-    }
-  }, [achievements]);
-
   if (!isTutorialActive || !currentStep) return null;
 
   const progress = ((currentStepIndex + 1) / tutorialSteps.length) * 100;
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === tutorialSteps.length - 1;
-
-  // Format description with dynamic values
-  const formatDescription = (description: string) => {
-    return description
-      .replace('{points}', earnedPoints.toString())
-      .replace('{difficulty}', currentStep.difficulty || 'easy')
-      .replace('{achievements}', achievements.join(', ') || 'None yet');
-  };
 
   return (
     <>
@@ -171,21 +149,6 @@ const TutorialOverlay: React.FC = () => {
         )}
       </div>
 
-      {/* Achievement notification */}
-      {showAchievement && (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
-          <Card className="p-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-2xl">
-            <div className="flex items-center space-x-3">
-              <Trophy className="h-6 w-6" />
-              <div>
-                <div className="font-bold">Achievement Unlocked!</div>
-                <div className="text-sm">{showAchievement}</div>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
-
       {/* Tutorial overlay */}
       <div
         ref={overlayRef}
@@ -206,20 +169,14 @@ const TutorialOverlay: React.FC = () => {
             <div className="w-full h-full bg-gradient-to-br from-brand-red to-brand-orange rounded-lg" />
           </div>
 
-          {/* Header with progress and points */}
+          {/* Header */}
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <div className="w-3 h-3 bg-brand-orange rounded-full animate-pulse" />
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-brand-orange">
-                    Step {currentStepIndex + 1} of {tutorialSteps.length}
-                  </span>
-                  <div className="flex items-center space-x-2">
-                    <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                    <span className="text-xs text-gray-600">{earnedPoints} / {totalPoints} pts</span>
-                  </div>
-                </div>
+                <span className="text-sm font-semibold text-brand-orange">
+                  Step {currentStepIndex + 1} of {tutorialSteps.length}
+                </span>
               </div>
               <Button
                 variant="ghost"
@@ -233,23 +190,11 @@ const TutorialOverlay: React.FC = () => {
 
             {/* Content */}
             <div className="mb-6">
-              <h3 className="font-bold text-xl mb-3 text-gray-900 flex items-center">
+              <h3 className="font-bold text-xl mb-3 text-gray-900">
                 {currentStep.title}
-                {currentStep.difficulty && (
-                  <Badge 
-                    variant="outline" 
-                    className={`ml-2 text-xs ${
-                      currentStep.difficulty === 'easy' ? 'border-green-500 text-green-600' :
-                      currentStep.difficulty === 'medium' ? 'border-yellow-500 text-yellow-600' :
-                      'border-red-500 text-red-600'
-                    }`}
-                  >
-                    {currentStep.difficulty}
-                  </Badge>
-                )}
               </h3>
               <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
-                {formatDescription(currentStep.description)}
+                {currentStep.description}
               </div>
               
               {/* Hint section */}
