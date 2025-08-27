@@ -703,7 +703,10 @@ const Planner = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 py-4 border-b-2 border-brand-red">
+      <div 
+        className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 py-4 border-b-2 border-brand-red"
+        data-tutorial="planner-header"
+      >
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-white">View Menu</h1>
           <div className="flex items-center space-x-2">
@@ -845,7 +848,10 @@ const Planner = () => {
       {/* Content */}
       <div className="px-4 py-4">
         {/* Family Member Selection */}
-        <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+        <div 
+          className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30"
+          data-tutorial="planner-family-selector"
+        >
           <div className="flex items-center space-x-2 mb-3">
             <Users className="w-5 h-5 text-brand-red" />
             <h3 className="text-sm font-semibold text-brand-black">Select Family Member</h3>
@@ -870,7 +876,10 @@ const Planner = () => {
         </div>
 
         {/* Week Filter */}
-        <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+        <div 
+          className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30"
+          data-tutorial="planner-week-selector"
+        >
           <h3 className="text-sm font-semibold text-brand-black mb-3">Week Selection</h3>
           {normalizedPlans.length === 0 ? (
             <p className="text-sm text-brand-black/60">No weekly plans available</p>

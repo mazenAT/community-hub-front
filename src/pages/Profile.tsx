@@ -378,10 +378,12 @@ const Profile = () => {
         </Card>
 
         {/* Family Members Section */}
-        <FamilyMembersSection />
+        <div data-tutorial="profile-family-section">
+          <FamilyMembersSection />
+        </div>
 
         {/* Transaction History */}
-        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white">
+        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white" data-tutorial="profile-settings">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h3 className="text-lg sm:text-xl font-semibold text-brand-black">Transaction History</h3>
             <div className="text-sm text-brand-black/70">

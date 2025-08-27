@@ -172,7 +172,10 @@ const Wallet = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 sm:px-6 py-4 border-b-2 border-brand-red">
+      <div 
+        className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 sm:px-6 py-4 border-b-2 border-brand-red"
+        data-tutorial="wallet-header"
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/Logo.jpg" alt="App Logo" className="w-10 h-10 rounded" />
@@ -229,6 +232,7 @@ const Wallet = () => {
                 onClick={() => navigate("/recharge")}
                 className="add-money-btn bg-brand-orange hover:bg-brand-orange/90 text-white border-0 rounded-xl text-base w-full xs:w-auto"
                 disabled={loading}
+                data-tutorial="wallet-recharge"
               >
                 + Recharge
               </Button>
@@ -274,7 +278,7 @@ const Wallet = () => {
         </Dialog>
 
         {/* Recent Transactions */}
-        <div className="transactions-section space-y-3 sm:space-y-4">
+        <div className="transactions-section space-y-3 sm:space-y-4" data-tutorial="wallet-transactions">
           <h3 className="text-base sm:text-lg font-semibold text-brand-black">Recent Transactions</h3>
           {loading && transactions.length === 0 ? (
             <div className="text-center py-4">

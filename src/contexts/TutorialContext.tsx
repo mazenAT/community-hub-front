@@ -9,11 +9,11 @@ interface TutorialStep {
   position: 'top' | 'bottom' | 'left' | 'right' | 'center';
   order: number;
   completed: boolean;
-  // Navigation properties
-  route?: string; // Route to navigate to for this step
-  navigateBeforeStep?: boolean; // Whether to navigate before showing the step
+  // Page-specific properties
+  page: string; // Which page this step belongs to
+  route: string; // Route to navigate to
   // Interactive properties
-  highlightElement?: boolean; // Whether to highlight the target element
+  highlightElement: boolean; // Whether to highlight the target element
   spotlightRadius?: number; // Radius of the spotlight effect
   animation?: 'pulse' | 'bounce' | 'shake' | 'glow' | 'none';
   interactive?: boolean; // Whether user needs to interact with the element
@@ -46,151 +46,269 @@ interface TutorialContextType {
   validateStepCompletion: (stepId: string) => boolean;
   // Navigation
   navigateToStep: (step: TutorialStep) => void;
+  // Page-specific tutorial
+  startPageTutorial: (page: string) => void;
+  getCurrentPageSteps: () => TutorialStep[];
 }
 
 const defaultTutorialSteps: TutorialStep[] = [
+  // WELCOME & OVERVIEW
   {
     id: 'welcome',
     title: 'Welcome to Smart Community! 🎉',
-    description: 'Your all-in-one app for managing school meals, payments, and family activities. Let\'s take a quick tour!',
+    description: 'Your all-in-one app for managing school meals, payments, and family activities. Let\'s take a guided tour through each feature!',
     target: 'body',
     position: 'center',
     order: 1,
     completed: false,
+    page: 'welcome',
+    route: '/wallet',
     highlightElement: false,
     animation: 'bounce'
   },
+
+  // WALLET PAGE TUTORIAL
   {
-    id: 'wallet-tour',
-    title: 'Digital Wallet 💳',
-    description: 'Your financial hub! Let\'s explore the wallet features:\n\n• View balance and transactions\n• Add money securely\n• Manage payment methods\n• Request refunds',
-    target: '[data-tutorial="wallet-nav"]',
+    id: 'wallet-header',
+    title: 'Wallet Dashboard 💳',
+    description: 'This is your financial command center! Here you can:\n\n• View your current balance\n• See recent transactions\n• Access payment options\n• Manage your account',
+    target: '[data-tutorial="wallet-header"]',
     position: 'bottom',
     order: 2,
     completed: false,
+    page: 'wallet',
     route: '/wallet',
-    navigateBeforeStep: true,
+    highlightElement: true,
+    spotlightRadius: 120,
+    animation: 'pulse',
+    interactive: false
+  },
+  {
+    id: 'wallet-balance',
+    title: 'Your Balance 💰',
+    description: 'This card shows your current wallet balance. You can:\n\n• Add money using the "Recharge" button\n• Request refunds if needed\n• See your total available funds',
+    target: '[data-tutorial="wallet-balance"]',
+    position: 'right',
+    order: 3,
+    completed: false,
+    page: 'wallet',
+    route: '/wallet',
+    highlightElement: true,
+    spotlightRadius: 100,
+    animation: 'glow',
+    interactive: false
+  },
+  {
+    id: 'wallet-recharge',
+    title: 'Add Money to Wallet ➕',
+    description: 'Click this button to add money to your wallet:\n\n• Secure payment methods\n• Multiple recharge options\n• Instant balance updates\n• Transaction history tracking',
+    target: '[data-tutorial="wallet-recharge"]',
+    position: 'top',
+    order: 4,
+    completed: false,
+    page: 'wallet',
+    route: '/wallet',
     highlightElement: true,
     spotlightRadius: 60,
     animation: 'pulse',
     interactive: true,
     actionRequired: 'click',
-    hint: 'Click the wallet icon in the bottom navigation',
+    hint: 'Click the Recharge button to add money',
     showArrow: true,
-    arrowDirection: 'up'
+    arrowDirection: 'down'
   },
   {
-    id: 'wallet-features',
-    title: 'Wallet Features 🔍',
-    description: 'Great! Now let\'s explore what you can do:\n\n• Check your current balance\n• See transaction history\n• Add money to your wallet\n• Manage saved cards',
-    target: '[data-tutorial="wallet-balance"]',
-    position: 'right',
-    order: 3,
+    id: 'wallet-transactions',
+    title: 'Transaction History 📊',
+    description: 'Keep track of all your financial activities:\n\n• See when money was added\n• Track spending on meals\n• View refund requests\n• Monitor payment confirmations',
+    target: '[data-tutorial="wallet-transactions"]',
+    position: 'left',
+    order: 5,
     completed: false,
+    page: 'wallet',
     route: '/wallet',
-    navigateBeforeStep: false, // Already on wallet page
     highlightElement: true,
     spotlightRadius: 80,
     animation: 'glow',
     interactive: false
   },
   {
-    id: 'meal-planning-intro',
-    title: 'Smart Meal Planning 🍽️',
-    description: 'Time to explore meal planning! Let\'s navigate to the meal planner:\n\n• Weekly meal schedules\n• Pre-order options\n• Family preferences',
-    target: '[data-tutorial="meal-nav"]',
-    position: 'bottom',
-    order: 4,
+    id: 'wallet-navigation',
+    title: 'Navigate to Other Features 🧭',
+    description: 'Use the bottom navigation to explore other app features:\n\n• View Menu - Browse meal plans\n• Contact Us - Get help and support\n• Profile - Manage your account',
+    target: '[data-tutorial="wallet-nav"]',
+    position: 'top',
+    order: 6,
     completed: false,
+    page: 'wallet',
+    route: '/wallet',
+    highlightElement: true,
+    spotlightRadius: 80,
+    animation: 'pulse',
+    interactive: true,
+    actionRequired: 'click',
+    hint: 'Click any navigation icon to explore',
+    showArrow: true,
+    arrowDirection: 'down'
+  },
+
+  // MEAL PLANNER PAGE TUTORIAL
+  {
+    id: 'planner-header',
+    title: 'Meal Planning Hub 🍽️',
+    description: 'Welcome to your meal planning center! Here you can:\n\n• Browse weekly meal schedules\n• Pre-order meals for your family\n• View nutritional information\n• Manage dietary preferences',
+    target: '[data-tutorial="planner-header"]',
+    position: 'bottom',
+    order: 7,
+    completed: false,
+    page: 'planner',
     route: '/planner',
-    navigateBeforeStep: true,
+    highlightElement: true,
+    spotlightRadius: 120,
+    animation: 'pulse',
+    interactive: false
+  },
+  {
+    id: 'planner-family-selector',
+    title: 'Choose Family Member 👨‍👩‍👧‍👦',
+    description: 'Select which family member you\'re ordering for:\n\n• Different meal preferences\n• Individual dietary needs\n• Separate order tracking\n• Personalized recommendations',
+    target: '[data-tutorial="planner-family-selector"]',
+    position: 'right',
+    order: 8,
+    completed: false,
+    page: 'planner',
+    route: '/planner',
+    highlightElement: true,
+    spotlightRadius: 80,
+    animation: 'glow',
+    interactive: true,
+    actionRequired: 'click',
+    hint: 'Select a family member from the dropdown',
+    showArrow: true,
+    arrowDirection: 'left'
+  },
+  {
+    id: 'planner-week-selector',
+    title: 'Select Week 📅',
+    description: 'Choose which week\'s meals to view:\n\n• Browse different weeks\n• See meal variations\n• Plan ahead for your family\n• Check availability',
+    target: '[data-tutorial="planner-week-selector"]',
+    position: 'right',
+    order: 9,
+    completed: false,
+    page: 'planner',
+    route: '/planner',
+    highlightElement: true,
+    spotlightRadius: 80,
+    animation: 'glow',
+    interactive: true,
+    actionRequired: 'click',
+    hint: 'Click on different week buttons',
+    showArrow: true,
+    arrowDirection: 'left'
+  },
+  {
+    id: 'planner-meal-grid',
+    title: 'Meal Options 🥗',
+    description: 'Explore the available meals for each day:\n\n• Different meal categories\n• Pricing information\n• Nutritional details\n• Pre-order options',
+    target: '[data-tutorial="meal-list"]',
+    position: 'left',
+    order: 10,
+    completed: false,
+    page: 'planner',
+    route: '/planner',
+    highlightElement: true,
+    spotlightRadius: 120,
+    animation: 'glow',
+    interactive: true,
+    actionRequired: 'scroll',
+    hint: 'Scroll through the meal options for each day'
+  },
+  {
+    id: 'planner-order-button',
+    title: 'Order Your Meals 🛒',
+    description: 'Ready to order? Click the order button:\n\n• Secure payment processing\n• Order confirmation\n• Delivery tracking\n• Easy reordering',
+    target: '[data-tutorial="planner-order-button"]',
+    position: 'bottom',
+    order: 11,
+    completed: false,
+    page: 'planner',
+    route: '/planner',
     highlightElement: true,
     spotlightRadius: 60,
     animation: 'pulse',
     interactive: true,
     actionRequired: 'click',
-    hint: 'Click the meal planning icon',
+    hint: 'Click the order button for your selected meals',
     showArrow: true,
     arrowDirection: 'up'
   },
+
+  // PROFILE PAGE TUTORIAL
   {
-    id: 'meal-browsing',
-    title: 'Browse Meals 🥗',
-    description: 'Explore the meal options:\n\n• Scroll through different days\n• View meal categories\n• Check nutritional info\n• See pricing details',
-    target: '[data-tutorial="meal-list"]',
-    position: 'left',
-    order: 5,
+    id: 'profile-header',
+    title: 'Your Profile & Settings ⚙️',
+    description: 'Manage your personal information and preferences:\n\n• Update contact details\n• Change passwords\n• Manage family members\n• Set dietary preferences',
+    target: '[data-tutorial="profile-header"]',
+    position: 'bottom',
+    order: 12,
     completed: false,
-    route: '/planner',
-    navigateBeforeStep: false, // Already on planner page
+    page: 'profile',
+    route: '/profile',
+    highlightElement: true,
+    spotlightRadius: 120,
+    animation: 'pulse',
+    interactive: false
+  },
+  {
+    id: 'profile-family-management',
+    title: 'Family Member Management 👨‍👩‍👧‍👦',
+    description: 'Add and manage your family members:\n\n• Add new family members\n• Set individual preferences\n• Manage allergies and dietary needs\n• Track orders per member',
+    target: '[data-tutorial="profile-family-section"]',
+    position: 'right',
+    order: 13,
+    completed: false,
+    page: 'profile',
+    route: '/profile',
     highlightElement: true,
     spotlightRadius: 100,
     animation: 'glow',
     interactive: true,
-    actionRequired: 'scroll',
-    hint: 'Scroll through the meal options'
-  },
-  {
-    id: 'family-setup',
-    title: 'Family Management 👨‍👩‍👧‍👦',
-    description: 'Set up your family members:\n\n• Add family members\n• Set dietary preferences\n• Manage allergies\n• Track individual orders',
-    target: '[data-tutorial="family-nav"]',
-    position: 'bottom',
-    order: 6,
-    completed: false,
-    route: '/profile',
-    navigateBeforeStep: true,
-    highlightElement: true,
-    spotlightRadius: 60,
-    animation: 'pulse',
-    interactive: true,
     actionRequired: 'click',
-    hint: 'Click the profile icon to manage family members',
+    hint: 'Click to add or manage family members',
     showArrow: true,
-    arrowDirection: 'up'
-  },
-  {
-    id: 'notifications',
-    title: 'Stay Connected 🔔',
-    description: 'Never miss important updates:\n\n• Meal changes\n• Payment confirmations\n• School announcements\n• Order updates',
-    target: '[data-tutorial="notifications"]',
-    position: 'left',
-    order: 7,
-    completed: false,
-    route: '/wallet', // Notifications are on wallet page
-    navigateBeforeStep: true,
-    highlightElement: true,
-    spotlightRadius: 50,
-    animation: 'shake',
-    interactive: false
+    arrowDirection: 'left'
   },
   {
     id: 'profile-settings',
-    title: 'Your Profile & Settings ⚙️',
-    description: 'Customize your experience:\n\n• Update personal info\n• Change preferences\n• Manage security\n• View activity',
-    target: '[data-tutorial="profile-nav"]',
-    position: 'bottom',
-    order: 8,
+    title: 'Account Settings 🔧',
+    description: 'Customize your app experience:\n\n• Update personal information\n• Change security settings\n• Manage notifications\n• View activity history',
+    target: '[data-tutorial="profile-settings"]',
+    position: 'left',
+    order: 14,
     completed: false,
+    page: 'profile',
     route: '/profile',
-    navigateBeforeStep: true,
     highlightElement: true,
-    spotlightRadius: 60,
-    animation: 'pulse',
+    spotlightRadius: 80,
+    animation: 'glow',
     interactive: true,
     actionRequired: 'click',
-    hint: 'Click your profile icon',
+    hint: 'Click to access your account settings',
     showArrow: true,
-    arrowDirection: 'up'
+    arrowDirection: 'right'
   },
+
+  // COMPLETION
   {
     id: 'completion',
-    title: 'You\'re All Set! 🚀',
-    description: 'Congratulations! You now know how to use Smart Community. Start exploring the features and enjoy the convenience of managing everything in one place!',
+    title: 'Tutorial Complete! 🎓',
+    description: 'Excellent! You now know how to use Smart Community:\n\n• Navigate between features\n• Manage your wallet\n• Plan and order meals\n• Manage your profile\n\nStart exploring and enjoy the convenience!',
     target: 'body',
     position: 'center',
-    order: 9,
+    order: 15,
     completed: false,
+    page: 'completion',
+    route: '/wallet',
     highlightElement: false,
     animation: 'bounce'
   }
@@ -203,6 +321,7 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [currentStep, setCurrentStep] = useState<TutorialStep | null>(null);
   const [tutorialSteps, setTutorialSteps] = useState<TutorialStep[]>(defaultTutorialSteps);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [currentPage, setCurrentPage] = useState<string>('welcome');
 
   const tutorialProgress = tutorialSteps.filter(step => step.completed).length / tutorialSteps.length;
 
@@ -210,11 +329,26 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     setIsTutorialActive(true);
     setCurrentStepIndex(0);
     setCurrentStep(tutorialSteps[0]);
+    setCurrentPage('welcome');
+  };
+
+  const startPageTutorial = (page: string) => {
+    const pageSteps = tutorialSteps.filter(step => step.page === page);
+    if (pageSteps.length > 0) {
+      setIsTutorialActive(true);
+      setCurrentStepIndex(0);
+      setCurrentStep(pageSteps[0]);
+      setCurrentPage(page);
+    }
+  };
+
+  const getCurrentPageSteps = () => {
+    return tutorialSteps.filter(step => step.page === currentPage);
   };
 
   const navigateToStep = (step: TutorialStep) => {
-    if (step.route && step.navigateBeforeStep) {
-      // Navigate to the required page before showing the step
+    if (step.route && step.route !== window.location.pathname) {
+      // Navigate to the required page
       window.location.href = step.route;
     }
   };
@@ -240,6 +374,7 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
       
       setCurrentStepIndex(nextIndex);
       setCurrentStep(nextStep);
+      setCurrentPage(nextStep.page);
       
       // Navigate to the correct page for the next step
       navigateToStep(nextStep);
@@ -253,6 +388,7 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
       
       setCurrentStepIndex(prevIndex);
       setCurrentStep(prevStep);
+      setCurrentPage(prevStep.page);
       
       // Navigate to the correct page for the previous step
       navigateToStep(prevStep);
@@ -263,6 +399,7 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     setIsTutorialActive(false);
     setCurrentStep(null);
     setCurrentStepIndex(0);
+    setCurrentPage('welcome');
     // Mark tutorial as completed
     secureStorage.set('tutorial_completed', 'true');
   };
@@ -272,11 +409,14 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     setTutorialSteps(resetSteps);
     setCurrentStepIndex(0);
     setCurrentStep(resetSteps[0]);
+    setCurrentPage('welcome');
   };
 
   const completeTutorial = () => {
     setIsTutorialActive(false);
     setCurrentStep(null);
+    setCurrentStepIndex(0);
+    setCurrentPage('welcome');
     // Save completion status
     secureStorage.set('tutorial_completed', 'true');
   };
@@ -350,7 +490,9 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     getElementPosition,
     tutorialProgress,
     validateStepCompletion,
-    navigateToStep
+    navigateToStep,
+    startPageTutorial,
+    getCurrentPageSteps
   };
 
   return (
