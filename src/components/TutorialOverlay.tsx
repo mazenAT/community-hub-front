@@ -19,36 +19,28 @@ const TutorialOverlay: React.FC = () => {
   } = useTutorial();
   
   const [overlayPosition, setOverlayPosition] = useState({ top: 0, left: 0, width: 400, height: 300 });
-  const [spotlightPosition, setSpotlightPosition] = useState({ x: 0, y: 0, radius: 0 });
-  const [showSpotlight, setShowSpotlight] = useState(false);
+  const [highlightedElement, setHighlightedElement] = useState<DOMRect | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Calculate overlay position based on current step
+  // Calculate overlay position and highlight element
   useEffect(() => {
     if (isTutorialActive && currentStep) {
       if (currentStep.position === 'center') {
-        // Center the overlay
+        // Center the overlay for welcome/completion steps
         setOverlayPosition({
           top: window.innerHeight / 2 - 150,
           left: window.innerWidth / 2 - 200,
           width: 400,
           height: 300,
         });
-        setShowSpotlight(false);
+        setHighlightedElement(null);
       } else {
-        // Position relative to target element
+        // Position relative to target element and highlight it
         const targetElement = document.querySelector(currentStep.target);
         if (targetElement && currentStep.highlightElement) {
           const rect = targetElement.getBoundingClientRect();
-          const spotlightRadius = currentStep.spotlightRadius || 60;
-          
-          setSpotlightPosition({
-            x: rect.left + rect.width / 2,
-            y: rect.top + rect.height / 2,
-            radius: spotlightRadius
-          });
-          setShowSpotlight(true);
+          setHighlightedElement(rect);
           
           // Position overlay relative to target
           let overlayTop, overlayLeft;
@@ -81,7 +73,7 @@ const TutorialOverlay: React.FC = () => {
             height: 300,
           });
         } else {
-          setShowSpotlight(false);
+          setHighlightedElement(null);
           // Fallback to center
           setOverlayPosition({
             top: window.innerHeight / 2 - 150,
@@ -102,11 +94,7 @@ const TutorialOverlay: React.FC = () => {
         const targetElement = document.querySelector(currentStep.target);
         if (targetElement && currentStep.highlightElement) {
           const rect = targetElement.getBoundingClientRect();
-          setSpotlightPosition({
-            x: rect.left + rect.width / 2,
-            y: rect.top + rect.height / 2,
-            radius: currentStep.spotlightRadius || 60
-          });
+          setHighlightedElement(rect);
         }
       }
     };
@@ -115,88 +103,86 @@ const TutorialOverlay: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [isTutorialActive, currentStep]);
 
-  // Show navigation loading state
+  // Handle navigation
   useEffect(() => {
-    if (currentStep?.route && currentStep?.navigateBeforeStep) {
+    if (currentStep?.route) {
       setIsNavigating(true);
-      // Hide navigation state after a short delay to simulate page load
-      const timer = setTimeout(() => setIsNavigating(false), 1000);
+      const timer = setTimeout(() => setIsNavigating(false), 2000);
       return () => clearTimeout(timer);
     }
   }, [currentStep]);
 
   if (!isTutorialActive || !currentStep) return null;
 
-  const progress = ((currentStepIndex + 1) / tutorialSteps.length) * 100;
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === tutorialSteps.length - 1;
-
-  // Show navigation loading state
-  if (isNavigating) {
-    return (
-      <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
-        <Card className="p-8 text-center bg-white shadow-2xl">
-          <Loader2 className="w-12 h-12 text-brand-orange animate-spin mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Navigating...</h3>
-          <p className="text-gray-600">
-            Taking you to the {currentStep.title.toLowerCase()} page
-          </p>
-        </Card>
-      </div>
-    );
-  }
+  const progress = tutorialProgress * 100;
 
   return (
     <>
-      {/* Dark overlay with spotlight effect */}
-      <div className="fixed inset-0 z-40">
-        {showSpotlight ? (
-          <svg className="w-full h-full">
-            <defs>
-              <mask id="spotlight-mask">
-                <rect width="100%" height="100%" fill="white" />
-                <circle
-                  cx={spotlightPosition.x}
-                  cy={spotlightPosition.y}
-                  r={spotlightPosition.radius}
+      {/* Full-screen overlay with SVG mask for spotlight effect */}
+      <div className="fixed inset-0 z-50 pointer-events-none">
+        <svg
+          width="100%"
+          height="100%"
+          className="absolute inset-0"
+          style={{ filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.3))' }}
+        >
+          <defs>
+            <mask id="tutorial-mask">
+              {/* White background (opaque) */}
+              <rect width="100%" height="100%" fill="white" />
+              
+              {/* Cut out the highlighted element (transparent) */}
+              {highlightedElement && (
+                <rect
+                  x={highlightedElement.left}
+                  y={highlightedElement.top}
+                  width={highlightedElement.width}
+                  height={highlightedElement.height}
                   fill="black"
+                  rx="8"
+                  ry="8"
                 />
-              </mask>
-            </defs>
-            <rect
-              width="100%"
-              height="100%"
-              fill="rgba(0, 0, 0, 0.8)"
-              mask="url(#spotlight-mask)"
-            />
-          </svg>
-        ) : (
-          <div className="w-full h-full bg-black/60" />
-        )}
+              )}
+            </mask>
+          </defs>
+          
+          {/* Dark overlay with mask */}
+          <rect
+            width="100%"
+            height="100%"
+            fill="rgba(0, 0, 0, 0.7)"
+            mask="url(#tutorial-mask)"
+          />
+        </svg>
       </div>
 
-      {/* Tutorial overlay */}
+      {/* Loading overlay for navigation */}
+      {isNavigating && (
+        <div className="fixed inset-0 z-60 bg-black/50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-brand-orange" />
+            <p className="text-lg font-semibold">Navigating...</p>
+            <p className="text-sm text-gray-600">Taking you to the next feature</p>
+          </div>
+        </div>
+      )}
+
+      {/* Tutorial content overlay */}
       <div
         ref={overlayRef}
-        className="fixed z-50 w-96 max-w-[90vw] transition-all duration-300 ease-out"
+        className="fixed z-55 pointer-events-auto"
         style={{
           top: overlayPosition.top,
           left: overlayPosition.left,
+          width: overlayPosition.width,
+          height: overlayPosition.height,
         }}
       >
-        <Card className="p-6 shadow-2xl border-brand-orange bg-white relative overflow-hidden">
-          {/* Animated background */}
-          <div className={`absolute inset-0 opacity-10 ${
-            currentStep.animation === 'pulse' ? 'animate-pulse' :
-            currentStep.animation === 'bounce' ? 'animate-bounce' :
-            currentStep.animation === 'shake' ? 'animate-pulse' :
-            currentStep.animation === 'glow' ? 'animate-pulse' : ''
-          }`}>
-            <div className="w-full h-full bg-gradient-to-br from-brand-red to-brand-orange rounded-lg" />
-          </div>
-
-          {/* Header */}
-          <div className="relative z-10">
+        <Card className="w-full h-full bg-white shadow-2xl border-0">
+          <div className="p-6 h-full flex flex-col">
+            {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <div className="w-3 h-3 bg-brand-orange rounded-full animate-pulse" />
@@ -215,7 +201,7 @@ const TutorialOverlay: React.FC = () => {
             </div>
 
             {/* Content */}
-            <div className="mb-6">
+            <div className="flex-1 mb-6">
               <h3 className="font-bold text-xl mb-3 text-gray-900">
                 {currentStep.title}
               </h3>
@@ -224,14 +210,15 @@ const TutorialOverlay: React.FC = () => {
               </div>
               
               {/* Navigation indicator */}
-              {currentStep.route && currentStep.navigateBeforeStep && (
+              {currentStep.route && (
                 <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <div className="flex items-center space-x-2 text-green-700">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                     <span className="text-sm font-medium">
                       Navigating to {currentStep.route === '/wallet' ? 'Wallet' : 
-                                   currentStep.route === '/planner' ? 'Meal Planner' : 
-                                   currentStep.route === '/profile' ? 'Profile' : 'Page'}
+                                   currentStep.route === '/profile' ? 'Profile' : 
+                                   currentStep.route === '/recharge' ? 'Recharge' :
+                                   currentStep.route === '/orders' ? 'Orders' : 'Page'}
                     </span>
                   </div>
                 </div>
@@ -315,16 +302,16 @@ const TutorialOverlay: React.FC = () => {
         </Card>
       </div>
 
-      {/* Directional arrow */}
-      {currentStep.showArrow && showSpotlight && (
+      {/* Directional arrow pointing to highlighted element */}
+      {currentStep.showArrow && highlightedElement && (
         <div 
-          className="fixed z-45 text-brand-orange animate-bounce"
+          className="fixed z-55 text-brand-orange animate-bounce pointer-events-none"
           style={{
-            left: spotlightPosition.x - 12,
-            top: currentStep.arrowDirection === 'up' ? spotlightPosition.y - 40 : 
-                 currentStep.arrowDirection === 'down' ? spotlightPosition.y + 40 :
-                 currentStep.arrowDirection === 'left' ? spotlightPosition.x - 40 :
-                 spotlightPosition.x + 40,
+            left: highlightedElement.left + highlightedElement.width / 2 - 12,
+            top: currentStep.arrowDirection === 'up' ? highlightedElement.top - 40 : 
+                 currentStep.arrowDirection === 'down' ? highlightedElement.bottom + 20 :
+                 currentStep.arrowDirection === 'left' ? highlightedElement.left - 40 :
+                 highlightedElement.right + 20,
           }}
         >
           {currentStep.arrowDirection === 'up' && <ChevronUp className="h-6 w-6" />}
