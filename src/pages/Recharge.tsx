@@ -254,12 +254,12 @@ const Recharge = () => {
 
       console.log('3DS payment response received:', paymentResponse);
 
-      // With redirect flow, the user will be redirected to Fawry immediately
+      // With backend API flow, the user will be redirected to Fawry's 3DS page
       // The response here is just for logging - the actual redirect happens in fawry3dsService
       if (paymentResponse.type === 'redirect') {
-        console.log('Redirecting to Fawry payment page...');
+        console.log('Redirecting to Fawry 3DS authentication page...');
         // The redirect is handled automatically by fawry3dsService
-        // User will be taken to Fawry's hosted payment page
+        // User will be taken to Fawry's 3DS authentication page
         // No need to handle response here as the page will change
       } else {
         // Fallback error handling
