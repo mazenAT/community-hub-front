@@ -706,16 +706,12 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     try {
       const completed = await secureStorage.get('tutorial_completed');
       if (completed === 'true') {
-        // Tutorial already completed
+        // Tutorial already completed - don't auto-start
         return;
       }
       
-      // Check if user is signed in and show tutorial
-      const token = await secureStorage.get('token');
-      if (token) {
-        // User is signed in, show tutorial
-        startTutorial();
-      }
+      // Don't automatically start tutorial - let user choose when to start
+      // Tutorial will only start when user manually clicks the tutorial button
     } catch (error) {
       // Silent error handling
     }
