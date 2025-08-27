@@ -1139,17 +1139,9 @@ const Planner = () => {
                                         View PDF
                                       </Button>
                                     )}
-                                    <Button
-                                      size="sm"
-                                      className="flex-1 h-14 bg-gradient-to-r from-brand-red via-brand-orange to-brand-red hover:from-brand-red/80 hover:via-brand-orange/80 hover:to-brand-red/80 text-white font-black rounded-2xl shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-brand-orange/20"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handlePreOrder(meal, date);
-                                      }}
-                                      disabled={!isOrderingWindowOpen(date)}
-                                    >
-                                      {!isOrderingWindowOpen(date) ? "Order Closed" : "Order Now"}
-                                    </Button>
+                                    <div className="flex-1 h-14 bg-gradient-to-r from-brand-red via-brand-orange to-brand-red rounded-2xl flex items-center justify-center text-white font-black shadow-xl">
+                                      <span className="text-lg">Click to Order</span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -1425,19 +1417,27 @@ const Planner = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Daily Item Order Modal */}
+      {/* Daily Item Order Modal - Premium Style */}
       <Dialog open={showAddOnOrderModal} onOpenChange={setShowAddOnOrderModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-center text-brand-black">
-              🍽️ Order Daily Items Separately
-            </DialogTitle>
-            <p className="text-sm text-gray-600 text-center">
-              Select daily-items to order independently of meals
-            </p>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+          <DialogHeader className="bg-gradient-to-r from-brand-orange/10 via-brand-red/10 to-brand-orange/10 p-8 border-b border-gray-200/30">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-brand-orange to-brand-red rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                <span className="text-4xl">🍽️</span>
+              </div>
+              <DialogTitle className="text-3xl font-bold text-brand-black mb-2">
+                Order Daily Items Separately
+              </DialogTitle>
+              <p className="text-xl text-brand-black/70 mb-2">
+                Select daily items to order independently of meals
+              </p>
+              <p className="text-lg text-brand-orange font-semibold">
+                These will be available for pickup on the same day
+              </p>
+            </div>
           </DialogHeader>
           
-          <div className="space-y-6">
+          <div className="p-8">
             {/* Daily Item Categories */}
             {['Bakery', 'Snacks', 'Drinks', 'Greek Yogurt Popsicle'].map((category) => {
               const categoryAddOns = filteredDailyItems.filter(dailyItem => {
@@ -1453,74 +1453,82 @@ const Planner = () => {
               if (categoryAddOns.length === 0) return null;
 
               return (
-                <div key={category} className="border border-gray-200 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-brand-black mb-3">{category}</h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-brand-yellow/30">
-                          <th className="text-left p-3 text-sm font-semibold text-brand-black">Item</th>
-                          <th className="text-center p-3 text-sm font-semibold text-brand-black">Price</th>
-                          <th className="text-center p-3 text-sm font-semibold text-brand-black">Quantity</th>
-                          <th className="text-center p-3 text-sm font-semibold text-brand-black">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {categoryAddOns.map((dailyItem) => (
-                          <tr key={dailyItem.id} className="border-b border-brand-yellow/20 hover:bg-brand-yellow/5 transition-colors">
-                            <td className="p-3">
-                              <div>
-                                <h4 className="font-semibold text-brand-black text-sm">{dailyItem.name}</h4>
-                                {dailyItem.description && (
-                                  <p className="text-xs text-brand-black/60 mt-1">{dailyItem.description}</p>
-                                )}
-                              </div>
-                            </td>
-                            <td className="p-3 text-center">
-                              <span className="text-sm font-medium text-brand-orange">
+                <div key={category} className="mb-8">
+                  <h3 className="text-2xl font-bold text-brand-black mb-6 flex items-center">
+                    <div className="w-3 h-3 bg-gradient-to-r from-brand-orange to-brand-red rounded-full mr-3 animate-pulse"></div>
+                    <span className="bg-gradient-to-r from-brand-orange to-brand-red bg-clip-text text-transparent">{category}</span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {categoryAddOns.map((dailyItem) => (
+                      <div key={dailyItem.id} className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-3xl border border-gray-200/60 hover:border-brand-orange/60 hover:shadow-2xl hover:shadow-brand-orange/10 transition-all duration-500 overflow-hidden group relative">
+                        {/* Premium Glow Effect */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-brand-orange/5 via-transparent to-brand-red/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        
+                        {/* Top Accent Bar */}
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-orange via-brand-red to-brand-orange opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        
+                        {/* Item Content */}
+                        <div className="p-6 relative z-10">
+                          {/* Item Header */}
+                          <div className="mb-4">
+                            <h4 className="font-extrabold text-brand-black text-lg leading-tight line-clamp-2 mb-3 bg-gradient-to-r from-brand-black to-brand-black/80 bg-clip-text">
+                              {dailyItem.name}
+                            </h4>
+                            {dailyItem.description && (
+                              <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-4 font-medium">
+                                {dailyItem.description}
+                              </p>
+                            )}
+                          </div>
+                          
+                          {/* Price */}
+                          <div className="mb-5">
+                            <div className="bg-gradient-to-br from-brand-orange to-brand-red p-3 rounded-2xl shadow-lg">
+                              <span className="text-2xl font-black text-white">
                                 {formatCurrency(dailyItem.price)}
                               </span>
-                            </td>
-                            <td className="p-3 text-center">
-                              <span className="text-sm font-medium text-brand-black">
+                            </div>
+                          </div>
+                          
+                          {/* Quantity Controls */}
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="text-sm font-medium text-brand-black">Quantity:</span>
+                            <div className="flex items-center space-x-4">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-12 h-12 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/600 rounded-xl transition-all duration-200 hover:scale-105"
+                                onClick={() => {
+                                  setSelectedAddOnsForOrder(prev => ({
+                                    ...prev,
+                                    [dailyItem.id]: Math.max(0, (prev[dailyItem.id] || 0) - 1)
+                                  }));
+                                }}
+                                disabled={!selectedAddOnsForOrder[dailyItem.id] || selectedAddOnsForOrder[dailyItem.id] === 0}
+                              >
+                                <span className="text-xl font-bold">−</span>
+                              </Button>
+                              <span className="w-16 text-center text-2xl font-bold text-brand-black">
                                 {selectedAddOnsForOrder[dailyItem.id] || 0}
                               </span>
-                            </td>
-                            <td className="p-3 text-center">
-                              <div className="flex items-center justify-center space-x-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="w-7 h-7 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
-                                  onClick={() => {
-                                    setSelectedAddOnsForOrder(prev => ({
-                                      ...prev,
-                                      [dailyItem.id]: Math.max(0, (prev[dailyItem.id] || 0) - 1)
-                                    }));
-                                  }}
-                                  disabled={!selectedAddOnsForOrder[dailyItem.id] || selectedAddOnsForOrder[dailyItem.id] === 0}
-                                >
-                                  -
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="w-7 h-7 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10"
-                                  onClick={() => {
-                                    setSelectedAddOnsForOrder(prev => ({
-                                      ...prev,
-                                      [dailyItem.id]: (prev[dailyItem.id] || 0) + 1
-                                    }));
-                                  }}
-                                >
-                                  +
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-12 h-12 p-0 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/600 rounded-xl transition-all duration-200 hover:scale-105"
+                                onClick={() => {
+                                  setSelectedAddOnsForOrder(prev => ({
+                                    ...prev,
+                                    [dailyItem.id]: (prev[dailyItem.id] || 0) + 1
+                                  }));
+                                }}
+                              >
+                                <span className="text-xl font-bold">+</span>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               );
