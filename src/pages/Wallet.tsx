@@ -7,7 +7,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import { walletApi, profileApi, transactionApi } from "@/services/api";
 import { showToast } from "@/services/native";
 import { formatCurrency } from "@/utils/format";
-import { User } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -143,6 +143,18 @@ const Wallet = () => {
     }
   };
 
+  const handleLogout = () => {
+    // Clear authentication data
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    
+    // Show success message
+    toast({ title: "Logged out", description: "You have been successfully logged out." });
+    
+    // Redirect to login page
+    navigate("/");
+  };
+
   const mappedTransactions = transactions.map((t: any) => ({
     id: t.id,
     type: t.type || t.transaction_type || 'unknown',
@@ -196,6 +208,15 @@ const Wallet = () => {
                 <User className="w-4 h-4 text-brand-red" />
               )}
             </button>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 bg-white/20 text-white border-white/30 hover:bg-white/30"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden md:inline">Logout</span>
+            </Button>
             <div className="hidden sm:flex items-center space-x-2">
               <TutorialTrigger variant="inline" />
               <Button
