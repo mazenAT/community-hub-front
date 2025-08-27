@@ -541,8 +541,8 @@ const Recharge = () => {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-3">
             <CreditCard className="w-5 h-5 text-blue-600" />
             <div>
-              <p className="font-medium text-blue-900">Credit/Debit Card</p>
-              <p className="text-sm text-blue-700">Pay securely with your card via Fawry</p>
+              <p className="font-medium text-blue-900">Fawry Payment Gateway</p>
+              <p className="text-sm text-blue-700">Secure payment processing via Fawry with 3DS authentication</p>
             </div>
           </div>
         </div>

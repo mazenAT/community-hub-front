@@ -72,7 +72,7 @@ const defaultTutorialSteps: TutorialStep[] = [
   {
     id: 'wallet-header',
     title: 'Wallet Dashboard 💳',
-    description: 'This is your financial command center! Here you can:\n\n• View your current balance\n• See recent transactions\n• Access payment options\n• Manage your account',
+    description: 'This is your financial command center! Here you can:\n\n• View your current balance\n• See recent transactions\n• Access Fawry payment gateway\n• Manage your account',
     target: '[data-tutorial="wallet-header"]',
     position: 'bottom',
     order: 2,
@@ -102,7 +102,7 @@ const defaultTutorialSteps: TutorialStep[] = [
   {
     id: 'wallet-recharge',
     title: 'Add Money to Wallet ➕',
-    description: 'Click this button to add money to your wallet:\n\n• Secure payment methods\n• Multiple recharge options\n• Instant balance updates\n• Transaction history tracking',
+    description: 'Click this button to add money to your wallet:\n\n• Fawry payment gateway\n• Secure 3DS authentication\n• Instant balance updates\n• Transaction history tracking',
     target: '[data-tutorial="wallet-recharge"]',
     position: 'top',
     order: 4,
@@ -157,7 +157,7 @@ const defaultTutorialSteps: TutorialStep[] = [
   {
     id: 'recharge-amount',
     title: 'Select Recharge Amount 💰',
-    description: 'Choose how much money to add to your wallet:\n\n• Quick preset amounts (50, 100, 200, 500 EGP)\n• Custom amount option\n• Flexible payment choices',
+    description: 'Choose how much money to add to your wallet:\n\n• Quick preset amounts (50, 100, 200, 500 EGP)\n• Custom amount option\n• Secure Fawry payment processing',
     target: '[data-tutorial="recharge-amount"]',
     position: 'bottom',
     order: 7,
@@ -176,7 +176,7 @@ const defaultTutorialSteps: TutorialStep[] = [
   {
     id: 'recharge-payment-method',
     title: 'Payment Method 💳',
-    description: 'Secure payment processing:\n\n• Credit/Debit card support\n• Fawry payment gateway\n• Safe and encrypted transactions',
+    description: 'Secure payment processing:\n\n• Fawry payment gateway\n• Safe and encrypted transactions\n• 3DS authentication for security',
     target: '[data-tutorial="recharge-payment-method"]',
     position: 'right',
     order: 8,
@@ -190,8 +190,8 @@ const defaultTutorialSteps: TutorialStep[] = [
   },
   {
     id: 'recharge-card-info',
-    title: 'Card Information 🏦',
-    description: 'Enter your payment details:\n\n• Use saved cards for quick checkout\n• Add new card information\n• Secure card tokenization',
+    title: 'Payment Information 🏦',
+    description: 'Enter your payment details:\n\n• Use saved cards for quick checkout\n• Add new card information\n• Secure card tokenization via Fawry',
     target: '[data-tutorial="recharge-card-info"]',
     position: 'left',
     order: 9,
