@@ -9,6 +9,9 @@ interface TutorialStep {
   position: 'top' | 'bottom' | 'left' | 'right' | 'center';
   order: number;
   completed: boolean;
+  // Navigation properties
+  route?: string; // Route to navigate to for this step
+  navigateBeforeStep?: boolean; // Whether to navigate before showing the step
   // Interactive properties
   highlightElement?: boolean; // Whether to highlight the target element
   spotlightRadius?: number; // Radius of the spotlight effect
@@ -41,6 +44,8 @@ interface TutorialContextType {
   tutorialProgress: number;
   // Step validation
   validateStepCompletion: (stepId: string) => boolean;
+  // Navigation
+  navigateToStep: (step: TutorialStep) => void;
 }
 
 const defaultTutorialSteps: TutorialStep[] = [
@@ -58,11 +63,13 @@ const defaultTutorialSteps: TutorialStep[] = [
   {
     id: 'wallet-tour',
     title: 'Digital Wallet 💳',
-    description: 'Your financial hub! Click on the wallet icon to explore:\n\n• View balance and transactions\n• Add money securely\n• Manage payment methods\n• Request refunds',
+    description: 'Your financial hub! Let\'s explore the wallet features:\n\n• View balance and transactions\n• Add money securely\n• Manage payment methods\n• Request refunds',
     target: '[data-tutorial="wallet-nav"]',
     position: 'bottom',
     order: 2,
     completed: false,
+    route: '/wallet',
+    navigateBeforeStep: true,
     highlightElement: true,
     spotlightRadius: 60,
     animation: 'pulse',
@@ -80,6 +87,8 @@ const defaultTutorialSteps: TutorialStep[] = [
     position: 'right',
     order: 3,
     completed: false,
+    route: '/wallet',
+    navigateBeforeStep: false, // Already on wallet page
     highlightElement: true,
     spotlightRadius: 80,
     animation: 'glow',
@@ -88,11 +97,13 @@ const defaultTutorialSteps: TutorialStep[] = [
   {
     id: 'meal-planning-intro',
     title: 'Smart Meal Planning 🍽️',
-    description: 'Time to explore meal planning! Navigate to the meal planner to see:\n\n• Weekly meal schedules\n• Pre-order options\n• Family preferences',
+    description: 'Time to explore meal planning! Let\'s navigate to the meal planner:\n\n• Weekly meal schedules\n• Pre-order options\n• Family preferences',
     target: '[data-tutorial="meal-nav"]',
     position: 'bottom',
     order: 4,
     completed: false,
+    route: '/planner',
+    navigateBeforeStep: true,
     highlightElement: true,
     spotlightRadius: 60,
     animation: 'pulse',
@@ -110,6 +121,8 @@ const defaultTutorialSteps: TutorialStep[] = [
     position: 'left',
     order: 5,
     completed: false,
+    route: '/planner',
+    navigateBeforeStep: false, // Already on planner page
     highlightElement: true,
     spotlightRadius: 100,
     animation: 'glow',
@@ -125,12 +138,14 @@ const defaultTutorialSteps: TutorialStep[] = [
     position: 'bottom',
     order: 6,
     completed: false,
+    route: '/profile',
+    navigateBeforeStep: true,
     highlightElement: true,
     spotlightRadius: 60,
     animation: 'pulse',
     interactive: true,
     actionRequired: 'click',
-    hint: 'Click the family icon to manage members',
+    hint: 'Click the profile icon to manage family members',
     showArrow: true,
     arrowDirection: 'up'
   },
@@ -142,6 +157,8 @@ const defaultTutorialSteps: TutorialStep[] = [
     position: 'left',
     order: 7,
     completed: false,
+    route: '/wallet', // Notifications are on wallet page
+    navigateBeforeStep: true,
     highlightElement: true,
     spotlightRadius: 50,
     animation: 'shake',
@@ -155,6 +172,8 @@ const defaultTutorialSteps: TutorialStep[] = [
     position: 'bottom',
     order: 8,
     completed: false,
+    route: '/profile',
+    navigateBeforeStep: true,
     highlightElement: true,
     spotlightRadius: 60,
     animation: 'pulse',
@@ -193,6 +212,13 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     setCurrentStep(tutorialSteps[0]);
   };
 
+  const navigateToStep = (step: TutorialStep) => {
+    if (step.route && step.navigateBeforeStep) {
+      // Navigate to the required page before showing the step
+      window.location.href = step.route;
+    }
+  };
+
   const completeStep = (stepId: string) => {
     const updatedSteps = tutorialSteps.map(step =>
       step.id === stepId ? { ...step, completed: true } : step
@@ -210,16 +236,26 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
   const nextStep = () => {
     if (currentStepIndex < tutorialSteps.length - 1) {
       const nextIndex = currentStepIndex + 1;
+      const nextStep = tutorialSteps[nextIndex];
+      
       setCurrentStepIndex(nextIndex);
-      setCurrentStep(tutorialSteps[nextIndex]);
+      setCurrentStep(nextStep);
+      
+      // Navigate to the correct page for the next step
+      navigateToStep(nextStep);
     }
   };
 
   const previousStep = () => {
     if (currentStepIndex > 0) {
       const prevIndex = currentStepIndex - 1;
+      const prevStep = tutorialSteps[prevIndex];
+      
       setCurrentStepIndex(prevIndex);
-      setCurrentStep(tutorialSteps[prevIndex]);
+      setCurrentStep(prevStep);
+      
+      // Navigate to the correct page for the previous step
+      navigateToStep(prevStep);
     }
   };
 
@@ -313,7 +349,8 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     clearHighlight,
     getElementPosition,
     tutorialProgress,
-    validateStepCompletion
+    validateStepCompletion,
+    navigateToStep
   };
 
   return (

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useTutorial } from '@/contexts/TutorialContext';
-import { X, ChevronLeft, ChevronRight, Play, Target, Lightbulb } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Play, Target, Lightbulb, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -21,6 +21,7 @@ const TutorialOverlay: React.FC = () => {
   const [overlayPosition, setOverlayPosition] = useState({ top: 0, left: 0, width: 400, height: 300 });
   const [spotlightPosition, setSpotlightPosition] = useState({ x: 0, y: 0, radius: 0 });
   const [showSpotlight, setShowSpotlight] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // Calculate overlay position based on current step
@@ -114,11 +115,36 @@ const TutorialOverlay: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [isTutorialActive, currentStep]);
 
+  // Show navigation loading state
+  useEffect(() => {
+    if (currentStep?.route && currentStep?.navigateBeforeStep) {
+      setIsNavigating(true);
+      // Hide navigation state after a short delay to simulate page load
+      const timer = setTimeout(() => setIsNavigating(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep]);
+
   if (!isTutorialActive || !currentStep) return null;
 
   const progress = ((currentStepIndex + 1) / tutorialSteps.length) * 100;
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === tutorialSteps.length - 1;
+
+  // Show navigation loading state
+  if (isNavigating) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
+        <Card className="p-8 text-center bg-white shadow-2xl">
+          <Loader2 className="w-12 h-12 text-brand-orange animate-spin mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Navigating...</h3>
+          <p className="text-gray-600">
+            Taking you to the {currentStep.title.toLowerCase()} page
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -196,6 +222,20 @@ const TutorialOverlay: React.FC = () => {
               <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
                 {currentStep.description}
               </div>
+              
+              {/* Navigation indicator */}
+              {currentStep.route && currentStep.navigateBeforeStep && (
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center space-x-2 text-green-700">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    <span className="text-sm font-medium">
+                      Navigating to {currentStep.route === '/wallet' ? 'Wallet' : 
+                                   currentStep.route === '/planner' ? 'Meal Planner' : 
+                                   currentStep.route === '/profile' ? 'Profile' : 'Page'}
+                    </span>
+                  </div>
+                </div>
+              )}
               
               {/* Hint section */}
               {currentStep.hint && (
