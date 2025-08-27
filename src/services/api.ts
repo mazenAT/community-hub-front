@@ -144,14 +144,14 @@ export const plannerApi = {
 };
 
 export const dailyItemsApi = {
-  getDailyItems: () => api.get('/daily-items'),
+  getDailyItems: () => api.get('/add-ons'),
 };
 
 export const dailyItemOrderApi = {
   createOrder: (daily_item_id: number, quantity: number, family_member_id?: number) => 
-    api.post('/daily-item-orders', { daily_item_id, quantity, family_member_id }),
-  getMyOrders: () => api.get('/daily-item-orders'),
-  getOrder: (id: number) => api.get(`/daily-item-orders/${id}`),
+    api.post('/add-on-orders', { add_on_id: daily_item_id, quantity, family_member_id }),
+  getMyOrders: () => api.get('/add-on-orders'),
+  getOrder: (id: number) => api.get(`/add-on-orders/${id}`),
 };
 
 export const schoolApi = {

@@ -316,8 +316,8 @@ const Planner = () => {
   // Filter daily-items based on selected filters (Frontend-only filtering)
   const filteredDailyItems = dailyItems.filter((dailyItem) => {
     // Filter by search term
-    const addonName = addon.name.toLowerCase();
-    const addonDescription = (addon.description || '').toLowerCase();
+    const addonName = dailyItem.name.toLowerCase();
+    const addonDescription = (dailyItem.description || '').toLowerCase();
     const searchText = `${addonName} ${addonDescription}`;
     
     const searchMatch = !dailyItemSearchTerm || searchText.includes(dailyItemSearchTerm.toLowerCase());
@@ -355,9 +355,9 @@ const Planner = () => {
 
     // Filter by price range
     const priceMatch = selectedAddOnPriceRange === "all" ||
-      (selectedAddOnPriceRange === "low" && addon.price <= 1.00) ||
-      (selectedAddOnPriceRange === "medium" && addon.price > 1.00 && addon.price <= 3.00) ||
-      (selectedAddOnPriceRange === "high" && addon.price > 3.00);
+      (selectedAddOnPriceRange === "low" && dailyItem.price <= 1.00) ||
+      (selectedAddOnPriceRange === "medium" && dailyItem.price > 1.00 && dailyItem.price <= 3.00) ||
+      (selectedAddOnPriceRange === "high" && dailyItem.price > 3.00);
 
     return searchMatch && typeMatch && priceMatch;
   });
@@ -494,15 +494,15 @@ const Planner = () => {
     }
     
     // Filter daily-items by their actual category field
-    const categoryAddOns = filteredDailyItems.filter(addon => {
+    const categoryAddOns = filteredDailyItems.filter(dailyItem => {
       // Direct category matching for more accurate filtering
       switch (category) {
         case 'Bakery':
-          return addon.category === 'bakery';
+          return dailyItem.category === 'bakery';
         case 'Snacks':
-          return addon.category === 'snacks';
+          return dailyItem.category === 'snacks';
         case 'Drinks':
-          return addon.category === 'drinks';
+          return dailyItem.category === 'drinks';
         default:
           return true;
       }
@@ -600,11 +600,11 @@ const Planner = () => {
     // Handle daily-items with error handling
     dailyItemsApi.getDailyItems()
       .then((res) => {
-        setAddOns(res.data.filter((addon: DailyItem) => addon.is_active));
+        setDailyItems(res.data.filter((dailyItem: DailyItem) => dailyItem.is_active));
       })
       .catch((error) => {
         // Failed to load daily-items
-        setAddOns([]);
+        setDailyItems([]);
       });
   }, []);
 
@@ -1171,12 +1171,12 @@ const Planner = () => {
               <div key={category} className="text-center p-3 bg-brand-yellow/10 rounded-lg border border-brand-yellow/30">
                 <div className="text-sm font-medium text-brand-black">{category}</div>
                 <div className="text-xs text-gray-600 mt-1">
-                  {filteredDailyItems.filter(addon => {
+                  {filteredDailyItems.filter(dailyItem => {
                     switch (category) {
-                      case 'Bakery': return addon.category === 'bakery';
-                      case 'Snacks': return addon.category === 'snacks';
-                      case 'Drinks': return addon.category === 'drinks';
-                      case 'Greek Yogurt Popsicle': return addon.category === 'greek_yoghurt_popsicle';
+                      case 'Bakery': return dailyItem.category === 'bakery';
+                      case 'Snacks': return dailyItem.category === 'snacks';
+                      case 'Drinks': return dailyItem.category === 'drinks';
+                      case 'Greek Yogurt Popsicle': return dailyItem.category === 'greek_yoghurt_popsicle';
                       default: return false;
                     }
                   }).length} items
@@ -1220,28 +1220,28 @@ const Planner = () => {
           
           <div className="space-y-4">
             {(() => {
-              const categoryAddOns = filteredDailyItems.filter(addon => {
+              const categoryAddOns = filteredDailyItems.filter(dailyItem => {
                 switch (selectedAddOnCategory) {
                   case 'Bakery':
-                    return addon.category === 'bakery';
+                    return dailyItem.category === 'bakery';
                   case 'Snacks':
-                    return addon.category === 'snacks';
+                    return dailyItem.category === 'snacks';
                   case 'Drinks':
-                    return addon.category === 'drinks';
+                    return dailyItem.category === 'drinks';
                   case 'Greek Yogurt Popsicle':
-                    return addon.category === 'greek_yoghurt_popsicle';
+                    return dailyItem.category === 'greek_yoghurt_popsicle';
                   default:
                     return true;
                 }
               });
 
               return categoryAddOns.map((addon) => (
-                <div key={addon.id} className="flex items-center justify-between p-4 border border-brand-yellow/30 rounded-lg bg-brand-yellow/5">
+                <div key={dailyItem.id} className="flex items-center justify-between p-4 border border-brand-yellow/30 rounded-lg bg-brand-yellow/5">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-brand-black">{addon.name}</h4>
-                    <p className="text-sm text-brand-black/70">{addon.description}</p>
+                    <h4 className="font-semibold text-brand-black">{dailyItem.name}</h4>
+                    <p className="text-sm text-brand-black/70">{dailyItem.description}</p>
                     <p className="text-sm font-medium text-brand-orange mt-1">
-                      {formatCurrency(addon.price)}
+                      {formatCurrency(dailyItem.price)}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -1252,15 +1252,15 @@ const Planner = () => {
                       onClick={() => {
                         setSelectedAddOns(prev => ({
                           ...prev,
-                          [addon.id]: Math.max(0, (prev[addon.id] || 0) - 1)
+                          [dailyItem.id]: Math.max(0, (prev[dailyItem.id] || 0) - 1)
                         }));
                       }}
-                      disabled={!selectedAddOns[addon.id] || selectedAddOns[addon.id] === 0}
+                      disabled={!selectedAddOns[dailyItem.id] || selectedAddOns[dailyItem.id] === 0}
                     >
                       -
                     </Button>
                     <span className="w-8 text-center text-sm font-medium">
-                      {selectedAddOns[addon.id] || 0}
+                      {selectedAddOns[dailyItem.id] || 0}
                     </span>
                     <Button
                       size="sm"
@@ -1269,7 +1269,7 @@ const Planner = () => {
                       onClick={() => {
                         setSelectedAddOns(prev => ({
                           ...prev,
-                          [addon.id]: (prev[addon.id] || 0) + 1
+                          [dailyItem.id]: (prev[dailyItem.id] || 0) + 1
                         }));
                       }}
                     >
@@ -1286,7 +1286,7 @@ const Planner = () => {
               Total: {formatCurrency(
                 Object.entries(selectedAddOns).reduce((total, [addonId, quantity]) => {
                   const addon = dailyItems.find(a => a.id === parseInt(addonId));
-                  return total + (addon ? addon.price * quantity : 0);
+                  return total + (addon ? dailyItem.price * quantity : 0);
                 }, 0)
               )}
             </div>
@@ -1348,12 +1348,12 @@ const Planner = () => {
           <div className="space-y-6">
             {/* Daily Item Categories */}
             {['Bakery', 'Snacks', 'Drinks', 'Greek Yogurt Popsicle'].map((category) => {
-              const categoryAddOns = filteredDailyItems.filter(addon => {
+              const categoryAddOns = filteredDailyItems.filter(dailyItem => {
                 switch (category) {
-                  case 'Bakery': return addon.category === 'bakery';
-                  case 'Snacks': return addon.category === 'snacks';
-                  case 'Drinks': return addon.category === 'drinks';
-                  case 'Greek Yogurt Popsicle': return addon.category === 'greek_yoghurt_popsicle';
+                  case 'Bakery': return dailyItem.category === 'bakery';
+                  case 'Snacks': return dailyItem.category === 'snacks';
+                  case 'Drinks': return dailyItem.category === 'drinks';
+                  case 'Greek Yogurt Popsicle': return dailyItem.category === 'greek_yoghurt_popsicle';
                   default: return false;
                 }
               });
@@ -1365,14 +1365,14 @@ const Planner = () => {
                   <h3 className="text-lg font-semibold text-brand-black mb-3">{category}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {categoryAddOns.map((addon) => (
-                      <div key={addon.id} className="flex items-center justify-between p-3 border border-brand-yellow/30 rounded-lg bg-brand-yellow/5">
+                      <div key={dailyItem.id} className="flex items-center justify-between p-3 border border-brand-yellow/30 rounded-lg bg-brand-yellow/5">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-brand-black">{addon.name}</h4>
-                          {addon.description && (
-                            <p className="text-sm text-brand-black/70">{addon.description}</p>
+                          <h4 className="font-semibold text-brand-black">{dailyItem.name}</h4>
+                          {dailyItem.description && (
+                            <p className="text-sm text-brand-black/70">{dailyItem.description}</p>
                           )}
                           <p className="text-sm font-medium text-brand-orange mt-1">
-                            {formatCurrency(addon.price)}
+                            {formatCurrency(dailyItem.price)}
                           </p>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -1383,15 +1383,15 @@ const Planner = () => {
                             onClick={() => {
                               setSelectedAddOnsForOrder(prev => ({
                                 ...prev,
-                                [addon.id]: Math.max(0, (prev[addon.id] || 0) - 1)
+                                [dailyItem.id]: Math.max(0, (prev[dailyItem.id] || 0) - 1)
                               }));
                             }}
-                            disabled={!selectedAddOnsForOrder[addon.id] || selectedAddOnsForOrder[addon.id] === 0}
+                            disabled={!selectedAddOnsForOrder[dailyItem.id] || selectedAddOnsForOrder[dailyItem.id] === 0}
                           >
                             -
                           </Button>
                           <span className="w-8 text-center text-sm font-medium">
-                            {selectedAddOnsForOrder[addon.id] || 0}
+                            {selectedAddOnsForOrder[dailyItem.id] || 0}
                           </span>
                           <Button
                             size="sm"
@@ -1400,7 +1400,7 @@ const Planner = () => {
                             onClick={() => {
                               setSelectedAddOnsForOrder(prev => ({
                                 ...prev,
-                                [addon.id]: (prev[addon.id] || 0) + 1
+                                [dailyItem.id]: (prev[dailyItem.id] || 0) + 1
                               }));
                             }}
                           >
@@ -1421,7 +1421,7 @@ const Planner = () => {
                   Total: {formatCurrency(
                     Object.entries(selectedAddOnsForOrder).reduce((total, [addonId, quantity]) => {
                       const addon = filteredDailyItems.find(a => a.id === parseInt(addonId));
-                      return total + (addon ? addon.price * quantity : 0);
+                      return total + (addon ? dailyItem.price * quantity : 0);
                     }, 0)
                   )}
                 </div>
@@ -1491,7 +1491,7 @@ const Planner = () => {
                           <div className="text-gray-600 text-xs">Daily Items:</div>
                           {item.daily_items.map((addon: any, addonIndex: number) => (
                             <div key={addonIndex} className="text-xs text-gray-500 ml-2">
-                              • {addon.add_on?.name || 'Daily Item'} (x{addon.quantity})
+                              • {dailyItem.add_on?.name || 'Daily Item'} (x{dailyItem.quantity})
                             </div>
                           ))}
                         </div>
