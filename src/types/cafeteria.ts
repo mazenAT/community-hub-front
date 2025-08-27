@@ -12,7 +12,7 @@ export type MealCategory =
 // Meal Subcategories
 export type MealSubcategory = 
   | 'rice' | 'pasta' | 'noodles' | 'egyptian' | 'potatoes' | 'chicken'
-  | 'wrap' | 'bun' | 'beef' | 'hot_dog' | 'fries' | 'premium' | 'special';
+  | 'wrap' | 'bun' | 'beef' | 'hot_dog' | 'fries' | 'premium' | 'special' | 'complete_meal';
 
 // Daily Item Categories
 export type DailyItemCategory = 
@@ -78,7 +78,19 @@ export interface PricingStructure {
   };
   nursery: {
     base_price: 90; // LE
-    description: 'Special meals for nursery students';
+    special_items: {
+      'Corn flakes + milk + Pasta red sauce + grilled chicken + Salad + Fruits / Dessert': 130,    // LE - Complete meal package
+      'Omelette Wrap + Rice + Potatoes + minced meat + Salad + Fruits / Dessert': 130,    // LE - Complete meal package
+      'Biscuit Yoghurt + Rice + green beans + grilled chicken + Salad + Fruits / Dessert': 130,   // LE - Complete meal package
+      'Oat Cookies + Pasta cheese sauce + grilled chicken + Salad + Fruits / Dessert': 130, // LE - Complete meal package
+      'Feta Cheese Petit Pain + Rice + grilled chicken + Molokhia + Salad + Fruits / Dessert': 130,  // LE - Complete meal package
+      'Corn flakes + milk + Basmati Rice + shish tawook + Salad + Fruits / Dessert': 130,    // LE - Complete meal package
+      'Omelette Wrap + Pasta white sauce + grilled chicken + Salad + Fruits / Dessert': 130,    // LE - Complete meal package
+      'Fruit Yoghurt + Chinese Noodles + soy chicken + Salad + Fruits / Dessert': 130,   // LE - Complete meal package
+      'Plain Croissant + Pasta Bolognese + Salad + Fruits / Dessert': 130, // LE - Complete meal package
+      'Cheddar Cheese Petit Pain + Rice + grilled chicken + Molokhia + Salad + Fruits / Dessert': 130,  // LE - Complete meal package
+    };
+    description: 'Special meals for nursery students including complete KG meal packages';
   };
 }
 
@@ -86,6 +98,16 @@ export interface PricingStructure {
 export const SPECIAL_PRICING_ITEMS = {
   'Fries Crepe': 80,    // LE (instead of 110LE)
   'Fries Wrap': 70,     // LE (instead of 95LE)
+  'Corn flakes + milk + Pasta red sauce + grilled chicken + Salad + Fruits / Dessert': 130,    // LE - Complete meal package
+  'Omelette Wrap + Rice + Potatoes + minced meat + Salad + Fruits / Dessert': 130,   // LE - Complete meal package
+  'Biscuit Yoghurt + Rice + green beans + grilled chicken + Salad + Fruits / Dessert': 130,   // LE - Complete meal package
+  'Oat Cookies + Pasta cheese sauce + grilled chicken + Salad + Fruits / Dessert': 130, // LE - Complete meal package
+  'Feta Cheese Petit Pain + Rice + grilled chicken + Molokhia + Salad + Fruits / Dessert': 130,  // LE - Complete meal package
+  'Corn flakes + milk + Basmati Rice + shish tawook + Salad + Fruits / Dessert': 130,    // LE - Complete meal package
+  'Omelette Wrap + Pasta white sauce + grilled chicken + Salad + Fruits / Dessert': 130,    // LE - Complete meal package
+  'Fruit Yoghurt + Chinese Noodles + soy chicken + Salad + Fruits / Dessert': 130,   // LE - Complete meal package
+  'Plain Croissant + Pasta Bolognese + Salad + Fruits / Dessert': 130, // LE - Complete meal package
+  'Cheddar Cheese Petit Pain + Rice + grilled chicken + Molokhia + Salad + Fruits / Dessert': 130,  // LE - Complete meal package
 } as const;
 
 // Bun Items (L pricing for sandwiches)
