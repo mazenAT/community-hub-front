@@ -477,212 +477,171 @@ const Recharge = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 pb-32">
-      {/* Mobile-Optimized Header */}
-      <div className="bg-white px-4 py-4 border-b border-gray-200 shadow-sm sticky top-0 z-10">
-        <div className="flex items-center space-x-3">
-          <button 
-            onClick={() => navigate("/wallet")}
-            className="w-12 h-12 flex items-center justify-center rounded-full bg-brand-yellow/20 hover:bg-brand-yellow/30 transition-all duration-200 border border-brand-yellow/30 active:scale-95"
+      {/* Header */}
+      <div className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 py-4 border-b-2 border-brand-red">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigate(-1)}
+            className="text-white hover:text-white/80 transition-colors"
           >
-            <svg className="w-6 h-6 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold text-brand-black">Recharge Wallet</h1>
-            <p className="text-sm text-gray-600">Add funds to your digital wallet</p>
-          </div>
+          <h1 className="text-xl font-bold text-white">Recharge Wallet</h1>
+          <div className="w-6"></div>
         </div>
+        <p className="text-white/90 text-sm mt-1">Add funds to your digital wallet</p>
       </div>
 
-      <div className="p-4 space-y-4">
-        {/* Loading Overlay */}
-        {isSubmitting && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm mx-4 text-center">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-brand-red" />
-              <h3 className="text-lg font-semibold mb-2">Processing Payment</h3>
-              <p className="text-gray-600 text-sm">Please wait while we process your payment. Do not close this page.</p>
+      <div className="px-4 py-4">
+        {/* Select Amount */}
+        <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="recharge-amount">
+          <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
+            <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
+            Select Amount
+          </h3>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {[50, 100, 200, 500].map((amount) => (
+              <Button
+                key={amount}
+                variant={selectedAmount === amount ? "default" : "outline"}
+                className={`${
+                  selectedAmount === amount
+                    ? "bg-brand-orange hover:bg-brand-orange/90 text-white border-brand-orange"
+                    : "border-brand-orange text-brand-orange hover:bg-brand-orange/10"
+                } rounded-xl`}
+                onClick={() => setSelectedAmount(amount)}
+              >
+                {amount} EGP
+              </Button>
+            ))}
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-brand-black">Custom Amount</label>
+            <Input
+              type="number"
+              placeholder="Enter amount in EGP"
+              value={customAmount}
+              onChange={(e) => {
+                setCustomAmount(e.target.value);
+                setSelectedAmount(null);
+              }}
+              className="border-brand-orange/30 focus:border-brand-orange"
+            />
+          </div>
+        </div>
+
+        {/* Payment Method */}
+        <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="recharge-payment-method">
+          <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
+            <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
+            Payment Method
+          </h3>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-3">
+            <CreditCard className="w-5 h-5 text-blue-600" />
+            <div>
+              <p className="font-medium text-blue-900">Credit/Debit Card</p>
+              <p className="text-sm text-blue-700">Pay securely with your card via Fawry</p>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Mobile-Optimized Amount Selection */}
-        <Card className="border-0 shadow-sm bg-white rounded-2xl">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-brand-black flex items-center space-x-2">
-              <Wallet className="w-5 h-5 text-brand-red" />
-              <span>Select Amount</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {[50, 100, 200, 500].map((amount) => (
-                <Button 
-                  key={amount} 
-                  variant={selectedAmount === amount ? "default" : "outline"} 
-                  onClick={() => handleAmountSelect(amount)} 
-                  className={`h-16 text-lg font-semibold rounded-xl transition-all duration-200 ${
-                    selectedAmount === amount 
-                      ? 'bg-gradient-to-r from-brand-red to-brand-orange text-white border-0 shadow-lg scale-105' 
-                      : 'bg-white text-brand-black border-2 border-gray-200 hover:border-brand-red hover:bg-brand-red/5 active:scale-95'
-                  }`}
-                >
-                  {amount} EGP
-                </Button>
-              ))}
-            </div>
-            
-            {/* Custom Amount Input */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Custom Amount</label>
+        {/* Card Information */}
+        <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="recharge-card-info">
+          <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
+            <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
+            Card Information
+          </h3>
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant={paymentMode === 'saved' ? "default" : "outline"}
+              className={`${
+                paymentMode === 'saved'
+                  ? "bg-brand-orange hover:bg-brand-orange/90 text-white border-brand-orange"
+                  : "border-brand-orange text-brand-orange hover:bg-brand-orange/10"
+              } rounded-xl`}
+              onClick={() => setPaymentMode('saved')}
+            >
+              Saved Card
+            </Button>
+            <Button
+              variant={paymentMode === 'new' ? "default" : "outline"}
+              className={`${
+                paymentMode === 'new'
+                  ? "bg-brand-orange hover:bg-brand-orange/90 text-white border-brand-orange"
+                  : "border-brand-orange text-brand-orange hover:bg-brand-orange/10"
+              } rounded-xl`}
+              onClick={() => setPaymentMode('new')}
+            >
+              New Card
+            </Button>
+          </div>
+
+          {paymentMode === 'saved' ? (
+            <SavedCards
+              onCardSelect={(card: SavedCard) => setSelectedCard(card)}
+              selectedCardId={selectedCard?.id}
+            />
+          ) : (
+            <div className="space-y-3">
               <Input 
-                type="number" 
-                placeholder="Enter amount in EGP" 
-                value={customAmount} 
-                onChange={(e) => handleCustomAmountChange(e.target.value)} 
-                className="h-14 text-lg border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
+                placeholder="Mobile Number" 
+                value={mobile} 
+                onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, '').slice(0,11))} 
+                maxLength={11} 
+                autoComplete="off"
+                className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
+              />
+              <Input 
+                placeholder="Name on Card" 
+                value={cardAlias} 
+                onChange={(e) => setCardAlias(e.target.value)} 
+                autoComplete="off"
+                className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
+              />
+              <Input 
+                placeholder="Card Number" 
+                value={cardNumber} 
+                onChange={(e) => setCardNumber(e.target.value)} 
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+                className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <Input 
+                  placeholder="MM" 
+                  value={expiryMonth} 
+                  onChange={(e) => setExpiryMonth(e.target.value)} 
+                  autoComplete="off"
+                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl text-center"
+                />
+                <Input 
+                  placeholder="YY" 
+                  value={expiryYear} 
+                  onChange={(e) => setExpiryYear(e.target.value)} 
+                  autoComplete="off"
+                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl text-center"
+                />
+              </div>
+              <Input 
+                placeholder="CVV" 
+                value={cvv} 
+                onChange={(e) => setCvv(e.target.value)} 
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+                className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
               />
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
 
-        {/* Payment Method Info */}
-        <Card className="border-0 shadow-sm bg-white rounded-2xl">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-brand-black flex items-center space-x-2">
-              <CreditCard className="w-5 h-5 text-brand-red" />
-              <span>Payment Method</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
-              <div className="flex items-center space-x-3">
-                <CreditCard className="w-8 h-8 text-blue-600" />
-                <div>
-                  <h3 className="font-semibold text-blue-900">Credit/Debit Card</h3>
-                  <p className="text-sm text-blue-700">Pay securely with your card via Fawry</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card Information Section */}
-        <Card className="border-0 shadow-sm bg-white rounded-2xl">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-brand-black flex items-center space-x-2">
-              <CreditCard className="w-5 h-5 text-brand-red" />
-              <span>Card Information</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Payment Mode Selection */}
-            <div className="flex space-x-2 mb-4">
-              <Button
-                variant={paymentMode === 'saved' ? 'default' : 'outline'}
-                onClick={() => setPaymentMode('saved')}
-                className={`flex-1 h-12 rounded-xl transition-all duration-200 ${
-                  paymentMode === 'saved' 
-                    ? 'bg-brand-orange text-white border-brand-orange hover:bg-brand-orange/90' 
-                    : 'bg-white text-brand-black border-2 border-gray-200 hover:border-brand-orange hover:bg-brand-orange/5'
-                }`}
-              >
-                Saved Card
-              </Button>
-              <Button
-                variant={paymentMode === 'new' ? 'default' : 'outline'}
-                onClick={() => setPaymentMode('new')}
-                className={`flex-1 h-12 rounded-xl transition-all duration-200 ${
-                  paymentMode === 'new' 
-                    ? 'bg-brand-orange text-white border-brand-orange hover:bg-brand-orange/90' 
-                    : 'bg-white text-brand-black border-2 border-gray-200 hover:border-brand-orange hover:bg-brand-orange/5'
-                }`}
-              >
-                New Card
-              </Button>
-            </div>
-
-            {paymentMode === 'saved' ? (
-              <div className="space-y-4">
-                <SavedCards
-                  onCardSelect={(card: SavedCard) => setSelectedCard(card)}
-                  selectedCardId={selectedCard?.id}
-                />
-                {selectedCard && (
-                  <div className="p-4 border-2 border-brand-yellow/30 rounded-xl bg-brand-yellow/10">
-                    <p className="text-sm text-brand-black/70 mb-3">Selected card: {selectedCard.card_alias}</p>
-                    <Input
-                      placeholder="CVV"
-                      value={cvv}
-                      onChange={(e) => setCvv(e.target.value)}
-                      maxLength={4}
-                      autoComplete="off"
-                      className="w-32 h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
-                    />
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <Input 
-                  placeholder="Mobile Number" 
-                  value={mobile} 
-                  onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, '').slice(0,11))} 
-                  maxLength={11} 
-                  autoComplete="off"
-                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
-                />
-                <Input 
-                  placeholder="Name on Card" 
-                  value={cardAlias} 
-                  onChange={(e) => setCardAlias(e.target.value)} 
-                  autoComplete="off"
-                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
-                />
-                <Input 
-                  placeholder="Card Number" 
-                  value={cardNumber} 
-                  onChange={(e) => setCardNumber(e.target.value)} 
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck="false"
-                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
-                />
-                <div className="grid grid-cols-2 gap-3">
-                  <Input 
-                    placeholder="MM" 
-                    value={expiryMonth} 
-                    onChange={(e) => setExpiryMonth(e.target.value)} 
-                    autoComplete="off"
-                    className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl text-center"
-                  />
-                  <Input 
-                    placeholder="YY" 
-                    value={expiryYear} 
-                    onChange={(e) => setExpiryYear(e.target.value)} 
-                    autoComplete="off"
-                    className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl text-center"
-                  />
-                </div>
-                <Input 
-                  placeholder="CVV" 
-                  value={cvv} 
-                  onChange={(e) => setCvv(e.target.value)} 
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck="false"
-                  className="h-12 border-2 border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 rounded-xl"
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Mobile-Optimized Total Display */}
-        <div className="bg-gradient-to-r from-brand-red to-brand-orange text-white p-6 rounded-2xl shadow-lg">
+        {/* Total Amount Display */}
+        <div className="mb-6 bg-gradient-to-r from-brand-red to-brand-orange text-white p-6 rounded-2xl shadow-lg" data-tutorial="recharge-total">
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm opacity-90">Total Amount</p>
@@ -696,12 +655,13 @@ const Recharge = () => {
         </div>
       </div>
       
-      {/* Mobile-Optimized Fixed Bottom Button */}
+      {/* Fixed Bottom Button */}
       <div className="fixed bottom-20 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 shadow-lg">
         <Button 
           onClick={handleRechargeClick} 
           disabled={isSubmitting || finalAmount <= 0} 
           className="w-full h-16 text-xl font-bold bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-orange hover:to-brand-red text-white rounded-2xl shadow-lg transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          data-tutorial="recharge-pay-button"
         >
           {isSubmitting ? (
             <div className="flex items-center space-x-2">

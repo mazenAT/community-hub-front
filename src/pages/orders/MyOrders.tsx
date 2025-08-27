@@ -173,30 +173,30 @@ const MyOrders: React.FC = () => {
   }
 
   return (
-    <>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">My Orders</h1>
-        
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-20">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 sm:px-6 py-4 border-b-2 border-brand-red" data-tutorial="orders-header">
+        <h1 className="text-2xl font-bold text-white">My Orders</h1>
+        <p className="text-white/90 text-sm mt-1">Track your meal orders and add-on purchases</p>
+      </div>
+
+      <div className="px-4 py-4">
         {/* Family Member Filter */}
-        {familyMembers.length > 0 && (
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Filter by Family Member
-            </label>
-            <select
-              value={selectedFamilyMember}
-              onChange={(e) => setSelectedFamilyMember(e.target.value)}
-              className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red"
-            >
-              <option value="all">All Family Members</option>
-              {familyMembers.map((member) => (
-                <option key={member.id} value={member.id.toString()}>
-                  {member.name} ({member.grade} - {member.class})
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="orders-filter">
+          <h3 className="text-sm font-semibold text-brand-black mb-3">Filter by Family Member</h3>
+          <select
+            value={selectedFamilyMember}
+            onChange={(e) => setSelectedFamilyMember(e.target.value)}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent"
+          >
+            <option value="all">All Family Members</option>
+            {familyMembers.map((member) => (
+              <option key={member.id} value={member.id.toString()}>
+                {member.name} ({member.grade} • {member.class})
+              </option>
+            ))}
+          </select>
+        </div>
         {orders.length === 0 && addOnOrders.length === 0 ? (
           <EmptyState icon={<AlertCircle />} message="No orders found" />
         ) : (
@@ -318,7 +318,7 @@ const MyOrders: React.FC = () => {
         )}
       </div>
       <BottomNavigation activeTab="profile" />
-    </>
+    </div>
   );
 };
 

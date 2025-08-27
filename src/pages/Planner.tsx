@@ -913,51 +913,46 @@ const Planner = () => {
         </div>
 
         {/* Meal Filters */}
-        <div className="mb-6 space-y-4">
-          {/* Meal Type Filter */}
-          <div>
-            <h3 className="text-sm font-semibold text-brand-black mb-2">Meal Type</h3>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { key: 'all', label: 'All Meals' },
-                { key: 'hot_meal', label: 'Hot Meal' },
-                { key: 'sandwich', label: 'Sandwich' },
-                { key: 'sandwich_xl', label: 'Sandwich XL' },
-                { key: 'burger', label: 'Burger' },
-                { key: 'crepe', label: 'Crepe' },
-                { key: 'nursery', label: 'Nursery' }
-              ].map(({ key, label }) => (
-                <Button
-                  key={key}
-                  variant={selectedType === key ? 'default' : 'outline'}
-                  size="sm"
-                  className={`${
-                    selectedType === key 
-                      ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
-                      : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
-                  } rounded-full px-3 py-1 text-xs font-medium`}
-                  onClick={() => setSelectedType(key as 'all' | 'hot_meal' | 'sandwich' | 'sandwich_xl' | 'burger' | 'crepe' | 'nursery')}
-                >
-                  {label}
-                </Button>
-              ))}
-            </div>
+        <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="planner-meal-filters">
+          <h3 className="text-sm font-semibold text-brand-black mb-3">Meal Type</h3>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { key: 'all', label: 'All Meals' },
+              { key: 'hot_meal', label: 'Hot Meal' },
+              { key: 'sandwich', label: 'Sandwich' },
+              { key: 'sandwich_xl', label: 'Sandwich XL' },
+              { key: 'burger', label: 'Burger' },
+              { key: 'crepe', label: 'Crepe' },
+              { key: 'nursery', label: 'Nursery' }
+            ].map(({ key, label }) => (
+              <Button
+                key={key}
+                variant={selectedType === key ? 'default' : 'outline'}
+                size="sm"
+                className={`${
+                  selectedType === key 
+                    ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
+                    : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
+                } rounded-full px-3 py-1 text-xs font-medium`}
+                onClick={() => setSelectedType(key as 'all' | 'hot_meal' | 'sandwich' | 'sandwich_xl' | 'burger' | 'crepe' | 'nursery')}
+              >
+                {label}
+              </Button>
+            ))}
           </div>
         </div>
 
-        {/* View Full Menu Button - Always Visible */}
-          <div className="mb-6 flex justify-center">
-            <Button
-              variant="outline"
-              size="lg"
-              className="bg-brand-yellow text-brand-black border-brand-yellow hover:bg-brand-yellow/90 rounded-full px-6 py-3 font-medium"
+        {/* View Full Menu Button */}
+        <div className="mb-6 flex justify-center" data-tutorial="planner-order-button">
+          <Button
             onClick={handleViewGeneralPdf}
-              disabled={loadingPdf}
-            >
-              <FileText className="w-5 h-5 mr-2" />
+            className="bg-brand-orange hover:bg-brand-orange/90 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow-lg"
+            disabled={loadingPdf}
+          >
+            <FileText className="w-5 h-5 mr-2" />
             View Full Menu
-            </Button>
-          </div>
+          </Button>
+        </div>
 
         {/* Meal Planner Cards */}
         {activePlan ? (
