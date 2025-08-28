@@ -42,7 +42,7 @@ const SignIn = () => {
         } else {
           await secureStorage.set('has-family-members', 'false');
           // User has no family members, go to family setup
-          navigate("/family-setup");
+          navigate("/family-member-setup");
         }
         
         // Check tutorial status after successful authentication
@@ -54,7 +54,7 @@ const SignIn = () => {
       } catch (error) {
         // If there's an error checking family members, default to family setup
         await secureStorage.set('has-family-members', 'false');
-        navigate("/family-setup");
+        navigate("/family-member-setup");
       }
     },
     onError: (error: any) => {

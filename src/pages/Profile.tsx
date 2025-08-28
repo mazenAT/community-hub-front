@@ -203,7 +203,7 @@ const Profile = () => {
             <p className="text-xs sm:text-sm text-white/90">Manage your account</p>
           </div>
           <button 
-            onClick={() => navigate("/orders/my-orders")}
+            onClick={() => navigate("/orders")}
             className="bg-white/20 hover:bg-white/30 text-white px-3 sm:px-4 py-2 rounded-xl border border-white/30 flex items-center gap-2 transition-all duration-200 hover:scale-105"
           >
             <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
