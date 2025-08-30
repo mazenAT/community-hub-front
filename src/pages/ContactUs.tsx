@@ -166,8 +166,7 @@ const ContactUs = () => {
 
           <div className="mt-6 p-4 bg-brand-yellow/10 rounded-xl border border-brand-yellow/30">
             <p className="text-sm text-brand-black/70">
-              <strong>Note:</strong> For urgent matters, please call us directly. 
-              Email responses are typically sent within 48 hours during business days.
+              <strong>Note:</strong> Email responses are typically sent within 48 hours during business days.
             </p>
           </div>
         </div>

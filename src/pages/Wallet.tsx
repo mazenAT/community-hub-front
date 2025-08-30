@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/BottomNavigation";
-import { walletApi, profileApi, transactionApi } from "@/services/api";
+import { walletApi, profileApi, transactionApi, mealRefundApi } from "@/services/api";
 import { showToast } from "@/services/native";
 import { formatCurrency } from "@/utils/format";
 import { User, LogOut } from "lucide-react";
@@ -134,10 +134,21 @@ const Wallet = () => {
   const handleRefundTransaction = async (id: number) => {
     setRefundLoading(id);
     try {
-      await transactionApi.refundTransaction(id);
+      // Use internal meal order refund instead of Fawry-dependent transaction refund
+      await mealRefundApi.refundMealOrder(id);
+      toast({ 
+        title: "Refund Successful", 
+        description: "Your meal order has been cancelled and refunded to your wallet.", 
+        variant: "default" 
+      });
       fetchWalletData();
-    } catch (e) {
-      showToast('Refund failed.');
+    } catch (e: any) {
+      const errorMessage = e.response?.data?.message || 'Refund failed. Please try again.';
+      toast({ 
+        title: "Refund Failed", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
     } finally {
       setRefundLoading(null);
     }
