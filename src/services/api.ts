@@ -174,15 +174,8 @@ export const mealRefundApi = {
 
 // InstaPay API
 export const instaPayApi = {
-  createTopupRequest: (amount: number, receiptImage: File) => {
-    const formData = new FormData();
-    formData.append('amount', amount.toString());
-    formData.append('receipt_image', receiptImage);
-    return api.post('/instapay/create-topup', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+  createTopupRequest: (amount: number) => {
+    return api.post('/instapay/create-topup', { amount });
   },
   uploadReceipt: (referenceCode: string, receiptImage: File) => {
     const formData = new FormData();

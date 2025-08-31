@@ -44,6 +44,7 @@ const Recharge = () => {
   const [error, setError] = useState('');
   const [showInstaPayDetails, setShowInstaPayDetails] = useState(false);
   const [instaPayData, setInstaPayData] = useState<any>(null);
+  const [showReceiptUpload, setShowReceiptUpload] = useState(false);
 
   // Initialize secure credentials
   useEffect(() => {
@@ -111,14 +112,8 @@ const Recharge = () => {
       setIsSubmitting(true);
       setError('');
 
-      // Validate receipt image
-      if (!receiptImage) {
-        toast.error('Please upload a receipt screenshot to continue.');
-        return;
-      }
-
-      // Create InstaPay topup request with receipt
-      const response = await instaPayApi.createTopupRequest(amount, receiptImage);
+      // Create InstaPay topup request (without receipt)
+      const response = await instaPayApi.createTopupRequest(amount);
       
       if (response.data.success) {
         const { reference_code, bank_account, instructions, status } = response.data.data;
@@ -133,13 +128,47 @@ const Recharge = () => {
         setShowInstaPayDetails(true);
         
         // Show success message
-        toast.success('Top-up request created and receipt uploaded successfully!');
+        toast.success('Top-up request created successfully! Please complete your InstaPay transfer.');
       } else {
         toast.error(response.data.message || 'Failed to create top-up request');
       }
     } catch (error) {
       console.error('InstaPay topup error:', error);
       toast.error('Failed to create top-up request. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleReceiptUpload = async () => {
+    if (!receiptImage || !instaPayData?.reference_code) {
+      toast.error('Please select a receipt image to upload.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      
+      // Upload receipt for validation
+      const response = await instaPayApi.uploadReceipt(instaPayData.reference_code, receiptImage);
+      
+      if (response.data.success) {
+        toast.success('Receipt uploaded successfully! We will validate and credit your wallet within minutes.');
+        
+        // Close modal and reset states
+        setShowInstaPayDetails(false);
+        setShowReceiptUpload(false);
+        setInstaPayData(null);
+        setReceiptImage(null);
+        
+        // Navigate to wallet
+        navigate('/wallet');
+      } else {
+        toast.error(response.data.message || 'Failed to upload receipt. Please try again.');
+      }
+    } catch (error) {
+      console.error('Receipt upload error:', error);
+      toast.error('Failed to upload receipt. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -760,42 +789,6 @@ const Recharge = () => {
               InstaPay Top-up
             </h3>
             
-            {/* Receipt Upload */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Upload Receipt Screenshot
-              </label>
-              <div className="border-2 border-dashed border-green-300 rounded-lg p-4 text-center hover:border-green-400 transition-colors">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setReceiptImage(e.target.files?.[0] || null)}
-                  className="hidden"
-                  id="receipt-upload"
-                />
-                <label htmlFor="receipt-upload" className="cursor-pointer">
-                  {receiptImage ? (
-                    <div className="space-y-2">
-                      <div className="text-green-600 font-medium">✓ Receipt uploaded</div>
-                      <div className="text-sm text-gray-500">{receiptImage.name}</div>
-                      <button
-                        type="button"
-                        onClick={() => setReceiptImage(null)}
-                        className="text-red-500 text-sm hover:text-red-700"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="text-green-600 font-medium">Click to upload receipt</div>
-                      <div className="text-sm text-gray-500">PNG, JPG up to 10MB</div>
-                    </div>
-                  )}
-                </label>
-              </div>
-            </div>
-
             {/* Instructions */}
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
               <div className="flex items-center gap-2">
@@ -914,7 +907,55 @@ const Recharge = () => {
                 <li>Enter the amount: {instaPayData.amount} EGP</li>
                 <li>Add the reference code in the transfer note</li>
                 <li>Complete the transfer</li>
+                <li>Upload your receipt screenshot below</li>
               </ol>
+            </div>
+
+            {/* Receipt Upload Section */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <h3 className="font-semibold text-blue-900 mb-3">Upload Receipt for Validation</h3>
+              <p className="text-sm text-blue-700 mb-3">
+                After completing your InstaPay transfer, upload a screenshot of the receipt to validate and credit your wallet.
+              </p>
+              
+              <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setReceiptImage(e.target.files?.[0] || null)}
+                  className="hidden"
+                  id="receipt-upload-modal"
+                />
+                <label htmlFor="receipt-upload-modal" className="cursor-pointer">
+                  {receiptImage ? (
+                    <div className="space-y-2">
+                      <div className="text-blue-600 font-medium">✓ Receipt uploaded</div>
+                      <div className="text-sm text-gray-500">{receiptImage.name}</div>
+                      <button
+                        type="button"
+                        onClick={() => setReceiptImage(null)}
+                        className="text-red-500 text-sm hover:text-red-700"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="text-blue-600 font-medium">Click to upload receipt</div>
+                      <div className="text-sm text-blue-500">PNG, JPG up to 10MB</div>
+                    </div>
+                  )}
+                </label>
+              </div>
+              
+              {receiptImage && (
+                <button
+                  onClick={handleReceiptUpload}
+                  className="w-full mt-3 bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  Submit Receipt for Validation
+                </button>
+              )}
             </div>
 
             {/* Action Buttons */}
