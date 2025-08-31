@@ -42,6 +42,8 @@ const Recharge = () => {
   const [paymentMethod, setPaymentMethod] = useState<'fawry' | 'instapay'>('fawry');
   const [receiptImage, setReceiptImage] = useState<File | null>(null);
   const [error, setError] = useState('');
+  const [showInstaPayDetails, setShowInstaPayDetails] = useState(false);
+  const [instaPayData, setInstaPayData] = useState<any>(null);
 
   // Initialize secure credentials
   useEffect(() => {
@@ -121,18 +123,17 @@ const Recharge = () => {
       if (response.data.success) {
         const { reference_code, bank_account, instructions, status } = response.data.data;
         
-        // Show success message with instructions
-        toast.success('Top-up request created and receipt uploaded successfully!');
-        
-        // Show bank account details and instructions
-        const bankDetails = `Bank: ${bank_account.bank_name}\nAccount: ${bank_account.account_name}\nAccount Number: ${bank_account.account_number}`;
-        
-        toast.info(`Reference Code: ${reference_code}\n\n${bankDetails}\n\n${instructions}`, {
-          duration: 15000,
+        // Store the data and show the details modal
+        setInstaPayData({
+          reference_code,
+          bank_account,
+          instructions,
+          amount: amount
         });
+        setShowInstaPayDetails(true);
         
-        // Navigate to wallet page
-        navigate('/wallet');
+        // Show success message
+        toast.success('Top-up request created and receipt uploaded successfully!');
       } else {
         toast.error(response.data.message || 'Failed to create top-up request');
       }
@@ -856,6 +857,91 @@ const Recharge = () => {
           )}
         </Button>
       </div>
+
+      {/* InstaPay Details Modal */}
+      {showInstaPayDetails && instaPayData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-8 h-8 bg-green-500 rounded-full"></div>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Top-up Request Created!</h2>
+              <p className="text-gray-600">Please complete your InstaPay transfer using the details below</p>
+            </div>
+
+            {/* Reference Code */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <h3 className="font-semibold text-blue-900 mb-2">Reference Code</h3>
+              <div className="bg-white border border-blue-300 rounded px-3 py-2 font-mono text-lg text-center">
+                {instaPayData.reference_code}
+              </div>
+              <p className="text-sm text-blue-700 mt-2 text-center">
+                Include this code in your InstaPay transfer note
+              </p>
+            </div>
+
+            {/* Bank Account Details */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+              <h3 className="font-semibold text-green-900 mb-3">Bank Account Details</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Bank:</span>
+                  <span className="font-semibold">{instaPayData.bank_account.bank_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Account Name:</span>
+                  <span className="font-semibold">{instaPayData.bank_account.account_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Account Number:</span>
+                  <span className="font-semibold">{instaPayData.bank_account.account_number}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Amount:</span>
+                  <span className="font-semibold text-green-600">{instaPayData.amount} EGP</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Instructions */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <h3 className="font-semibold text-yellow-900 mb-2">Instructions</h3>
+              <ol className="list-decimal list-inside space-y-2 text-sm text-yellow-800">
+                <li>Open your InstaPay app</li>
+                <li>Select "Bank Transfer"</li>
+                <li>Enter the bank details above</li>
+                <li>Enter the amount: {instaPayData.amount} EGP</li>
+                <li>Add the reference code in the transfer note</li>
+                <li>Complete the transfer</li>
+              </ol>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowInstaPayDetails(false);
+                  setInstaPayData(null);
+                  navigate('/wallet');
+                }}
+                className="flex-1 bg-gray-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
+              >
+                Go to Wallet
+              </button>
+              <button
+                onClick={() => {
+                  setShowInstaPayDetails(false);
+                  setInstaPayData(null);
+                }}
+                className="flex-1 bg-brand-red text-white py-3 px-4 rounded-lg font-semibold hover:bg-brand-orange transition-colors"
+              >
+                Create Another
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Navigation */}
       <BottomNavigation activeTab="wallet" />
