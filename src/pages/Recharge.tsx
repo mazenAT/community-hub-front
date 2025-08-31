@@ -870,7 +870,7 @@ const Recharge = () => {
                 {instaPayData.reference_code}
               </div>
               <p className="text-sm text-blue-700 mt-2 text-center">
-                Include this code in your InstaPay transfer note
+                <strong>CRITICAL:</strong> Add this code in the <strong>"Reason for Transfer"</strong> field in InstaPay
               </p>
             </div>
 
@@ -905,10 +905,17 @@ const Recharge = () => {
                 <li>Select "Bank Transfer"</li>
                 <li>Enter the bank details above</li>
                 <li>Enter the amount: {instaPayData.amount} EGP</li>
-                <li>Add the reference code in the transfer note</li>
+                <li><strong>IMPORTANT:</strong> Add the reference code <span className="font-mono bg-yellow-100 px-1 rounded">{instaPayData.reference_code}</span> in the <strong>"Reason for Transfer"</strong> field</li>
                 <li>Complete the transfer</li>
                 <li>Upload your receipt screenshot below</li>
               </ol>
+              
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded">
+                <p className="text-sm text-red-700 font-medium">
+                  ⚠️ <strong>Critical:</strong> You must include the reference code in the "Reason for Transfer" field, 
+                  otherwise we cannot identify your payment and credit your wallet!
+                </p>
+              </div>
             </div>
 
             {/* Receipt Upload Section */}
