@@ -40,6 +40,7 @@ const Recharge = () => {
   const [selectedCard, setSelectedCard] = useState<SavedCard | null>(null);
   const [paymentMode, setPaymentMode] = useState<'saved' | 'new'>('saved');
   const [paymentMethod, setPaymentMethod] = useState<'fawry' | 'instapay'>('fawry');
+  const [receiptImage, setReceiptImage] = useState<File | null>(null);
   const [error, setError] = useState('');
 
   // Initialize secure credentials
@@ -108,19 +109,26 @@ const Recharge = () => {
       setIsSubmitting(true);
       setError('');
 
-      // Create InstaPay topup request
-      const response = await instaPayApi.createTopupRequest(amount);
+      // Validate receipt image
+      if (!receiptImage) {
+        toast.error('Please upload a receipt screenshot to continue.');
+        return;
+      }
+
+      // Create InstaPay topup request with receipt
+      const response = await instaPayApi.createTopupRequest(amount, receiptImage);
       
       if (response.data.success) {
-        const { reference_code, bank_account, instructions } = response.data.data;
+        const { reference_code, bank_account, instructions, status } = response.data.data;
         
         // Show success message with instructions
-        toast.success('Top-up request created successfully!');
+        toast.success('Top-up request created and receipt uploaded successfully!');
         
-        // Navigate to InstaPay instructions page or show modal
-        // For now, we'll show the instructions in a toast
-        toast.info(`Reference Code: ${reference_code}\n${instructions}`, {
-          duration: 10000,
+        // Show bank account details and instructions
+        const bankDetails = `Bank: ${bank_account.bank_name}\nAccount: ${bank_account.account_name}\nAccount Number: ${bank_account.account_number}`;
+        
+        toast.info(`Reference Code: ${reference_code}\n\n${bankDetails}\n\n${instructions}`, {
+          duration: 15000,
         });
         
         // Navigate to wallet page
@@ -748,8 +756,46 @@ const Recharge = () => {
           <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
             <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              InstaPay Instructions
+              InstaPay Top-up
             </h3>
+            
+            {/* Receipt Upload */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Upload Receipt Screenshot
+              </label>
+              <div className="border-2 border-dashed border-green-300 rounded-lg p-4 text-center hover:border-green-400 transition-colors">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setReceiptImage(e.target.files?.[0] || null)}
+                  className="hidden"
+                  id="receipt-upload"
+                />
+                <label htmlFor="receipt-upload" className="cursor-pointer">
+                  {receiptImage ? (
+                    <div className="space-y-2">
+                      <div className="text-green-600 font-medium">✓ Receipt uploaded</div>
+                      <div className="text-sm text-gray-500">{receiptImage.name}</div>
+                      <button
+                        type="button"
+                        onClick={() => setReceiptImage(null)}
+                        className="text-red-500 text-sm hover:text-red-700"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="text-green-600 font-medium">Click to upload receipt</div>
+                      <div className="text-sm text-gray-500">PNG, JPG up to 10MB</div>
+                    </div>
+                  )}
+                </label>
+              </div>
+            </div>
+
+            {/* Instructions */}
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
@@ -757,19 +803,19 @@ const Recharge = () => {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-green-800">Click "Pay" to generate a unique reference code</span>
+                <span className="text-sm text-green-800">Upload your InstaPay receipt screenshot</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-green-800">Send the amount via InstaPay to our bank account</span>
+                <span className="text-sm text-green-800">Click "Create Top-up Request" to submit</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-green-800">Upload the receipt screenshot for instant verification</span>
+                <span className="text-sm text-green-800">You'll receive bank details and reference code</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-green-800">Your wallet will be credited automatically</span>
+                <span className="text-sm text-green-800">Your wallet will be credited automatically after verification</span>
               </div>
             </div>
           </div>
