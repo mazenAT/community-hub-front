@@ -797,20 +797,30 @@ const Recharge = () => {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-green-800">Upload your InstaPay receipt screenshot</span>
+                <span className="text-sm text-green-800">Click "Create Top-up Request" to get bank details</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-green-800">Click "Create Top-up Request" to submit</span>
+                <span className="text-sm text-green-800">Complete the InstaPay transfer using the provided details</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-green-800">You'll receive bank details and reference code</span>
+                <span className="text-sm text-green-800">Add the reference code in the "Reason for Transfer" field</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-green-800">Upload your receipt screenshot for validation</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 <span className="text-sm text-green-800">Your wallet will be credited automatically after verification</span>
               </div>
+            </div>
+            
+            <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
+              <p className="text-xs text-yellow-700">
+                <strong>Note:</strong> You'll get bank details and reference code immediately after creating the request.
+              </p>
             </div>
           </div>
         )}
