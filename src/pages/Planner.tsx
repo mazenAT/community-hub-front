@@ -334,6 +334,10 @@ const Planner = () => {
   
   // Store daily-items for each meal (key: mealId_date, value: array of daily-items)
   const [mealAddOns, setMealAddOns] = useState<{[key: string]: {daily_item_id: number, quantity: number}[]}>({});
+  
+  // Meal title modal state
+  const [showMealTitleModal, setShowMealTitleModal] = useState(false);
+  const [selectedMealTitle, setSelectedMealTitle] = useState<string>("");
 
   const { data: profile, isLoading: isLoadingProfile, error: profileError } = useQuery({
     queryKey: ["profile"],
@@ -1234,8 +1238,21 @@ const Planner = () => {
                                   {/* Meal Header */}
                                   <div className="mb-4">
                                     <div className="flex-1">
-                                      <h4 className="font-bold text-brand-black text-lg sm:text-xl leading-tight line-clamp-2 mb-2 bg-gradient-to-r from-brand-black to-brand-black/80 bg-clip-text">
+                                      <h4 
+                                        className="font-bold text-brand-black text-lg sm:text-xl leading-tight mb-2 bg-gradient-to-r from-brand-black to-brand-black/80 bg-clip-text break-words cursor-pointer hover:opacity-80 transition-opacity"
+                                        onClick={() => {
+                                          // Show full title in a mobile-friendly modal
+                                          if (meal.title && meal.title.length > 50) {
+                                            setSelectedMealTitle(meal.title);
+                                            setShowMealTitleModal(true);
+                                          }
+                                        }}
+                                        title={meal.title && meal.title.length > 50 ? "Tap to see full title" : ""}
+                                      >
                                         {meal.title || meal.name}
+                                        {meal.title && meal.title.length > 50 && (
+                                          <span className="ml-2 text-sm text-blue-600 opacity-75">📱</span>
+                                        )}
                                       </h4>
                                       <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-2 font-medium">
                                         {meal.description || 'Delicious meal prepared with fresh ingredients'}
@@ -1860,6 +1877,23 @@ const Planner = () => {
             <div className="text-center text-sm text-gray-500">
               You can always view your previous orders with full details
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Meal Title Modal */}
+      <Dialog open={showMealTitleModal} onOpenChange={setShowMealTitleModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center">Full Meal Title</DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <p className="text-gray-700 text-lg leading-relaxed">{selectedMealTitle}</p>
+          </div>
+          <div className="flex justify-end p-4 pt-0">
+            <Button onClick={() => setShowMealTitleModal(false)}>
+              Close
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
