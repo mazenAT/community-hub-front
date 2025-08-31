@@ -4,11 +4,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, ChevronRight, Calendar, AlertCircle, ShoppingBag } from "lucide-react";
+import { User, ChevronRight, AlertCircle, ShoppingBag } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Input } from "@/components/ui/input";
-import { profileApi, walletApi } from "@/services/api";
-import { format, parseISO } from 'date-fns';
+import { profileApi } from "@/services/api";
 import { formatCurrency } from "@/utils/format";
 import { FamilyMembersSection } from "@/components/FamilyMembersSection";
 
@@ -34,15 +33,7 @@ interface UserProfile {
   };
 }
 
-interface Transaction {
-  id: number;
-  wallet_id: number;
-  type: 'credit' | 'debit';
-  amount: number;
-  note: string | null;
-  created_at: string;
-  updated_at: string;
-}
+
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -76,18 +67,7 @@ const Profile = () => {
     }
   }, [profileData]);
 
-  const { data: transactionsResponse, isLoading: isLoadingTransactions, error: transactionsError, refetch: refetchTransactions } = useQuery<{ data: Transaction[] }>({
-    queryKey: ["transactions"],
-    queryFn: async () => {
-      const response = await walletApi.getTransactions();
-      // Transactions API uses successResponse which wraps in { success: true, data: [...] }
-      return response.data?.data ? response.data : { data: response.data };
-    },
-    retry: 3,
-    retryDelay: 1000,
-  });
 
-  const transactionsData = transactionsResponse?.data;
 
   const updateProfileMutation = useMutation({
     mutationFn: profileApi.updateProfile,
@@ -151,17 +131,9 @@ const Profile = () => {
     });
   };
 
-  const formatTime = (dateString: string) => {
-    const date = parseISO(dateString);
-    return format(date, 'hh:mm a');
-  };
 
-  const formatAmount = (amount: number, type: 'credit' | 'debit') => {
-    const sign = type === 'debit' ? '-' : '+';
-    return `${sign}${formatCurrency(Math.abs(amount))}`;
-  };
 
-  if (isLoadingProfile || isLoadingTransactions) {
+  if (isLoadingProfile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-brand-red border-t-transparent rounded-full animate-spin"></div>
@@ -169,14 +141,14 @@ const Profile = () => {
     );
   }
 
-  if (profileError || transactionsError) {
+  if (profileError) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center">
         <div className="text-center p-6">
           <AlertCircle className="w-12 h-12 text-brand-red mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-brand-black mb-2">Error Loading Data</h2>
-          <p className="text-brand-black/70 mb-4">There was a problem loading your profile or transactions. Please try again.</p>
-          <Button onClick={() => { refetchProfile(); refetchTransactions(); }} className="bg-brand-red hover:bg-brand-red/90 text-white">
+          <h2 className="text-xl font-semibold text-brand-black mb-2">Error Loading Profile</h2>
+          <p className="text-brand-black/70 mb-4">There was a problem loading your profile. Please try again.</p>
+          <Button onClick={() => refetchProfile()} className="bg-brand-red hover:bg-brand-red/90 text-white">
             Retry
           </Button>
         </div>
@@ -187,8 +159,7 @@ const Profile = () => {
   const user = profileData;
   const balance = Number(user?.wallet?.balance) || 0;
 
-  const totalSpent = transactionsData?.filter(t => t.type === 'debit').reduce((sum, t) => sum + t.amount, 0) || 0;
-  const totalTransactions = transactionsData?.length || 0;
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-20">
@@ -240,7 +211,7 @@ const Profile = () => {
             </div>
             <div className="flex justify-between items-center py-2 border-t border-brand-yellow/30">
               <span className="text-sm sm:text-base text-brand-black/70">Wallet Balance</span>
-              <span className="text-sm sm:text-base font-medium text-brand-black">{formatAmount(balance, 'credit')}</span>
+              <span className="text-sm sm:text-base font-medium text-brand-black">{formatCurrency(balance)}</span>
             </div>
             {/* Allergies Badges (non-editable, no duplicates) */}
             {/* Removed allergies section as per edit hint */}
@@ -331,55 +302,7 @@ const Profile = () => {
           </div>
         </Card>
 
-        {/* Transaction History */}
-        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white" data-tutorial="profile-settings">
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h3 className="text-lg sm:text-xl font-semibold text-brand-black">Transaction History</h3>
-            <div className="text-sm text-brand-black/70">
-              Total: {totalTransactions} transactions
-            </div>
-          </div>
-          
-          {transactionsData && transactionsData.length > 0 ? (
-            <div className="space-y-3">
-              {transactionsData.slice(0, 5).map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-3 h-3 rounded-full ${transaction.type === 'credit' ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                    <div>
-                      <p className="font-medium text-brand-black">{transaction.note || 'Transaction'}</p>
-                      <p className="text-sm text-brand-black/60">{formatTime(transaction.created_at)}</p>
-                    </div>
-                  </div>
-                  <div className={`font-semibold ${transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatAmount(transaction.amount, transaction.type)}
-                  </div>
-                </div>
-              ))}
-              {transactionsData.length > 5 && (
-                <Button 
-                  onClick={() => navigate("/wallet")}
-                  variant="outline" 
-                  className="w-full mt-4 border-brand-red text-brand-red hover:bg-brand-red hover:text-white"
-                >
-                  View All Transactions
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Calendar className="w-12 h-12 text-brand-black/30 mx-auto mb-3" />
-              <p className="text-brand-black/60">No transactions yet</p>
-              <Button 
-                onClick={() => navigate("/wallet")}
-                variant="outline" 
-                className="mt-3 border-brand-red text-brand-red hover:bg-brand-red hover:text-white"
-              >
-                Go to Wallet
-              </Button>
-            </div>
-          )}
-        </Card>
+
       </div>
 
       <BottomNavigation />
