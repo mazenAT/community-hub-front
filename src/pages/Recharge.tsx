@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, CreditCard, Wallet } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { profileApi, api } from "../services/api";
+import { profileApi, api, instaPayApi } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import SavedCards from "../components/SavedCards";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -39,6 +39,7 @@ const Recharge = () => {
   const [mobile, setMobile] = useState("");
   const [selectedCard, setSelectedCard] = useState<SavedCard | null>(null);
   const [paymentMode, setPaymentMode] = useState<'saved' | 'new'>('saved');
+  const [paymentMethod, setPaymentMethod] = useState<'fawry' | 'instapay'>('fawry');
   const [error, setError] = useState('');
 
   // Initialize secure credentials
@@ -77,6 +78,66 @@ const Recharge = () => {
         return;
       }
 
+      const finalAmount = selectedAmount || parseFloat(customAmount) || 0;
+      
+      // Validate amount
+      if (finalAmount <= 0) {
+        toast.error("Please select a valid amount.");
+        return;
+      }
+
+      // Handle different payment methods
+      if (paymentMethod === 'instapay') {
+        await handleInstaPayTopup(finalAmount);
+      } else {
+        await handleFawryPayment(finalAmount);
+      }
+    } catch (error) {
+      console.error('Recharge initialization error:', error);
+      if (error instanceof Error && error.message.includes('Rate limit exceeded')) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to start recharge process. Please try again.");
+      }
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleInstaPayTopup = async (amount: number) => {
+    try {
+      setIsSubmitting(true);
+      setError('');
+
+      // Create InstaPay topup request
+      const response = await instaPayApi.createTopupRequest(amount);
+      
+      if (response.data.success) {
+        const { reference_code, bank_account, instructions } = response.data.data;
+        
+        // Show success message with instructions
+        toast.success('Top-up request created successfully!');
+        
+        // Navigate to InstaPay instructions page or show modal
+        // For now, we'll show the instructions in a toast
+        toast.info(`Reference Code: ${reference_code}\n${instructions}`, {
+          duration: 10000,
+        });
+        
+        // Navigate to wallet page
+        navigate('/wallet');
+      } else {
+        toast.error(response.data.message || 'Failed to create top-up request');
+      }
+    } catch (error) {
+      console.error('InstaPay topup error:', error);
+      toast.error('Failed to create top-up request. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFawryPayment = async (amount: number) => {
+    try {
       // Get secure credentials
       let credentials;
       let endpoints;
@@ -538,16 +599,57 @@ const Recharge = () => {
             <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
             Payment Method
           </h3>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-3">
-            <CreditCard className="w-5 h-5 text-blue-600" />
-                <div>
-              <p className="font-medium text-blue-900">Fawry Payment Gateway</p>
-              <p className="text-sm text-blue-700">Secure payment processing via Fawry with 3DS authentication</p>
-                </div>
+          
+          {/* Payment Method Selection */}
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant={paymentMethod === 'fawry' ? "default" : "outline"}
+              className={`${
+                paymentMethod === 'fawry'
+                  ? "bg-brand-orange hover:bg-brand-orange/90 text-white border-brand-orange"
+                  : "border-brand-orange text-brand-orange hover:bg-brand-orange/10"
+              } rounded-xl flex-1`}
+              onClick={() => setPaymentMethod('fawry')}
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Fawry Card
+            </Button>
+            <Button
+              variant={paymentMethod === 'instapay' ? "default" : "outline"}
+              className={`${
+                paymentMethod === 'instapay'
+                  ? "bg-brand-orange hover:bg-brand-orange/90 text-white border-brand-orange"
+                  : "border-brand-orange text-brand-orange hover:bg-brand-orange/10"
+              } rounded-xl flex-1`}
+              onClick={() => setPaymentMethod('instapay')}
+            >
+              <Wallet className="w-4 h-4 mr-2" />
+              InstaPay
+            </Button>
+          </div>
+
+          {/* Payment Method Details */}
+          {paymentMethod === 'fawry' ? (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-3">
+              <CreditCard className="w-5 h-5 text-blue-600" />
+              <div>
+                <p className="font-medium text-blue-900">Fawry Payment Gateway</p>
+                <p className="text-sm text-blue-700">Secure payment processing via Fawry with 3DS authentication</p>
               </div>
             </div>
+          ) : (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-3">
+              <Wallet className="w-5 h-5 text-green-600" />
+              <div>
+                <p className="font-medium text-green-900">InstaPay Bank Transfer</p>
+                <p className="text-sm text-green-700">Send money via InstaPay to our bank account with a unique reference code</p>
+              </div>
+            </div>
+          )}
+        </div>
 
-        {/* Card Information */}
+        {/* Card Information - Only show for Fawry */}
+        {paymentMethod === 'fawry' && (
         <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="recharge-card-info">
           <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
             <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
@@ -639,6 +741,39 @@ const Recharge = () => {
               </div>
             )}
         </div>
+        )}
+
+        {/* InstaPay Section - Only show for InstaPay */}
+        {paymentMethod === 'instapay' && (
+          <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+            <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              InstaPay Instructions
+            </h3>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-green-800">Select your recharge amount above</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-green-800">Click "Pay" to generate a unique reference code</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-green-800">Send the amount via InstaPay to our bank account</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-green-800">Upload the receipt screenshot for instant verification</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-green-800">Your wallet will be credited automatically</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Total Amount Display */}
         <div className="mb-6 bg-gradient-to-r from-brand-red to-brand-orange text-white p-6 rounded-2xl shadow-lg" data-tutorial="recharge-total">
@@ -669,7 +804,9 @@ const Recharge = () => {
               <span>Processing...</span>
             </div>
           ) : (
-            `Pay ${finalAmount.toFixed(2)} EGP`
+            paymentMethod === 'instapay' 
+              ? `Create ${finalAmount.toFixed(2)} EGP Top-up Request`
+              : `Pay ${finalAmount.toFixed(2)} EGP`
           )}
         </Button>
       </div>

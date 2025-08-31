@@ -7,7 +7,7 @@ import { secureCredentials } from './secureCredentials';
 
 // Backend API endpoint for creating 3DS payments
 // This follows Fawry's official 3DS API documentation
-const BACKEND_3DS_API_URL = import.meta.env.VITE_API_URL + '/fawry/create-3ds-payment';
+const BACKEND_3DS_API_URL = (import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api') + '/fawry/create-3ds-payment';
 
 export interface Fawry3dsPaymentRequest {
   // Required fields for payment

@@ -172,6 +172,25 @@ export const mealRefundApi = {
   getRefundableOrders: () => api.get('/meal-orders/refundable'),
 };
 
+// InstaPay API
+export const instaPayApi = {
+  createTopupRequest: (amount: number) =>
+    api.post('/instapay/create-topup', { amount }),
+  uploadReceipt: (referenceCode: string, receiptImage: File) => {
+    const formData = new FormData();
+    formData.append('reference_code', referenceCode);
+    formData.append('receipt_image', receiptImage);
+    return api.post('/instapay/upload-receipt', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  getTopupStatus: (referenceCode: string) =>
+    api.get(`/instapay/status/${referenceCode}`),
+  getTopupHistory: () => api.get('/instapay/history'),
+};
+
 export const mealApi = {
   getMeal: (id: number) => api.get(`/meals/${id}`),
 };
