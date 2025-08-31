@@ -19,6 +19,7 @@ import TutorialTrigger from "@/components/TutorialTrigger";
 
 import CampaignSlider from '@/components/CampaignSlider';
 
+
 interface UserProfile {
   id: number;
   name: string;

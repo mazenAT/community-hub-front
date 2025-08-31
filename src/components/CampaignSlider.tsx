@@ -110,10 +110,10 @@ const CampaignSlider: React.FC = () => {
 
   if (campaigns.length === 0) {
     return (
-      <div className="w-full h-32 sm:h-48 bg-gradient-to-br from-brand-red to-brand-orange rounded-xl shadow-lg flex items-center justify-center p-4">
+      <div className="w-full h-32 sm:h-48 bg-gradient-to-r from-black via-gray-900 to-orange-600 rounded-xl shadow-lg flex items-center justify-center p-4">
         <div className="text-center text-white">
-                          <h3 className="text-base sm:text-xl font-bold mb-1 sm:mb-2">Welcome to Cafeteria Smart System</h3>
-          <p className="text-xs sm:text-sm opacity-90">Stay tuned for exciting updates and offers!</p>
+          <h3 className="text-base sm:text-xl font-bold mb-1 sm:mb-2">Welcome to Cafeteria Smart System</h3>
+          <p className="text-xs sm:text-sm text-orange-200">Stay tuned for exciting updates and offers!</p>
         </div>
       </div>
     );
