@@ -1,7 +1,7 @@
 {
-  "short_name": "Smart Community",
-  "name": "Smart Community App",
-  "description": "Smart Community Mobile App for managing meals, wallet, and family members",
+  "short_name": "Lite Bite Cafeteria",
+  "name": "Lite Bite Cafeteria System",
+  "description": "Lite Bite Cafeteria System Mobile App for managing meals, wallet, and family members",
   "icons": [
     {
       "src": "Logo.jpg",

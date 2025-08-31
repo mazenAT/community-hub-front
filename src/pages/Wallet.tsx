@@ -205,7 +205,7 @@ const Wallet = () => {
             <img src="/Logo.jpg" alt="App Logo" className="w-8 h-8 sm:w-10 sm:h-10 rounded" />
             <div>
               <h1 className="text-base sm:text-lg font-semibold text-white">Wallet</h1>
-              <p className="text-xs text-white/90">Welcome to Cafeteria Smart System, {userProfile?.name || 'User'}</p>
+              <p className="text-xs text-white/90">Welcome to Lite Bite Cafeteria System, {userProfile?.name || 'User'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

@@ -1,5 +1,5 @@
 {
-  "name": "smart-community-app",
+  "name": "lite-bite-cafeteria-system",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -92,8 +92,8 @@
     ]
   },
   "capacitor": {
-    "appId": "com.smartcommunity.app",
-    "appName": "Smart Community",
+    "appId": "com.litebitecafeteria.app",
+    "appName": "Lite Bite Cafeteria System",
     "webDir": "build",
     "bundledWebRuntime": false,
     "plugins": {

@@ -9,6 +9,7 @@ import { CalendarIcon, AlertCircle, FileText, ChevronDown, Users } from "lucide-
 import BottomNavigation from "@/components/BottomNavigation";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import NotificationBell from "@/components/NotificationBell";
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
@@ -801,7 +802,7 @@ const Planner = () => {
         data-tutorial="planner-header"
       >
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white">View Menu</h1>
+          <h1 className="text-2xl font-bold text-white">Lite Bite Cafeteria Menu</h1>
           <div className="flex items-center space-x-2">
             <FileText className="w-5 h-5 text-white" />
             <NotificationBell />
@@ -927,7 +928,7 @@ const Planner = () => {
               <AlertCircle className="w-5 h-5 text-white mt-0.5 flex-shrink-0" />
               <div className="text-sm text-white">
                 <p className="font-medium mb-1">Pre-Order Deadline</p>
-                <p>Orders must be placed before <strong>11:59 AM</strong> the day before each meal. After this time, ordering will be closed for that meal.</p>
+                <p>Orders must be placed before <strong>11:59 AM</strong> the day before each meal. After this time, ordering will be closed for that day.</p>
               </div>
             </div>
           </div>
@@ -1207,9 +1208,21 @@ const Planner = () => {
                                   {/* Meal Header */}
                                   <div className="mb-4">
                                     <div className="flex-1">
-                                      <h4 className="font-bold text-brand-black text-lg sm:text-xl leading-tight line-clamp-2 mb-2 bg-gradient-to-r from-brand-black to-brand-black/80 bg-clip-text">
-                                    {meal.title || meal.name}
-                                  </h4>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <h4 className="font-bold text-brand-black text-lg sm:text-xl leading-tight line-clamp-2 mb-2 bg-gradient-to-r from-brand-black to-brand-black/80 bg-clip-text cursor-help">
+                                              {meal.title || meal.name}
+                                            </h4>
+                                          </TooltipTrigger>
+                                          <TooltipContent className="max-w-xs">
+                                            <p className="text-sm">{meal.title || meal.name}</p>
+                                            {meal.description && (
+                                              <p className="text-xs text-gray-300 mt-1">{meal.description}</p>
+                                            )}
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
                                       <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-2 font-medium">
                                         {meal.description || 'Delicious meal prepared with fresh ingredients'}
                                   </p>

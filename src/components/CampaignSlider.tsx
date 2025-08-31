@@ -112,7 +112,10 @@ const CampaignSlider: React.FC = () => {
     return (
       <div className="w-full h-32 sm:h-48 bg-gradient-to-r from-black via-gray-900 to-orange-600 rounded-xl shadow-lg flex items-center justify-center p-4">
         <div className="text-center text-white">
-          <h3 className="text-base sm:text-xl font-bold mb-1 sm:mb-2">Welcome to Cafeteria Smart System</h3>
+          <div className="mb-3">
+            <img src="/Logo.jpg" alt="Lite Bite Cafeteria Logo" className="w-16 h-16 mx-auto rounded-lg shadow-lg" />
+          </div>
+          <h3 className="text-base sm:text-xl font-bold mb-1 sm:mb-2">Welcome to Lite Bite Cafeteria System</h3>
           <p className="text-xs sm:text-sm text-orange-200">Stay tuned for exciting updates and offers!</p>
         </div>
       </div>
