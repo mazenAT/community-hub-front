@@ -940,42 +940,45 @@ const Planner = () => {
 
       {/* Content */}
       <div className="px-4 py-4">
-        {/* Family Member Selection */}
+        {/* Combined Filters Section */}
         <div 
-          className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30"
-          data-tutorial="planner-family-selector"
+          className="mb-6 space-y-4"
+          data-tutorial="planner-filters"
         >
-          <div className="flex items-center space-x-2 mb-3">
-            <Users className="w-5 h-5 text-brand-red" />
-            <h3 className="text-sm font-semibold text-brand-black">Select Family Member</h3>
+          {/* Family Member Selection */}
+          <div 
+            className="bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30"
+          >
+            <div className="flex items-center space-x-2 mb-3">
+              <Users className="w-5 h-5 text-brand-red" />
+              <h3 className="text-sm font-semibold text-brand-black">Select Family Member</h3>
+            </div>
+            <Select value={selectedFamilyMember} onValueChange={setSelectedFamilyMember}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Choose a family member to order for" />
+              </SelectTrigger>
+              <SelectContent>
+                {familyMembers.map((member) => (
+                  <SelectItem key={member.id} value={member.id.toString()}>
+                    {member.name} - {member.grade} Class {member.class}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {familyMembers.length === 0 && !isLoadingFamilyMembers && (
+              <p className="text-sm text-brand-black/60 mt-2">
+                No family members found. Please add family members in your profile.
+              </p>
+            )}
           </div>
-          <Select value={selectedFamilyMember} onValueChange={setSelectedFamilyMember}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Choose a family member to order for" />
-            </SelectTrigger>
-            <SelectContent>
-              {familyMembers.map((member) => (
-                <SelectItem key={member.id} value={member.id.toString()}>
-                  {member.name} - {member.grade} Class {member.class}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {familyMembers.length === 0 && !isLoadingFamilyMembers && (
-            <p className="text-sm text-brand-black/60 mt-2">
-              No family members found. Please add family members in your profile.
-            </p>
-          )}
-        </div>
 
-        {/* Week Filter */}
-        <div 
-          className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30"
-          data-tutorial="planner-week-selector"
-        >
-          <h3 className="text-sm font-semibold text-brand-black mb-3">Week Selection</h3>
-          {normalizedPlans.length === 0 ? (
-            <p className="text-sm text-brand-black/60">No weekly plans available</p>
+          {/* Week Filter */}
+          <div 
+            className="bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30"
+          >
+            <h3 className="text-sm font-semibold text-brand-black mb-3">Week Selection</h3>
+            {normalizedPlans.length === 0 ? (
+              <p className="text-sm text-brand-black/60">No weekly plans available</p>
           ) : (
           <div className="flex flex-wrap gap-2">
             {normalizedPlans.map((plan: WeeklyPlan, index: number) => {
@@ -1027,35 +1030,36 @@ const Planner = () => {
               )}
             </div>
           )}
-        </div>
+          </div>
 
-        {/* Meal Filters */}
-        <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="planner-meal-filters">
-          <h3 className="text-sm font-semibold text-brand-black mb-3">Meal Type</h3>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { key: 'all', label: 'All Meals' },
-                { key: 'hot_meal', label: 'Hot Meal' },
-                { key: 'sandwich', label: 'Sandwich' },
-                { key: 'sandwich_xl', label: 'Sandwich XL' },
-                { key: 'burger', label: 'Burger' },
-                { key: 'crepe', label: 'Crepe' },
-                { key: 'nursery', label: 'Nursery' }
-              ].map(({ key, label }) => (
-                <Button
-                  key={key}
-                  variant={selectedType === key ? 'default' : 'outline'}
-                  size="sm"
-                  className={`${
-                    selectedType === key 
-                      ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
-                      : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
-                  } rounded-full px-3 py-1 text-xs font-medium`}
-                  onClick={() => setSelectedType(key as 'all' | 'hot_meal' | 'sandwich' | 'sandwich_xl' | 'burger' | 'crepe' | 'nursery')}
-                >
-                  {label}
-                </Button>
-              ))}
+          {/* Meal Filters */}
+          <div className="bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+            <h3 className="text-sm font-semibold text-brand-black mb-3">Meal Type</h3>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { key: 'all', label: 'All Meals' },
+                  { key: 'hot_meal', label: 'Hot Meal' },
+                  { key: 'sandwich', label: 'Sandwich' },
+                  { key: 'sandwich_xl', label: 'Sandwich XL' },
+                  { key: 'burger', label: 'Burger' },
+                  { key: 'crepe', label: 'Crepe' },
+                  { key: 'nursery', label: 'Nursery' }
+                ].map(({ key, label }) => (
+                  <Button
+                    key={key}
+                    variant={selectedType === key ? 'default' : 'outline'}
+                    size="sm"
+                    className={`${
+                      selectedType === key 
+                        ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
+                        : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
+                    } rounded-full px-3 py-1 text-xs font-medium`}
+                    onClick={() => setSelectedType(key as 'all' | 'hot_meal' | 'sandwich' | 'sandwich_xl' | 'burger' | 'crepe' | 'nursery')}
+                  >
+                    {label}
+                  </Button>
+                ))}
+            </div>
           </div>
         </div>
 

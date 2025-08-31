@@ -78,7 +78,7 @@ const ContactUs = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 p-4 pb-20">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-8" data-tutorial="contact-header">
           <h1 className="text-3xl font-bold text-brand-black mb-2">Contact Us</h1>
           <p className="text-brand-black/70">
             Have a question or need help? We'd love to hear from you.
@@ -86,7 +86,7 @@ const ContactUs = () => {
         </div>
 
         {/* Contact Form */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="bg-white rounded-2xl shadow-lg p-6" data-tutorial="contact-form">
           <h2 className="text-xl font-bold text-brand-black mb-6">Send us a Message</h2>
           
           <form onSubmit={handleSubmit} className="space-y-4">
