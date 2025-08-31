@@ -98,49 +98,61 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6">
-      <div className="w-full max-w-sm space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-red-900 flex flex-col items-center justify-center px-6 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-orange-600/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-red-600/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
+      </div>
+      
+      <div className="relative z-10 w-full max-w-sm space-y-8">
         {/* App Icon */}
         <div className="flex justify-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-brand-red to-brand-orange rounded-2xl flex items-center justify-center">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-20 h-20 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-orange-500/30">
+            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 0 1121 9z" />
             </svg>
           </div>
         </div>
 
         {/* Welcome Text */}
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-semibold text-gray-900">Reset Password</h1>
-          <p className="text-gray-500">Enter your new password</p>
+        <div className="text-center space-y-3">
+          <h1 className="text-3xl font-bold text-white">Reset Password</h1>
+          <p className="text-orange-200 text-lg">Enter your new password</p>
           {email && (
-            <p className="text-sm text-gray-400">Resetting password for: {email}</p>
+            <p className="text-sm text-orange-300/80">Resetting password for: {email}</p>
           )}
         </div>
 
         {/* Reset Form */}
-        <div className="space-y-4">
-          <div className="space-y-3">
-            <Input
-              type="password"
-              placeholder="New Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="h-12 bg-gray-100 border-0 text-base"
-            />
-            <Input
-              type="password"
-              placeholder="Confirm New Password"
-              value={passwordConfirmation}
-              onChange={(e) => setPasswordConfirmation(e.target.value)}
-              className="h-12 bg-gray-100 border-0 text-base"
-            />
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                type="password"
+                placeholder="New Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-14 bg-white/10 backdrop-blur-sm border-2 border-orange-500/30 text-white placeholder:text-orange-200/70 text-base focus:border-orange-500 focus:bg-white/20 transition-all duration-300"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Input
+                type="password"
+                placeholder="Confirm New Password"
+                value={passwordConfirmation}
+                onChange={(e) => setPasswordConfirmation(e.target.value)}
+                className="h-14 bg-white/10 backdrop-blur-sm border-2 border-orange-500/30 text-white placeholder:text-orange-200/70 text-base focus:border-orange-500 focus:bg-white/20 transition-all duration-300"
+              />
+            </div>
           </div>
 
           <Button 
             onClick={handleSubmit}
             disabled={resetPasswordMutation.isPending}
-            className="w-full h-12 bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-orange hover:to-brand-red text-white font-medium rounded-xl"
+            className="w-full h-14 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold text-lg rounded-2xl shadow-2xl shadow-orange-500/30 transition-all duration-300 transform hover:scale-105"
           >
             {resetPasswordMutation.isPending ? (
               <div className="flex items-center space-x-2">
@@ -154,10 +166,10 @@ const ResetPassword = () => {
         </div>
 
         {/* Back to Sign In */}
-        <div className="text-center">
+        <div className="text-center pt-4">
           <button 
             onClick={() => navigate("/signin")}
-            className="text-brand-red text-sm hover:underline"
+            className="text-orange-300 font-bold hover:text-orange-200 transition-colors duration-200"
           >
             Back to Sign In
           </button>

@@ -156,84 +156,112 @@ const SignUp = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300">
-      <img src="/Logo.jpg" alt="App Logo" className="w-32 h-32 mb-6" />
-      <div className="w-full max-w-sm space-y-8">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-black via-gray-900 to-red-900 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-orange-600/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-red-600/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
+      </div>
+      
+      <div className="relative z-10 w-full max-w-sm space-y-8 p-8">
+        {/* Logo with glow effect */}
+        <div className="flex justify-center">
+          <div className="relative">
+            <img src="/Logo.jpg" alt="App Logo" className="w-32 h-32 rounded-full shadow-2xl shadow-orange-500/30" />
+            <div className="absolute inset-0 w-32 h-32 rounded-full bg-gradient-to-r from-orange-500 to-red-500 opacity-20 blur-xl"></div>
+          </div>
+        </div>
+        
         {/* Welcome Text */}
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-semibold text-brand-black">Create Parent Account</h1>
-          <p className="text-brand-black/70">Sign up as a parent to manage your family's meals</p>
+        <div className="text-center space-y-3">
+          <h1 className="text-3xl font-bold text-white">Create Parent Account</h1>
+          <p className="text-orange-200 text-lg">Sign up as a parent to manage your family's meals</p>
         </div>
 
         {/* Sign Up Form */}
-        <div className="space-y-4">
-          <div className="space-y-3">
-            <Input
-              type="text"
-              placeholder="Full Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.name ? 'animate-shake border-brand-red' : ''}`}
-            />
-            {errors.name && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.name}</div>}
-
-            <Select value={selectedSchool} onValueChange={setSelectedSchool} disabled={loadingSchools}>
-              <SelectTrigger className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.selectedSchool ? 'animate-shake border-brand-red' : ''}`}>
-                <SelectValue placeholder={loadingSchools ? "Loading schools..." : "Select your school"} />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-brand-yellow/30 shadow-lg z-50">
-                {schools.map((school) => (
-                  <SelectItem key={school.id} value={String(school.id)}>
-                    {school.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.selectedSchool && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.selectedSchool}</div>}
-
-
-            
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.email ? 'animate-shake border-brand-red' : ''}`}
-            />
-            {errors.email && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.email}</div>}
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.password ? 'animate-shake border-brand-red' : ''}`}
-            />
-            {errors.password && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.password}</div>}
-            <div className="text-xs text-brand-black/60 mt-1">
-              Password must be at least 8 characters with uppercase, lowercase, number, and special character
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                type="text"
+                placeholder="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={`h-14 bg-white/10 backdrop-blur-sm border-2 border-orange-500/30 text-white placeholder:text-orange-200/70 text-base focus:border-orange-500 focus:bg-white/20 transition-all duration-300 ${shake.name ? 'animate-shake border-red-500' : ''}`}
+              />
+              {errors.name && <div className="text-red-400 text-sm mt-1 animate-fade-in font-medium">{errors.name}</div>}
             </div>
-            <Input
-              type="password"
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.confirmPassword ? 'animate-shake border-brand-red' : ''}`}
-            />
-            {errors.confirmPassword && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.confirmPassword}</div>}
-            <Input
-              type="text"
-              placeholder="Phone Number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className={`h-12 bg-white border-2 border-brand-yellow/30 text-base focus:border-brand-red ${shake.phone ? 'animate-shake border-brand-red' : ''}`}
-            />
-            {errors.phone && <div className="text-brand-red text-xs mt-1 animate-fade-in">{errors.phone}</div>}
+
+            <div className="space-y-2">
+              <Select value={selectedSchool} onValueChange={setSelectedSchool} disabled={loadingSchools}>
+                <SelectTrigger className={`h-14 bg-white/10 backdrop-blur-sm border-2 border-orange-500/30 text-white placeholder:text-orange-200/70 text-base focus:border-orange-500 focus:bg-white/20 transition-all duration-300 ${shake.selectedSchool ? 'animate-shake border-red-500' : ''}`}>
+                  <SelectValue placeholder={loadingSchools ? "Loading schools..." : "Select your school"} />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-900 border border-orange-500/30 shadow-lg z-50 text-white">
+                  {schools.map((school) => (
+                    <SelectItem key={school.id} value={String(school.id)} className="hover:bg-orange-500/20">
+                      {school.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.selectedSchool && <div className="text-red-400 text-sm mt-1 animate-fade-in font-medium">{errors.selectedSchool}</div>}
+            </div>
+
+
+            <div className="space-y-2">
+              <Input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={`h-14 bg-white/10 backdrop-blur-sm border-2 border-orange-500/30 text-white placeholder:text-orange-200/70 text-base focus:border-orange-500 focus:bg-white/20 transition-all duration-300 ${shake.email ? 'animate-shake border-red-500' : ''}`}
+              />
+              {errors.email && <div className="text-red-400 text-sm mt-1 animate-fade-in font-medium">{errors.email}</div>}
+            </div>
+            
+            <div className="space-y-2">
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`h-14 bg-white/10 backdrop-blur-sm border-2 border-orange-500/30 text-white placeholder:text-orange-200/70 text-base focus:border-orange-500 focus:bg-white/20 transition-all duration-300 ${shake.password ? 'animate-shake border-red-500' : ''}`}
+              />
+              {errors.password && <div className="text-red-400 text-sm mt-1 animate-fade-in font-medium">{errors.password}</div>}
+              <div className="text-xs text-orange-200/80 mt-1">
+                Password must be at least 8 characters with uppercase, lowercase, number, and special character
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Input
+                type="password"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className={`h-14 bg-white/10 backdrop-blur-sm border-2 border-orange-500/30 text-white placeholder:text-orange-200/70 text-base focus:border-orange-500 focus:bg-white/20 transition-all duration-300 ${shake.confirmPassword ? 'animate-shake border-red-500' : ''}`}
+              />
+              {errors.confirmPassword && <div className="text-red-400 text-sm mt-1 animate-fade-in font-medium">{errors.confirmPassword}</div>}
+            </div>
+            
+            <div className="space-y-2">
+              <Input
+                type="text"
+                placeholder="Phone Number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className={`h-14 bg-white/10 backdrop-blur-sm border-2 border-orange-500/30 text-white placeholder:text-orange-200/70 text-base focus:border-orange-500 focus:bg-white/20 transition-all duration-300 ${shake.phone ? 'animate-shake border-red-500' : ''}`}
+              />
+              {errors.phone && <div className="text-red-400 text-sm mt-1 animate-fade-in font-medium">{errors.phone}</div>}
+            </div>
           </div>
 
           <Button 
             onClick={handleSignUp}
             disabled={signUpMutation.isPending}
-            className="w-full h-12 bg-brand-red hover:bg-brand-red/90 text-white font-medium rounded-xl"
+            className="w-full h-14 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold text-lg rounded-2xl shadow-2xl shadow-orange-500/30 transition-all duration-300 transform hover:scale-105"
           >
             {signUpMutation.isPending ? (
               <div className="flex items-center space-x-2">
@@ -247,11 +275,11 @@ const SignUp = () => {
         </div>
 
         {/* Sign In Link */}
-        <div className="text-center">
-          <span className="text-brand-black/70">Already have an account? </span>
+        <div className="text-center pt-4">
+          <span className="text-orange-200/80">Already have an account? </span>
           <button 
             onClick={() => navigate("/")}
-            className="text-brand-red font-medium hover:text-brand-red/80"
+            className="text-orange-300 font-bold hover:text-orange-200 transition-colors duration-200 ml-1"
           >
             Sign In
           </button>
