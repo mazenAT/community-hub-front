@@ -9,7 +9,7 @@ import { CalendarIcon, AlertCircle, FileText, ChevronDown, Users } from "lucide-
 import BottomNavigation from "@/components/BottomNavigation";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 import NotificationBell from "@/components/NotificationBell";
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
@@ -275,6 +275,30 @@ const Planner = () => {
     const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
     const e = new Date(end.getFullYear(), end.getMonth(), end.getDate());
     return d >= s && d <= e;
+  };
+
+  // Check if the current plan contains nursery meals
+  const hasNurseryMeals = (plan: WeeklyPlan | null): boolean => {
+    if (!plan) return false;
+    
+    // Check meals array
+    if (plan.meals && Array.isArray(plan.meals)) {
+      const hasNurseryInMeals = plan.meals.some(meal => meal.category === 'nursery');
+      if (hasNurseryInMeals) return true;
+    }
+    
+    // Check meals_by_day structure
+    if (plan.meals_by_day && typeof plan.meals_by_day === 'object') {
+      for (const dateKey in plan.meals_by_day) {
+        const mealsForDate = plan.meals_by_day[dateKey];
+        if (Array.isArray(mealsForDate)) {
+          const hasNurseryInDate = mealsForDate.some(meal => meal.category === 'nursery');
+          if (hasNurseryInDate) return true;
+        }
+      }
+    }
+    
+    return false;
   };
 
   const [selectedType, setSelectedType] = useState<"all" | "hot_meal" | "sandwich" | "sandwich_xl" | "burger" | "crepe" | "nursery">("all");
@@ -1033,35 +1057,37 @@ const Planner = () => {
           )}
           </div>
 
-          {/* Meal Filters */}
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
-            <h3 className="text-sm font-semibold text-brand-black mb-3">Meal Type</h3>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { key: 'all', label: 'All Meals' },
-                  { key: 'hot_meal', label: 'Hot Meal' },
-                  { key: 'sandwich', label: 'Sandwich' },
-                  { key: 'sandwich_xl', label: 'Sandwich XL' },
-                  { key: 'burger', label: 'Burger' },
-                  { key: 'crepe', label: 'Crepe' },
-                  { key: 'nursery', label: 'Nursery' }
-                ].map(({ key, label }) => (
-                  <Button
-                    key={key}
-                    variant={selectedType === key ? 'default' : 'outline'}
-                    size="sm"
-                    className={`${
-                      selectedType === key 
-                        ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
-                        : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
-                    } rounded-full px-3 py-1 text-xs font-medium`}
-                    onClick={() => setSelectedType(key as 'all' | 'hot_meal' | 'sandwich' | 'sandwich_xl' | 'burger' | 'crepe' | 'nursery')}
-                  >
-                    {label}
-                  </Button>
-                ))}
+          {/* Meal Filters - Hidden for nursery meal plans */}
+          {!hasNurseryMeals(activePlan) && (
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+              <h3 className="text-sm font-semibold text-brand-black mb-3">Meal Type</h3>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { key: 'all', label: 'All Meals' },
+                    { key: 'hot_meal', label: 'Hot Meal' },
+                    { key: 'sandwich', label: 'Sandwich' },
+                    { key: 'sandwich_xl', label: 'Sandwich XL' },
+                    { key: 'burger', label: 'Burger' },
+                    { key: 'crepe', label: 'Crepe' },
+                    { key: 'nursery', label: 'Nursery' }
+                  ].map(({ key, label }) => (
+                    <Button
+                      key={key}
+                      variant={selectedType === key ? 'default' : 'outline'}
+                      size="sm"
+                      className={`${
+                        selectedType === key 
+                          ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
+                          : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
+                      } rounded-full px-3 py-1 text-xs font-medium`}
+                      onClick={() => setSelectedType(key as 'all' | 'hot_meal' | 'sandwich' | 'sandwich_xl' | 'burger' | 'crepe' | 'nursery')}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* View Full Menu Button */}
@@ -1208,21 +1234,9 @@ const Planner = () => {
                                   {/* Meal Header */}
                                   <div className="mb-4">
                                     <div className="flex-1">
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <h4 className="font-bold text-brand-black text-lg sm:text-xl leading-tight line-clamp-2 mb-2 bg-gradient-to-r from-brand-black to-brand-black/80 bg-clip-text cursor-help">
-                                              {meal.title || meal.name}
-                                            </h4>
-                                          </TooltipTrigger>
-                                          <TooltipContent className="max-w-xs">
-                                            <p className="text-sm">{meal.title || meal.name}</p>
-                                            {meal.description && (
-                                              <p className="text-xs text-gray-300 mt-1">{meal.description}</p>
-                                            )}
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
+                                      <h4 className="font-bold text-brand-black text-lg sm:text-xl leading-tight line-clamp-2 mb-2 bg-gradient-to-r from-brand-black to-brand-black/80 bg-clip-text">
+                                        {meal.title || meal.name}
+                                      </h4>
                                       <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-2 font-medium">
                                         {meal.description || 'Delicious meal prepared with fresh ingredients'}
                                   </p>
@@ -1281,82 +1295,86 @@ const Planner = () => {
           <EmptyState message="No active weekly plan found for your school." />
         )}
 
-        {/* Dedicated Daily Items Ordering Card */}
-        <div className="mb-6">
-          <div className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-2xl border border-gray-200/60 shadow-lg overflow-hidden">
-            {/* Card Header */}
-            <div className="bg-gradient-to-r from-brand-orange/10 via-brand-red/10 to-brand-orange/10 p-4 sm:p-6 border-b border-gray-200/30">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-brand-orange to-brand-red rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-xl sm:text-2xl">🍽️</span>
+        {/* Dedicated Daily Items Ordering Card - Hidden for nursery meal plans */}
+        {!hasNurseryMeals(activePlan) && (
+          <div className="mb-6">
+            <div className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-2xl border border-gray-200/60 shadow-lg overflow-hidden">
+              {/* Card Header */}
+              <div className="bg-gradient-to-r from-brand-orange/10 via-brand-red/10 to-brand-orange/10 p-4 sm:p-6 border-b border-gray-200/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-brand-orange to-brand-red rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
+                      <span className="text-xl sm:text-2xl">🍽️</span>
+                    </div>
+                    <div>
+                      <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-brand-black">Daily Items</h2>
+                      <p className="text-gray-600 text-sm sm:text-base font-medium">Order fresh daily items for specific dates</p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-brand-black">Daily Items</h2>
-                    <p className="text-gray-600 text-sm sm:text-base font-medium">Order fresh daily items for specific dates</p>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => {
-                    setSelectedDailyItemCategory("");
-                    setSelectedDailyItemDate(null);
-                    setSelectedAddOnsForOrder({});
-                    setShowAddOnOrderModal(true);
-                  }}
-                  className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-red hover:from-brand-red/80 hover:via-brand-orange/80 hover:to-brand-red/80 text-white font-bold px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl text-sm sm:text-base"
-                >
-                  Order Now
-                </Button>
-              </div>
-            </div>
-            
-            {/* Card Content */}
-            <div className="p-4 sm:p-6">
-              <p className="text-gray-600 mb-6 text-center">
-                Order fresh daily items independently of meals. Choose the date you want them delivered.
-              </p>
-
-              {/* Daily Item Categories Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                {[
-                  { name: 'Bakery', emoji: '🥐', color: 'from-yellow-400 to-orange-400' },
-                  { name: 'Snacks', emoji: '🍿', color: 'from-orange-400 to-red-400' },
-                  { name: 'Drinks', emoji: '🥤', color: 'from-blue-400 to-purple-400' },
-                  { name: 'Popsicles', emoji: '🍦', color: 'from-pink-400 to-red-400' }
-                ].map((category) => {
-                  const itemCount = filteredDailyItems.filter(dailyItem => {
-                    switch (category.name) {
-                      case 'Bakery': return dailyItem.category === 'bakery';
-                      case 'Snacks': return dailyItem.category === 'snacks';
-                      case 'Drinks': return dailyItem.category === 'drinks';
-                      case 'Popsicles': return dailyItem.category === 'greek_yoghurt_popsicle';
-                      default: return false;
-                    }
-                  }).length;
-                  
-                  return (
-                    <div key={category.name} className="group cursor-pointer" onClick={() => {
-                      setSelectedAddOnCategory(category.name);
+                  <Button
+                    onClick={() => {
+                      setSelectedDailyItemCategory("");
+                      setSelectedDailyItemDate(null);
+                      setSelectedAddOnsForOrder({});
                       setShowAddOnOrderModal(true);
-                    }}>
-                      <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-200/60 hover:border-brand-orange/40 hover:shadow-lg transition-all duration-300 hover:scale-105">
-                        <div className="text-center">
-                          <div className={`w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br ${category.color} rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg group-hover:shadow-xl transition-all duration-300`}>
-                            <span className="text-2xl sm:text-3xl">{category.emoji}</span>
-                          </div>
-                          <div className="text-xs sm:text-sm font-bold text-brand-black mb-1">{category.name}</div>
-                          <div className="text-xs text-gray-600">
-                            {itemCount} item{itemCount !== 1 ? 's' : ''} available
+                    }}
+                    className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-red hover:from-brand-red/80 hover:via-brand-orange/80 hover:to-brand-red/80 text-white font-bold px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl text-sm sm:text-base"
+                  >
+                    Order Now
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Card Content */}
+              <div className="p-4 sm:p-6">
+                <p className="text-gray-600 mb-6 text-center">
+                  Order fresh daily items independently of meals. Choose the date you want them delivered.
+                </p>
+
+                {/* Daily Item Categories Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                  {[
+                    { name: 'Bakery', emoji: '🥐', color: 'from-yellow-400 to-orange-400' },
+                    { name: 'Snacks', emoji: '🍿', color: 'from-orange-400 to-red-400' },
+                    { name: 'Drinks', emoji: '🥤', color: 'from-blue-400 to-purple-400' },
+                    { name: 'Popsicles', emoji: '🍦', color: 'from-pink-400 to-red-400' }
+                  ].map((category) => {
+                    const itemCount = filteredDailyItems.filter(dailyItem => {
+                      switch (category.name) {
+                        case 'Bakery': return dailyItem.category === 'bakery';
+                        case 'Snacks': return dailyItem.category === 'snacks';
+                        case 'Drinks': return dailyItem.category === 'drinks';
+                        case 'Popsicles': return dailyItem.category === 'greek_yoghurt_popsicle';
+                        default: return false;
+                      }
+                    }).length;
+                    
+                    return (
+                      <div key={category.name} className="group cursor-pointer" onClick={() => {
+                        setSelectedAddOnCategory(category.name);
+                        setShowAddOnOrderModal(true);
+                      }}>
+                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-200/60 hover:border-brand-orange/40 hover:shadow-lg transition-all duration-300 hover:scale-105">
+                          <div className="text-center">
+                            <div className={`w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br ${category.color} rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg group-hover:shadow-xl transition-all duration-300`}>
+                              <span className="text-2xl sm:text-3xl">{category.emoji}</span>
+                            </div>
+                            <div className="text-xs sm:text-sm font-bold text-brand-black mb-1">{category.name}</div>
+                            <div className="text-xs text-gray-600">
+                              {itemCount} item{itemCount !== 1 ? 's' : ''} available
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+                  )}
+
+
 
         </div>
 

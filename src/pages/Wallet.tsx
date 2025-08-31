@@ -167,19 +167,34 @@ const Wallet = () => {
     navigate("/");
   };
 
-  const mappedTransactions = transactions.map((t: any) => ({
-    id: t.id,
-    type: t.type || t.transaction_type || 'unknown',
-    amount: t.amount,
-    status: t.status || 'completed',
-    created_at: t.created_at,
-    note: t.description || t.note || '',
-    refunded_at: t.refunded_at || null,
-    details: t.details || {},
-    familyMemberName: t.details?.family_member_name || null,
-    familyMemberId: t.details?.family_member_id || null,
-    isFamilyMemberOrder: !!(t.details?.family_member_id),
-  }));
+  const mappedTransactions = transactions.map((t: any) => {
+    // For refund transactions, construct description from details if description is null
+    let note = t.description || t.note || '';
+    if (t.type === 'refund' && !note && t.details) {
+      if (t.details.order_id && t.details.family_member_name) {
+        note = `Refund for order #${t.details.order_id} (Originally ordered by ${t.details.family_member_name})`;
+      } else if (t.details.order_id) {
+        note = `Refund for order #${t.details.order_id}`;
+      } else if (t.details.refund_reason) {
+        note = `Refund: ${t.details.refund_reason}`;
+      } else {
+        note = 'Refund transaction';
+      }
+    }
+
+    return {
+      id: t.id,
+      type: t.type || t.transaction_type || 'unknown',
+      amount: t.amount,
+      created_at: t.created_at,
+      note: note,
+      refunded_at: t.refunded_at || null,
+      details: t.details || {},
+      familyMemberName: t.details?.family_member_name || null,
+      familyMemberId: t.details?.family_member_id || null,
+      isFamilyMemberOrder: !!(t.details?.family_member_id),
+    };
+  });
 
   if (error) {
     return (
@@ -325,7 +340,6 @@ const Wallet = () => {
               {mappedTransactions.map((transaction) => {
                 const isRefundable =
                   transaction.type === 'purchase' &&
-                  transaction.status === 'completed' &&
                   !transaction.refunded_at;
                 return (
                   <div
@@ -348,13 +362,6 @@ const Wallet = () => {
                             'bg-gray-100 text-gray-700'
                           }`}>
                             {transaction.type === 'credit' ? '+' : '-'}{transaction.type}
-                          </span>
-                          <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                            transaction.status === 'completed' ? 'bg-green-100 text-green-700' : 
-                            transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 
-                            'bg-red-100 text-red-700'
-                          }`}>
-                            {transaction.status}
                           </span>
                           {transaction.isFamilyMemberOrder && (
                             <span className="inline-block rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700">
