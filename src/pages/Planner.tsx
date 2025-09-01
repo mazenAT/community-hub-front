@@ -321,6 +321,10 @@ const Planner = () => {
   const [selectedFamilyMember, setSelectedFamilyMember] = useState<string>("");
   const [selectedWeek, setSelectedWeek] = useState<string>("1");
 
+  // PDF Preview Modal states
+  const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string>('');
+
   // Daily Items modal state
   const [showAddOnsModal, setShowAddOnsModal] = useState(false);
   const [selectedAddOnCategory, setSelectedAddOnCategory] = useState<string>("");
@@ -509,8 +513,9 @@ const Planner = () => {
       }
       
       if (pdfUrl) {
-        // Open PDF in new tab
-        window.open(pdfUrl, '_blank');
+        // Open PDF in modal instead of new tab
+        setPdfPreviewUrl(pdfUrl);
+        setIsPdfPreviewOpen(true);
         toast.success("Opening full menu PDF...");
       } else {
         toast.info("PDF menu is not available. Please contact the school for the full menu.");
@@ -1894,6 +1899,32 @@ const Planner = () => {
             <Button onClick={() => setShowMealTitleModal(false)}>
               Close
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* PDF Preview Modal */}
+      <Dialog open={isPdfPreviewOpen} onOpenChange={setIsPdfPreviewOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] p-0">
+          <DialogHeader className="p-6 pb-4">
+            <DialogTitle className="text-center text-brand-black">Full Menu PDF</DialogTitle>
+          </DialogHeader>
+          <div className="px-6 pb-6">
+            {pdfPreviewUrl && (
+              <iframe
+                src={pdfPreviewUrl}
+                className="w-full h-[70vh] border border-gray-300 rounded-lg"
+                title="Full Menu PDF"
+              />
+            )}
+            <div className="flex justify-end mt-4">
+              <Button 
+                onClick={() => setIsPdfPreviewOpen(false)}
+                className="bg-brand-red hover:bg-brand-red/90 text-white"
+              >
+                Close
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
