@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/BottomNavigation";
-import { walletApi, profileApi, transactionApi, mealRefundApi } from "@/services/api";
+import { walletApi, profileApi, transactionApi, mealRefundApi, api } from "@/services/api";
 import { showToast } from "@/services/native";
 import { formatCurrency } from "@/utils/format";
 import { User, LogOut } from "lucide-react";
@@ -16,6 +16,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
 import { AlertCircle } from 'lucide-react';
 import TutorialTrigger from "@/components/TutorialTrigger";
+import { frontendTransactionTracker } from "@/services/frontendTransactionTracker";
 
 import CampaignSlider from '@/components/CampaignSlider';
 
@@ -54,11 +55,21 @@ const Wallet = () => {
   const [refundAmount, setRefundAmount] = useState("");
   const [refundReason, setRefundReason] = useState("");
   const [refundLoading, setRefundLoading] = useState<number | null>(null);
+  const [successfulRefunds, setSuccessfulRefunds] = useState<Set<number>>(new Set());
+  const [refundSuccessMessage, setRefundSuccessMessage] = useState<string | null>(null);
+
+  const clearSuccessMessages = () => {
+    setRefundSuccessMessage(null);
+    setSuccessfulRefunds(new Set());
+  };
 
   const fetchWalletData = async () => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Clear success messages when refreshing data
+      clearSuccessMessages();
       
       // Fetch profile first to get the user and wallet information
       const profileResponse = await profileApi.getProfile();
@@ -81,6 +92,56 @@ const Wallet = () => {
           // Handle unexpected response format - set empty array instead of error
           transactionsData = [];
         }
+        
+        // Also try to get enhanced transactions with family info if available
+        try {
+          const enhancedResponse = await api.get('/transactions/with-family-info');
+          if (Array.isArray(enhancedResponse.data)) {
+            transactionsData = enhancedResponse.data;
+          } else if (Array.isArray(enhancedResponse.data?.data)) {
+            transactionsData = enhancedResponse.data.data;
+          }
+        } catch (enhancedErr) {
+          // Fallback to regular transactions if enhanced endpoint fails
+          console.warn('Enhanced transactions endpoint failed, using regular transactions:', enhancedErr);
+        }
+        
+        // Merge with frontend transactions to ensure recharge transactions are visible
+        try {
+          const frontendTransactions = frontendTransactionTracker.getAllTransactions();
+          const currentUserId = profile?.id;
+          
+          if (currentUserId && frontendTransactions.length > 0) {
+            const userFrontendTransactions = frontendTransactions
+              .filter(t => t.user_id === currentUserId && t.status === 'completed')
+              .map(t => ({
+                id: `frontend_${t.id}`,
+                type: 'recharge',
+                amount: t.amount,
+                created_at: t.created_at,
+                description: `Fawry Recharge - ${t.card_details?.card_alias || 'Card Payment'}`,
+                note: `Fawry Recharge - ${t.card_details?.card_alias || 'Card Payment'}`,
+                details: {
+                  payment_method: 'fawry_direct',
+                  frontend_transaction: true,
+                  fawry_reference: t.fawry_reference,
+                  card_details: t.card_details
+                },
+                refunded_at: null,
+                familyMemberName: null,
+                familyMemberId: null,
+                isFamilyMemberOrder: false
+              }));
+            
+            // Merge and sort by creation date
+            const allTransactions = [...transactionsData, ...userFrontendTransactions];
+            allTransactions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+            transactionsData = allTransactions;
+          }
+        } catch (frontendErr) {
+          console.warn('Failed to merge frontend transactions:', frontendErr);
+        }
+        
         setTransactions(transactionsData);
       } catch (transactionErr) {
         // If transactions fail, just set empty array instead of showing error
@@ -106,6 +167,43 @@ const Wallet = () => {
 
   useEffect(() => {
     fetchWalletData();
+    
+    // Cleanup function to clear success messages
+    return () => {
+      clearSuccessMessages();
+    };
+  }, []);
+
+  // Add pull-to-refresh functionality
+  useEffect(() => {
+    let startY = 0;
+    let currentY = 0;
+    let isRefreshing = false;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      currentY = e.touches[0].clientY;
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      
+      // Only trigger refresh if at the top of the page and pulling down
+      if (scrollTop === 0 && currentY > startY && currentY - startY > 100 && !isRefreshing) {
+        isRefreshing = true;
+        fetchWalletData().finally(() => {
+          isRefreshing = false;
+        });
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchmove', handleTouchMove);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+    };
   }, []);
 
   const handleRefundRequest = async () => {
@@ -136,17 +234,61 @@ const Wallet = () => {
     setRefundLoading(id);
     try {
       // Use internal meal order refund instead of Fawry-dependent transaction refund
-      await mealRefundApi.refundMealOrder(id);
+      const response = await mealRefundApi.refundMealOrder(id);
+      
+      // Extract meal order details from the response if available
+      let mealDetails = '';
+      let refundAmount = '';
+      
+      if (response.data) {
+        const data = response.data;
+        if (data.meal_name) {
+          mealDetails = ` for "${data.meal_name}"`;
+        }
+        if (data.meal_date) {
+          mealDetails += ` (${new Date(data.meal_date).toLocaleDateString()})`;
+        }
+        if (data.family_member_name) {
+          mealDetails += ` ordered by ${data.family_member_name}`;
+        }
+        if (data.refund_amount) {
+          refundAmount = ` (${formatCurrency(data.refund_amount)})`;
+        }
+      }
+      
+      // Create detailed success message
+      const successMessage = `Meal order${mealDetails} has been successfully cancelled and refunded${refundAmount} to your wallet.`;
+      
+      // Show success toast
       toast({ 
-        title: "Refund Successful", 
-        description: "Your meal order has been cancelled and refunded to your wallet.", 
+        title: "🎉 Refund Successful!", 
+        description: successMessage, 
         variant: "default" 
       });
+      
+      // Add haptic feedback for successful refund
+      if ('vibrate' in navigator) {
+        navigator.vibrate([100, 50, 100]); // Short vibration pattern
+      }
+      
+      // Set success message for display
+      setRefundSuccessMessage(successMessage);
+      
+      // Add to successful refunds set
+      setSuccessfulRefunds(prev => new Set([...prev, id]));
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setRefundSuccessMessage(null);
+      }, 5000);
+      
+      // Refresh wallet data to show updated balance and transactions
       fetchWalletData();
+      
     } catch (e: any) {
       const errorMessage = e.response?.data?.message || 'Refund failed. Please try again.';
       toast({ 
-        title: "Refund Failed", 
+        title: "❌ Refund Failed", 
         description: errorMessage, 
         variant: "destructive" 
       });
@@ -179,6 +321,13 @@ const Wallet = () => {
         note = `Refund: ${t.details.refund_reason}`;
       } else {
         note = 'Refund transaction';
+      }
+    }
+
+    // Handle recharge transactions
+    if (t.type === 'recharge' || t.type === 'top_up') {
+      if (!note) {
+        note = t.details?.payment_method === 'fawry_direct' ? 'Fawry Recharge' : 'Wallet Recharge';
       }
     }
 
@@ -235,6 +384,16 @@ const Wallet = () => {
                 <User className="w-4 h-4 text-brand-red" />
               )}
             </button>
+            <button
+              onClick={fetchWalletData}
+              className="w-8 h-8 bg-brand-yellow/20 rounded-full flex items-center justify-center border border-brand-yellow/30 hover:bg-brand-yellow/30 transition-colors"
+              disabled={loading}
+              title="Refresh transactions"
+            >
+              <svg className="w-4 h-4 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
             <Button
               onClick={handleLogout}
               variant="outline"
@@ -268,6 +427,40 @@ const Wallet = () => {
       <div className="px-4 py-3 sm:py-4">
         <CampaignSlider />
       </div>
+
+      {/* Success Message Banner */}
+      {refundSuccessMessage && (
+        <div className="mx-4 mb-4 p-4 bg-green-50 border border-green-200 rounded-lg relative overflow-hidden">
+          {/* Progress bar */}
+          <div className="absolute bottom-0 left-0 h-1 bg-green-300 animate-pulse">
+            <div className="h-full bg-green-500 transition-all duration-5000 ease-linear" style={{ width: '100%' }}></div>
+          </div>
+          
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <div className="flex-1">
+              <h4 className="text-sm font-medium text-green-800 mb-1">🎉 Refund Completed Successfully!</h4>
+              <p className="text-sm text-green-700">{refundSuccessMessage}</p>
+              <p className="text-xs text-green-600 mt-1">This message will disappear automatically in 5 seconds</p>
+            </div>
+            <button
+              onClick={() => setRefundSuccessMessage(null)}
+              className="flex-shrink-0 text-green-400 hover:text-green-600 transition-colors"
+              title="Dismiss message"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="px-4 py-2 space-y-4">
         {/* Balance Card */}
@@ -330,13 +523,26 @@ const Wallet = () => {
 
         {/* Recent Transactions */}
         <div className="transactions-section space-y-3" data-tutorial="wallet-transactions">
-          <h3 className="text-base font-semibold text-gray-800">Recent Transactions</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-semibold text-gray-800">Recent Transactions</h3>
+            <div className="text-xs text-gray-500 text-right">
+              <p>Recharge transactions may take a moment to appear</p>
+              <p>Pull down to refresh</p>
+            </div>
+          </div>
           {loading && transactions.length === 0 ? (
             <div className="text-center py-8">
               <LoadingSpinner size={32} />
+              <p className="text-gray-500 text-sm mt-2">Loading transactions...</p>
             </div>
           ) : (
             <div className="space-y-3">
+              {loading && (
+                <div className="text-center py-4">
+                  <LoadingSpinner size={24} />
+                  <p className="text-gray-500 text-xs mt-1">Refreshing...</p>
+                </div>
+              )}
               {mappedTransactions.map((transaction) => {
                 const isRefundable =
                   transaction.type === 'purchase' &&
@@ -357,35 +563,58 @@ const Wallet = () => {
                         )}
                         <div className="flex flex-wrap items-center gap-1 mt-2">
                           <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                            transaction.type === 'credit' ? 'bg-green-100 text-green-700' : 
-                            transaction.type === 'debit' ? 'bg-red-100 text-red-700' : 
+                            transaction.type === 'credit' || transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' ? 'bg-green-100 text-green-700' : 
+                            transaction.type === 'debit' || transaction.type === 'purchase' ? 'bg-red-100 text-red-700' : 
                             'bg-gray-100 text-gray-700'
                           }`}>
-                            {transaction.type === 'credit' ? '+' : '-'}{transaction.type}
+                            {transaction.type === 'credit' || transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' ? '+' : '-'}{transaction.type}
                           </span>
-                          {transaction.isFamilyMemberOrder && (
+                          {transaction.isFamilyMemberOrder && transaction.familyMemberName && (
                             <span className="inline-block rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700">
-                              Family
+                              👤 {transaction.familyMemberName}
+                            </span>
+                          )}
+                          {successfulRefunds.has(transaction.id) && (
+                            <span className="inline-block rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 animate-pulse">
+                              ✅ Refunded
                             </span>
                           )}
                         </div>
                       </div>
                       <div className="text-right">
                         <div className={`text-base sm:text-lg font-bold ${
-                          transaction.type === 'credit' ? 'text-green-600' : 
-                          transaction.type === 'debit' ? 'text-red-600' : 
+                          transaction.type === 'credit' || transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' ? 'text-green-600' : 
+                          transaction.type === 'debit' || transaction.type === 'purchase' ? 'text-red-600' : 
                           'text-gray-900'
                         }`}>
-                          {transaction.type === 'credit' ? '+' : '-'}{formatCurrency(Math.abs(Number(transaction.amount)))}
+                          {transaction.type === 'credit' || transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' ? '+' : '-'}{formatCurrency(Math.abs(Number(transaction.amount)))}
                         </div>
-                        {isRefundable && (
+                        {isRefundable && !successfulRefunds.has(transaction.id) && (
                           <button
-                            className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                            className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             disabled={refundLoading === transaction.id}
                             onClick={() => handleRefundTransaction(transaction.id)}
                           >
-                            {refundLoading === transaction.id ? 'Processing...' : 'Refund'}
+                            {refundLoading === transaction.id ? (
+                              <span className="flex items-center gap-1">
+                                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Processing...
+                              </span>
+                            ) : (
+                              'Refund'
+                            )}
                           </button>
+                        )}
+                        {successfulRefunds.has(transaction.id) && (
+                          <div className="mt-2 text-xs text-green-600 font-medium flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Refunded
+                          </div>
                         )}
                         {transaction.refunded_at && (
                           <div className="mt-1 text-xs text-green-600 font-medium">Refunded</div>
@@ -399,7 +628,21 @@ const Wallet = () => {
           )}
           {!loading && transactions.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-gray-500 text-sm">No transactions found</p>
+              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <p className="text-gray-500 text-sm mb-2">No transactions found</p>
+              <p className="text-gray-400 text-xs">Complete a recharge or make a purchase to see your transaction history</p>
+              <Button
+                onClick={() => navigate("/recharge")}
+                variant="outline"
+                size="sm"
+                className="mt-3"
+              >
+                Recharge Now
+              </Button>
             </div>
           )}
         </div>
