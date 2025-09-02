@@ -1660,7 +1660,7 @@ const Planner = () => {
             {(() => {
               // Filter by selected category if any
               let filteredItems = filteredDailyItems;
-              if (selectedDailyItemCategory if (selectedDailyItemCategory) {if (selectedDailyItemCategory) { selectedDailyItemCategory !== "all") {
+              if (selectedDailyItemCategory && selectedDailyItemCategory !== "all") {
                 filteredItems = filteredDailyItems.filter(dailyItem => dailyItem.category === selectedDailyItemCategory);
               }
 
