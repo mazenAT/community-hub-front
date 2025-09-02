@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ordersApi } from '@/services/api';
 import { Button } from '@/components/ui/button';
-import { formatCurrency } from '@/utils/format';
+import { formatCurrency, formatOrderDate } from '@/utils/format';
 
 interface OrderItem {
   id: number;
@@ -103,7 +103,7 @@ const OrderDetails: React.FC = () => {
             )}
             {isMeal && item.meal_date && (
               <p className="text-sm text-blue-600 mt-1">
-                📅 {new Date(item.meal_date).toLocaleDateString('en-GB')}
+                📅 {formatOrderDate(item.meal_date)}
               </p>
             )}
           </div>

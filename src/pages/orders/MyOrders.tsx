@@ -6,6 +6,7 @@ import EmptyState from '@/components/common/EmptyState';
 import { useToast } from '@/components/ui/use-toast';
 import { AlertCircle } from 'lucide-react';
 import { studentPreOrdersApi, mealApi, dailyItemOrderApi, familyMembersApi } from '@/services/api';
+import { formatOrderDate } from '@/utils/format';
 import BottomNavigation from '@/components/BottomNavigation';
 
 interface PreOrderItem {
@@ -212,7 +213,7 @@ const MyOrders: React.FC = () => {
                   >
                     <div>
                       <h3 className="font-semibold text-lg">Pre-Order #{order.id}</h3>
-                      <p className="text-xs text-gray-400 mb-1">{new Date(order.created_at).toLocaleDateString('en-GB')}</p>
+                      <p className="text-xs text-gray-400 mb-1">{formatOrderDate(order.created_at)}</p>
                       {order.familyMember && (
                         <p className="text-sm text-brand-red font-medium mb-1">
                           For: {order.familyMember.name} ({order.familyMember.grade} - {order.familyMember.class})
@@ -231,7 +232,7 @@ const MyOrders: React.FC = () => {
                                 {meal.subcategory && <span>Subcategory: {meal.subcategory} </span>}
                               </div>
                               <div className="text-xs text-gray-500">
-                                Price: {meal.price ? `${meal.price} EGP` : 'N/A'} | Qty: {item.quantity} | Date: {item.meal_date}
+                                Price: {meal.price ? `${meal.price} EGP` : 'N/A'} | Qty: {item.quantity} | Date: {formatOrderDate(item.meal_date)}
                               </div>
                               {item.add_ons && item.add_ons.length > 0 && (
                                 <div className="text-xs text-gray-700 mt-1">
@@ -275,7 +276,7 @@ const MyOrders: React.FC = () => {
                   >
                     <div>
                       <h3 className="font-semibold text-lg">Add-on Order #{addOnOrder.id}</h3>
-                      <p className="text-xs text-gray-400 mb-1">{new Date(addOnOrder.created_at).toLocaleDateString('en-GB')}</p>
+                      <p className="text-xs text-gray-400 mb-1">{formatOrderDate(addOnOrder.created_at)}</p>
                       
                       {/* Family Member Information */}
                       {addOnOrder.family_member && (
