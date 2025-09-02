@@ -212,7 +212,7 @@ const MyOrders: React.FC = () => {
                   >
                     <div>
                       <h3 className="font-semibold text-lg">Pre-Order #{order.id}</h3>
-                      <p className="text-xs text-gray-400 mb-1">{new Date(order.created_at).toLocaleDateString()}</p>
+                      <p className="text-xs text-gray-400 mb-1">{new Date(order.created_at).toLocaleDateString('en-GB')}</p>
                       {order.familyMember && (
                         <p className="text-sm text-brand-red font-medium mb-1">
                           For: {order.familyMember.name} ({order.familyMember.grade} - {order.familyMember.class})
@@ -275,7 +275,7 @@ const MyOrders: React.FC = () => {
                   >
                     <div>
                       <h3 className="font-semibold text-lg">Add-on Order #{addOnOrder.id}</h3>
-                      <p className="text-xs text-gray-400 mb-1">{new Date(addOnOrder.created_at).toLocaleDateString()}</p>
+                      <p className="text-xs text-gray-400 mb-1">{new Date(addOnOrder.created_at).toLocaleDateString('en-GB')}</p>
                       
                       {/* Family Member Information */}
                       {addOnOrder.family_member && (

@@ -103,7 +103,7 @@ const OrderDetails: React.FC = () => {
             )}
             {isMeal && item.meal_date && (
               <p className="text-sm text-blue-600 mt-1">
-                📅 {new Date(item.meal_date).toLocaleDateString()}
+                📅 {new Date(item.meal_date).toLocaleDateString('en-GB')}
               </p>
             )}
           </div>

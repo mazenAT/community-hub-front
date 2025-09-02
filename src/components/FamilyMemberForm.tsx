@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+
 import { X } from 'lucide-react';
 
 interface FamilyMember {
@@ -20,9 +20,7 @@ interface FamilyMemberFormProps {
   isLoading?: boolean;
 }
 
-const allergies = [
-  'Lactose', 'Soya', 'Chocolate', 'Beans', 'Peanuts', 'Fruits', 'Sesame'
-];
+
 
 const grades = [
   'Pre-K', 'Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade',
@@ -100,14 +98,7 @@ export const FamilyMemberForm: React.FC<FamilyMemberFormProps> = ({
     }
   };
 
-  const handleAllergyChange = (allergy: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      allergies: checked 
-        ? [...prev.allergies, allergy]
-        : prev.allergies.filter(a => a !== allergy)
-    }));
-  };
+
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -192,27 +183,22 @@ export const FamilyMemberForm: React.FC<FamilyMemberFormProps> = ({
 
           {/* Allergies */}
           <div>
-            <Label className="text-brand-black font-medium">
-              Allergies (Select all that apply)
+            <Label htmlFor="allergies" className="text-brand-black font-medium">
+              Allergies (Optional)
             </Label>
-            <div className="mt-2 bg-brand-yellow/10 rounded-lg p-4 border border-brand-yellow/30 max-h-48 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-2">
-                {allergies.map((allergy) => (
-                  <div key={allergy} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={allergy}
-                      checked={formData.allergies.includes(allergy)}
-                      onCheckedChange={(checked) => handleAllergyChange(allergy, checked as boolean)}
-                      className="data-[state=checked]:bg-brand-red data-[state=checked]:border-brand-red"
-                    />
-                    <Label htmlFor={allergy} className="text-sm text-brand-black cursor-pointer">
-                      {allergy}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
+            <Input
+              id="allergies"
+              value={formData.allergies.join(', ')}
+              onChange={(e) => setFormData(prev => ({ 
+                ...prev, 
+                allergies: e.target.value ? e.target.value.split(',').map(a => a.trim()).filter(a => a) : []
+              }))}
+              className="mt-1 border-2 focus:border-brand-red border-brand-yellow/30"
+              placeholder="Enter allergies separated by commas (e.g., Lactose, Peanuts, Chocolate)"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Enter any food allergies or dietary restrictions, separated by commas
+            </p>
           </div>
 
           {/* Buttons */}
