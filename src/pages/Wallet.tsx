@@ -403,7 +403,7 @@ const Wallet = () => {
               <LogOut className="w-4 h-4" />
               <span className="hidden md:inline">Logout</span>
             </Button>
-            <div className="hidden sm:flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
               <TutorialTrigger variant="inline" />
               <Button
                 variant="outline"
