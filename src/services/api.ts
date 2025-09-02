@@ -144,7 +144,14 @@ export const plannerApi = {
 };
 
 export const dailyItemsApi = {
-  getDailyItems: () => api.get('/add-ons'),
+  getDailyItems: (schoolId?: number) => {
+    const params = schoolId ? { school_id: schoolId } : {};
+    return api.get('/add-ons', { params });
+  },
+  getCategoriesForSchool: (schoolId?: number) => {
+    const params = schoolId ? { school_id: schoolId } : {};
+    return api.get('/add-ons/categories/school', { params });
+  },
 };
 
 export const dailyItemOrderApi = {

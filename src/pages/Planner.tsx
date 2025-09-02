@@ -335,6 +335,7 @@ const Planner = () => {
   // Daily Items Order Modal state
   const [selectedDailyItemDate, setSelectedDailyItemDate] = useState<Date | null>(null);
   const [selectedDailyItemCategory, setSelectedDailyItemCategory] = useState<string>("all");
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   
   // Store daily-items for each meal (key: mealId_date, value: array of daily-items)
   const [mealAddOns, setMealAddOns] = useState<{[key: string]: {daily_item_id: number, quantity: number}[]}>({});
@@ -706,17 +707,31 @@ const Planner = () => {
 
 
 
+  // Fetch daily items and categories for the school
   useEffect(() => {
-    // Handle daily-items with error handling
-    dailyItemsApi.getDailyItems()
+    if (!schoolId) return;
+    
+    // Fetch school-specific daily items
+    dailyItemsApi.getDailyItems(schoolId)
       .then((res) => {
         setDailyItems(res.data.filter((dailyItem: DailyItem) => dailyItem.is_active));
       })
       .catch((error) => {
-        // Failed to load daily-items
+        console.error('Failed to load daily items:', error);
         setDailyItems([]);
       });
-  }, []);
+    
+    // Fetch dynamic categories based on active meal plan
+    dailyItemsApi.getCategoriesForSchool(schoolId)
+      .then((res) => {
+        setAvailableCategories(res.data);
+      })
+      .catch((error) => {
+        console.error('Failed to load categories:', error);
+        // Fallback to default categories
+        setAvailableCategories(['bakery', 'snacks', 'drinks', 'greek_yoghurt_popsicle']);
+      });
+  }, [schoolId]);
 
   const navigate = useNavigate();
 
@@ -1646,10 +1661,15 @@ const Planner = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="bakery">Bakery</SelectItem>
-                      <SelectItem value="snacks">Snacks</SelectItem>
-                      <SelectItem value="drinks">Drinks</SelectItem>
-                      <SelectItem value="greek_yoghurt_popsicle">Popsicles</SelectItem>
+                      {availableCategories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category === 'greek_yoghurt_popsicle' ? 'Popsicles' : 
+                           category === 'bakery' ? 'Bakery' :
+                           category === 'snacks' ? 'Snacks' :
+                           category === 'drinks' ? 'Drinks' :
+                           category.charAt(0).toUpperCase() + category.slice(1)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
