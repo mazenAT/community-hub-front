@@ -624,8 +624,6 @@ const Wallet = () => {
 
       <BottomNavigation activeTab="wallet" />
       
-      {/* Floating Tutorial Button */}
-      <TutorialTrigger variant="floating" />
     </div>
   );
 };
