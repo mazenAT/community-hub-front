@@ -334,7 +334,7 @@ const Planner = () => {
   
   // Daily Items Order Modal state
   const [selectedDailyItemDate, setSelectedDailyItemDate] = useState<Date | null>(null);
-  const [selectedDailyItemCategory, setSelectedDailyItemCategory] = useState<string>("");
+  const [selectedDailyItemCategory, setSelectedDailyItemCategory] = useState<string>("all");
   
   // Store daily-items for each meal (key: mealId_date, value: array of daily-items)
   const [mealAddOns, setMealAddOns] = useState<{[key: string]: {daily_item_id: number, quantity: number}[]}>({});
@@ -742,7 +742,7 @@ const Planner = () => {
       // Clear selected daily-items and reset modal state
       setSelectedAddOnsForOrder({});
       setSelectedDailyItemDate(null);
-      setSelectedDailyItemCategory("");
+      setSelectedDailyItemCategory("all");
       setShowAddOnOrderModal(false);
       
       refetch(); // Update the UI after order
@@ -1335,7 +1335,7 @@ const Planner = () => {
                   </div>
                   <Button
                     onClick={() => {
-                      setSelectedDailyItemCategory("");
+                      setSelectedDailyItemCategory("all");
                       setSelectedDailyItemDate(null);
                       setSelectedAddOnsForOrder({});
                       setShowAddOnOrderModal(true);
@@ -1596,7 +1596,7 @@ const Planner = () => {
                 <span className="text-4xl">🍽️</span>
               </div>
               <DialogTitle className="text-3xl font-bold text-brand-black mb-2">
-                Order Daily Items - {selectedDailyItemCategory || 'All Categories'}
+                Order Daily Items - {selectedDailyItemCategory === "all" ? "All Categories" : selectedDailyItemCategory}
               </DialogTitle>
               <p className="text-xl text-brand-black/70 mb-2">
                 Select daily items to order independently of meals
@@ -1645,7 +1645,7 @@ const Planner = () => {
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Categories</SelectItem>
+                      <SelectItem value="all">All Categories</SelectItem>
                       <SelectItem value="bakery">Bakery</SelectItem>
                       <SelectItem value="snacks">Snacks</SelectItem>
                       <SelectItem value="drinks">Drinks</SelectItem>
@@ -1660,7 +1660,7 @@ const Planner = () => {
             {(() => {
               // Filter by selected category if any
               let filteredItems = filteredDailyItems;
-              if (selectedDailyItemCategory) {
+              if (selectedDailyItemCategory if (selectedDailyItemCategory) {if (selectedDailyItemCategory) { selectedDailyItemCategory !== "all") {
                 filteredItems = filteredDailyItems.filter(dailyItem => dailyItem.category === selectedDailyItemCategory);
               }
 
