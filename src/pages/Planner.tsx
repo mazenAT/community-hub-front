@@ -714,7 +714,7 @@ const Planner = () => {
     // Fetch school-specific daily items
     dailyItemsApi.getDailyItems(schoolId)
       .then((res) => {
-        setDailyItems(res.data.filter((dailyItem: DailyItem) => dailyItem.is_active));
+        console.log("Daily items response:", res.data); setDailyItems(res.data.filter((dailyItem: DailyItem) => dailyItem.is_active));
       })
       .catch((error) => {
         console.error('Failed to load daily items:', error);
