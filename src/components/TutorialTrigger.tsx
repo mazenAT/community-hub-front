@@ -32,3 +32,4 @@ const TutorialTrigger: React.FC<TutorialTriggerProps> = ({
   );
 };
 
+export default TutorialTrigger;
