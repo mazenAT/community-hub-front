@@ -301,7 +301,7 @@ const Planner = () => {
     return false;
   };
 
-  const [selectedType, setSelectedType] = useState<"all" | "hot_meal" | "sandwich" | "sandwich_xl" | "burger" | "crepe" | "nursery">("all");
+  const [selectedType, setSelectedType] = useState<MealCategory | "all">("all");
   const [selectedCategory, setSelectedCategory] = useState<MealCategory | "all">("all");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
   const [categories, setCategories] = useState<(MealCategory | "all")[]>([]);
@@ -1088,12 +1088,10 @@ const Planner = () => {
                 <div className="flex flex-wrap gap-2">
                   {[
                     { key: 'all', label: 'All Meals' },
-                    { key: 'hot_meal', label: 'Hot Meal' },
-                    { key: 'sandwich', label: 'Sandwich' },
-                    { key: 'sandwich_xl', label: 'Sandwich XL' },
-                    { key: 'burger', label: 'Burger' },
-                    { key: 'crepe', label: 'Crepe' },
-                    { key: 'nursery', label: 'Nursery' }
+                    ...categories.filter(cat => cat !== 'all').map(cat => ({
+                      key: cat,
+                      label: CATEGORY_LABELS[cat as MealCategory] || cat.charAt(0).toUpperCase() + cat.slice(1)
+                    }))
                   ].map(({ key, label }) => (
                     <Button
                       key={key}
