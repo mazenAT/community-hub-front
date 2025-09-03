@@ -272,7 +272,7 @@ const Wallet = () => {
       setRefundSuccessMessage(successMessage);
       
       // Add to successful refunds set
-      setSuccessfulRefunds(prev => new Set([...prev, id]));
+      setSuccessfulRefunds(prev => new Set([...prev, orderId]));
       
       // Clear success message after 5 seconds
       setTimeout(() => {
@@ -329,6 +329,7 @@ const Wallet = () => {
     }
 
     return {
+      reference_id: t.reference_id,
       id: t.id,
       type: t.type || t.transaction_type || 'unknown',
       amount: t.amount,
@@ -566,7 +567,7 @@ const Wallet = () => {
                             disabled={refundLoading === transaction.reference_id}
                             onClick={() => handleRefundTransaction(transaction.reference_id)}
                           >
-                            refundLoading === transaction.reference_id ? (
+                            {refundLoading === transaction.reference_id ? (
                               <span className="flex items-center gap-1">
                                 <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
