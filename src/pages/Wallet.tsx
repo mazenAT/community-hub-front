@@ -227,11 +227,11 @@ const Wallet = () => {
     }
   };
 
-  const handleRefundTransaction = async (id: number) => {
-    setRefundLoading(id);
+  const handleRefundTransaction = async (orderId: number) => {
+    setRefundLoading(orderId);
     try {
       // Use internal meal order refund
-      const response = await mealRefundApi.refundMealOrder(id, "User requested refund");
+      const response = await mealRefundApi.refundMealOrder(orderId, "User requested refund");
       
       // Extract meal order details from the response if available
       let mealDetails = '';
@@ -545,7 +545,7 @@ const Wallet = () => {
                               👤 {transaction.familyMemberName}
                             </span>
                           )}
-                          {successfulRefunds.has(transaction.id) && (
+                          {successfulRefunds.has(transaction.reference_id) && (
                             <span className="inline-block rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 animate-pulse">
                               ✅ Refunded
                             </span>
@@ -560,13 +560,13 @@ const Wallet = () => {
                         }`}>
                           {transaction.type === 'credit' || transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' ? '+' : '-'}{formatCurrency(Math.abs(Number(transaction.amount)))}
                         </div>
-                        {isRefundable && !successfulRefunds.has(transaction.id) && (
+                        {isRefundable && !successfulRefunds.has(transaction.reference_id) && (
                           <button
                             className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            disabled={refundLoading === transaction.id}
-                            onClick={() => handleRefundTransaction(transaction.id)}
+                            disabled={refundLoading === transaction.reference_id}
+                            onClick={() => handleRefundTransaction(transaction.reference_id)}
                           >
-                            {refundLoading === transaction.id ? (
+                            refundLoading === transaction.reference_id ? (
                               <span className="flex items-center gap-1">
                                 <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -579,7 +579,7 @@ const Wallet = () => {
                             )}
                           </button>
                         )}
-                        {successfulRefunds.has(transaction.id) && (
+                        {successfulRefunds.has(transaction.reference_id) && (
                           <div className="mt-2 text-xs text-green-600 font-medium flex items-center gap-1">
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
