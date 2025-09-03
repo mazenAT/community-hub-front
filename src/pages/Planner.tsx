@@ -4,8 +4,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { plannerApi, profileApi, dailyItemsApi, familyMembersApi, dailyItemOrderApi } from "@/services/api";
-import { format, parseISO, getDay, isBefore, startOfDay, endOfDay, subDays, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameDay } from "date-fns";
-import { CalendarIcon, AlertCircle, FileText, ChevronDown, Users } from "lucide-react";
+import { format, parseISO, getDay, isBefore, startOfDay, subDays, addDays, isSameDay } from "date-fns";
+import { CalendarIcon, AlertCircle, FileText, Users } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -14,7 +14,7 @@ import NotificationBell from "@/components/NotificationBell";
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
 import { formatCurrency } from "@/utils/format";
-import { MealCategory, DailyItemCategory, CATEGORY_LABELS, DAILY_ITEM_CATEGORY_LABELS, getMealPrice, getPriceDisplay } from "@/types/cafeteria";
+import { MealCategory, DailyItemCategory, CATEGORY_LABELS } from "@/types/cafeteria";
 import {
   Dialog,
   DialogContent,
@@ -244,11 +244,6 @@ const Planner = () => {
       }
     }
     
-    // Debug: Log all meals before filtering
-    console.log(`\n=== Final result: ${allMeals.length} meals for ${dateString} ===`);
-    console.log('All meals:', allMeals);
-    console.log('Selected meal type:', selectedType);
-    
     // Filter by selected meal type
     if (selectedType !== 'all') {
       const filteredMeals = allMeals.filter(meal => meal.category === selectedType);
@@ -320,6 +315,7 @@ const Planner = () => {
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [selectedFamilyMember, setSelectedFamilyMember] = useState<string>("");
   const [selectedWeek, setSelectedWeek] = useState<string>("1");
+  const [generalFilter, setGeneralFilter] = useState<"meals" | "daily_items">("meals");
 
   // PDF Preview Modal states
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
@@ -973,10 +969,10 @@ const Planner = () => {
         {activePlan && (
           <div className="mt-4 p-3 bg-white/20 border border-white/30 rounded-lg">
             <div className="flex items-start space-x-2">
-              <AlertCircle className="w-5 h-5 text-white mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-white">
+              <AlertCircle className="w-5 h-5 text-red-300 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-red-300">
                 <p className="font-medium mb-1">Pre-Order Deadline</p>
-                <p>Orders must be placed before <strong>11:59 AM</strong> the day before each meal. After this time, ordering will be closed for that day.</p>
+                <p>Orders are closed by 11:59 the day before.</p>
               </div>
             </div>
           </div>
@@ -1081,35 +1077,36 @@ const Planner = () => {
           )}
           </div>
 
-          {/* Meal Filters - Hidden for nursery meal plans */}
-          {!hasNurseryMeals(activePlan) && (
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
-              <h3 className="text-sm font-semibold text-brand-black mb-3">Meal Type</h3>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { key: 'all', label: 'All Meals' },
-                    ...categories.filter(cat => cat !== 'all').map(cat => ({
-                      key: cat,
-                      label: CATEGORY_LABELS[cat as MealCategory] || cat.charAt(0).toUpperCase() + cat.slice(1)
-                    }))
-                  ].map(({ key, label }) => (
-                    <Button
-                      key={key}
-                      variant={selectedType === key ? 'default' : 'outline'}
-                      size="sm"
-                      className={`${
-                        selectedType === key 
-                          ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
-                          : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
-                      } rounded-full px-3 py-1 text-xs font-medium`}
-                      onClick={() => setSelectedType(key as 'all' | 'hot_meal' | 'sandwich' | 'sandwich_xl' | 'burger' | 'crepe' | 'nursery')}
-                    >
-                      {label}
-                    </Button>
-                  ))}
-              </div>
+          {/* General Filter */}
+          <div className="bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+            <h3 className="text-sm font-semibold text-brand-black mb-3">Filter</h3>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={generalFilter === "meals" ? 'default' : 'outline'}
+                size="sm"
+                className={`${
+                  generalFilter === "meals" 
+                    ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
+                    : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
+                } rounded-full px-4 py-2 text-sm font-medium`}
+                onClick={() => setGeneralFilter("meals")}
+              >
+                Food/Sandwich
+              </Button>
+              <Button
+                variant={generalFilter === "daily_items" ? 'default' : 'outline'}
+                size="sm"
+                className={`${
+                  generalFilter === "daily_items" 
+                    ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
+                    : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
+                } rounded-full px-4 py-2 text-sm font-medium`}
+                onClick={() => setGeneralFilter("daily_items")}
+              >
+                Daily Items
+              </Button>
             </div>
-          )}
+          </div>
         </div>
 
         {/* View Full Menu Button */}
