@@ -52,15 +52,10 @@ const Recharge = () => {
       setIsSubmitting(true);
       setError('');
 
-      const response = await instaPayApi.createTopupRequest({
-        amount: amount,
-        bank_code: "CIBEGCX",
-        account_number: "100054480207"
-      });
+      const response = await instaPayApi.createTopupRequest(amount);
       
       if (response.data.success) {
         const { reference_code, bank_account, instructions, status } = response.data.data;
-        
         setInstaPayData({
           reference_code,
           bank_account,
@@ -101,11 +96,10 @@ const Recharge = () => {
     try {
       setIsSubmitting(true);
       
-      const response = await instaPayApi.uploadReceipt({
-        reference_code: instaPayData.reference_code,
-        receipt_image: receiptImage
-      });
-      
+      const response = await instaPayApi.uploadReceipt(
+        instaPayData.reference_code,
+        receiptImage
+      );
       if (response.data.success) {
         toast.success('Receipt uploaded successfully! We will validate and credit your wallet within minutes.');
         
