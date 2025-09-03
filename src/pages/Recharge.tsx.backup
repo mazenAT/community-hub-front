@@ -285,22 +285,6 @@ const Recharge = () => {
             </div>
 
             {/* Upload Receipt */}
-
-            {/* Important Note */}
-            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-white text-xs font-bold">!</span>
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-blue-800 mb-1">Important</h4>
-                  <p className="text-sm text-blue-700">
-                    When making the transfer in your InstaPay app, please use the reference code above as the <strong>"Reason for transfer"</strong> or <strong>"Transfer note"</strong>. This helps us process your payment faster.
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
               <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
                 <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
