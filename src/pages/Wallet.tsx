@@ -4,17 +4,15 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/BottomNavigation";
-import { walletApi, profileApi, transactionApi, mealRefundApi, api } from "@/services/api";
+import { walletApi, profileApi, mealRefundApi, api } from "@/services/api";
 import { showToast } from "@/services/native";
 import { formatCurrency } from "@/utils/format";
-import { User, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import NotificationBell from "@/components/NotificationBell";
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import EmptyState from '@/components/common/EmptyState';
-import { AlertCircle } from 'lucide-react';
 import TutorialTrigger from "@/components/TutorialTrigger";
 import { frontendTransactionTracker } from "@/services/frontendTransactionTracker";
 
@@ -119,12 +117,11 @@ const Wallet = () => {
                 type: 'recharge',
                 amount: t.amount,
                 created_at: t.created_at,
-                description: `Fawry Recharge - ${t.card_details?.card_alias || 'Card Payment'}`,
-                note: `Fawry Recharge - ${t.card_details?.card_alias || 'Card Payment'}`,
+                description: `InstaPay Recharge`,
+                note: `InstaPay Recharge`,
                 details: {
-                  payment_method: 'fawry_direct',
+                  payment_method: 'instapay',
                   frontend_transaction: true,
-                  fawry_reference: t.fawry_reference,
                   card_details: t.card_details
                 },
                 refunded_at: null,
@@ -233,8 +230,8 @@ const Wallet = () => {
   const handleRefundTransaction = async (id: number) => {
     setRefundLoading(id);
     try {
-      // Use internal meal order refund instead of Fawry-dependent transaction refund
-      const response = await mealRefundApi.refundMealOrder(id);
+      // Use internal meal order refund
+      const response = await mealRefundApi.refundMealOrder(id, "User requested refund");
       
       // Extract meal order details from the response if available
       let mealDetails = '';
@@ -327,7 +324,7 @@ const Wallet = () => {
     // Handle recharge transactions
     if (t.type === 'recharge' || t.type === 'top_up') {
       if (!note) {
-        note = t.details?.payment_method === 'fawry_direct' ? 'Fawry Recharge' : 'Wallet Recharge';
+        note = t.details?.payment_method === 'instapay' ? 'InstaPay Recharge' : 'Wallet Recharge';
       }
     }
 

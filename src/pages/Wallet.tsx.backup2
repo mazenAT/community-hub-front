@@ -4,17 +4,15 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/BottomNavigation";
-import { walletApi, profileApi, transactionApi, mealRefundApi, api } from "@/services/api";
+import { walletApi, profileApi, mealRefundApi, api } from "@/services/api";
 import { showToast } from "@/services/native";
 import { formatCurrency } from "@/utils/format";
-import { User, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import NotificationBell from "@/components/NotificationBell";
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import EmptyState from '@/components/common/EmptyState';
-import { AlertCircle } from 'lucide-react';
 import TutorialTrigger from "@/components/TutorialTrigger";
 import { frontendTransactionTracker } from "@/services/frontendTransactionTracker";
 
@@ -361,62 +359,36 @@ const Wallet = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 pb-24">
       {/* Header */}
       <div 
-        className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 py-3 sm:py-4 border-b-2 border-brand-red"
+        className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 py-4 border-b-2 border-brand-red shadow-lg"
         data-tutorial="wallet-header"
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <img src="/Logo.jpg" alt="App Logo" className="w-8 h-8 sm:w-10 sm:h-10 rounded" />
+          {/* Left side - Logo and Title */}
+          <div className="flex items-center gap-3">
+            <img src="/Logo.jpg" alt="App Logo" className="w-10 h-10 rounded-lg shadow-md" />
             <div>
-              <h1 className="text-base sm:text-lg font-semibold text-white">Wallet</h1>
-              <p className="text-xs text-white/90">Welcome to Lite Bite Cafeteria System, {userProfile?.name || 'User'}</p>
+              <h1 className="text-lg font-bold text-white">Wallet</h1>
+              <p className="text-sm text-white/90">Welcome back, {userProfile?.name || 'User'}</p>
             </div>
           </div>
+          
+          {/* Right side - Actions */}
           <div className="flex items-center gap-2">
             <NotificationBell />
-            <button 
-              onClick={() => navigate("/profile")}
-              className="w-8 h-8 bg-brand-yellow/20 rounded-full flex items-center justify-center overflow-hidden border border-brand-yellow/30"
-            >
-              {userProfile?.profile_image ? (
-                <img src={userProfile.profile_image} alt={userProfile.name || 'User Avatar'} className="w-full h-full object-cover" />
-              ) : (
-                <User className="w-4 h-4 text-brand-red" />
-              )}
-            </button>
-            <button
-              onClick={fetchWalletData}
-              className="w-8 h-8 bg-brand-yellow/20 rounded-full flex items-center justify-center border border-brand-yellow/30 hover:bg-brand-yellow/30 transition-colors"
-              disabled={loading}
-              title="Refresh transactions"
-            >
-              <svg className="w-4 h-4 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
+            
+            {/* Tutorial Button */}
+            <TutorialTrigger variant="inline" />
+            
+            {/* Logout Button */}
             <Button
               onClick={handleLogout}
               variant="outline"
               size="sm"
-              className="flex items-center gap-2 bg-white/20 text-white border-white/30 hover:bg-white/30"
+              className="bg-white/20 text-white border-white/30 hover:bg-white/30 transition-all duration-200 shadow-md"
             >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden md:inline">Logout</span>
+              <LogOut className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">Logout</span>
             </Button>
-            <div className="flex items-center space-x-2">
-              <TutorialTrigger variant="inline" />
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-brand-red text-brand-red hover:bg-brand-red/10 text-xs"
-                onClick={() => {
-                  localStorage.removeItem('token');
-                  navigate('/');
-                }}
-              >
-                Logout
-              </Button>
-            </div>
           </div>
         </div>
       </div>
@@ -650,8 +622,6 @@ const Wallet = () => {
 
       <BottomNavigation activeTab="wallet" />
       
-      {/* Floating Tutorial Button */}
-      <TutorialTrigger variant="floating" />
     </div>
   );
 };
