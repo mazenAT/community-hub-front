@@ -172,7 +172,7 @@ export const studentPreOrdersApi = {
   getMyPreOrders: (params?: { family_member_id?: string }) => api.get('/student/pre-orders', { params }),
 };
 
-// Meal Order Refunds (Internal - no Fawry involvement)
+// Meal Order Refunds (Internal)
 export const mealRefundApi = {
   refundMealOrder: (orderId: number, reason?: string) => 
     api.post(`/meal-orders/${orderId}/refund`, { reason }),
