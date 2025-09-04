@@ -4,7 +4,7 @@
   "description": "Lite Bite Cafeteria System Mobile App for managing meals, wallet, and family members",
   "icons": [
     {
-      "src": "Logo.jpg",
+      "src": "Logo.png",
       "sizes": "192x192 512x512",
       "type": "image/jpeg",
       "purpose": "any maskable"
@@ -27,7 +27,7 @@
       "url": "/wallet",
       "icons": [
         {
-          "src": "Logo.jpg",
+          "src": "Logo.png",
           "sizes": "96x96"
         }
       ]
@@ -39,7 +39,7 @@
       "url": "/planner",
       "icons": [
         {
-          "src": "Logo.jpg",
+          "src": "Logo.png",
           "sizes": "96x96"
         }
       ]

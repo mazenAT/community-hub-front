@@ -39,10 +39,10 @@ const Recharge = () => {
         return;
       }
 
-      await handleInstaPayTopup(finalAmount);
+        await handleInstaPayTopup(finalAmount);
     } catch (error) {
       console.error('Recharge initialization error:', error);
-      toast.error("Failed to start recharge process. Please try again.");
+        toast.error("Failed to start recharge process. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -154,40 +154,40 @@ const Recharge = () => {
           <>
             {/* Amount Input */}
             <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
-              <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
-                <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
+          <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
+            <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
                 Enter Amount
-              </h3>
+          </h3>
               <div className="relative">
-                <Input
-                  type="number"
+              <Input 
+                type="number" 
                   placeholder="Enter amount"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   className="pr-12 text-lg"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">EGP</span>
-              </div>
             </div>
+        </div>
 
-            {/* Payment Method */}
+        {/* Payment Method */}
             <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
-              <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
-                <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
-                Payment Method
-              </h3>
+          <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
+            <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
+            Payment Method
+          </h3>
               <div className="p-4 border-2 border-blue-200 bg-blue-50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                     <Wallet className="w-5 h-5 text-white" />
-                  </div>
+          </div>
                   <div className="flex-1">
                     <div className="font-medium text-blue-900">InstaPay</div>
                     <div className="text-sm text-blue-700">Bank transfer via InstaPay</div>
-                  </div>
-                </div>
               </div>
             </div>
+              </div>
+        </div>
 
             {error && (
               <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -214,32 +214,32 @@ const Recharge = () => {
         ) : (
           <>
             {/* Transfer Details */}
-            <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
-              <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
+          <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+            <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
                 <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
                 Send money to this account
-              </h3>
-              
+            </h3>
+            
               <div className="space-y-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">{instaPayData.amount} EGP</div>
                   <div className="text-sm text-gray-600">Amount to transfer</div>
-                </div>
-                
+            </div>
+            
                 <div className="bg-gray-50 p-4 rounded-lg space-y-3">
                   <div>
                     <div className="text-sm font-medium text-gray-700 mb-1">Bank</div>
                     <div className="text-lg font-semibold">CIB</div>
-                  </div>
-                  
-                  <div>
+          </div>
+
+            <div>
                     <div className="text-sm font-medium text-gray-700 mb-1">Account Name</div>
                     <div className="text-lg font-semibold">Lite Bite For Food Services</div>
-                  </div>
-                  
+      </div>
+      
                   <div>
                     <div className="text-sm font-medium text-gray-700 mb-1">Account Number</div>
-                    <Button
+        <Button 
                       onClick={() => copyToClipboard("100054480207")}
                       variant="outline"
                       className="w-full justify-center gap-2"
@@ -254,10 +254,10 @@ const Recharge = () => {
                           <Copy className="w-4 h-4" />
                           Copy Account Number
                         </>
-                      )}
-                    </Button>
-                  </div>
-                  
+          )}
+        </Button>
+      </div>
+
                   <div>
                     <div className="text-sm font-medium text-gray-700 mb-1">Reference Code</div>
                     <div className="text-lg font-mono bg-white p-2 rounded border mb-2">{instaPayData.reference_code}</div>
@@ -279,8 +279,8 @@ const Recharge = () => {
                         </>
                       )}
                     </Button>
-                  </div>
-                </div>
+              </div>
+            </div>
               </div>
             </div>
 
@@ -307,9 +307,9 @@ const Recharge = () => {
                 Upload Receipt
               </h3>
               
-              <input
-                type="file"
-                accept="image/*"
+                <input
+                  type="file"
+                  accept="image/*"
                 onChange={handleFileChange}
                 className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-center cursor-pointer hover:border-blue-400 transition-colors"
                 disabled={isSubmitting}
@@ -333,7 +333,7 @@ const Recharge = () => {
             </Button>
           </>
         )}
-      </div>
+        </div>
 
       <BottomNavigation />
     </div>

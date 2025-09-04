@@ -111,7 +111,7 @@ const SignIn = () => {
         {/* Logo with glow effect */}
         <div className="flex justify-center">
           <div className="relative">
-            <img src="/Logo.jpg" alt="App Logo" className="w-32 h-32 rounded-full shadow-2xl shadow-orange-500/30" />
+            <img src="/Logo.png" alt="App Logo" className="w-32 h-32 rounded-full shadow-2xl shadow-orange-500/30" />
             <div className="absolute inset-0 w-32 h-32 rounded-full bg-gradient-to-r from-orange-500 to-red-500 opacity-20 blur-xl"></div>
           </div>
         </div>

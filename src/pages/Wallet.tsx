@@ -365,7 +365,7 @@ const Wallet = () => {
         <div className="flex items-center justify-between">
           {/* Left side - Logo and Title */}
           <div className="flex items-center gap-3">
-            <img src="/Logo.jpg" alt="App Logo" className="w-10 h-10 rounded-lg shadow-md" />
+            <img src="/Logo.png" alt="App Logo" className="w-10 h-10 rounded-lg shadow-md" />
             <div>
               <h1 className="text-lg font-bold text-white">Wallet</h1>
               <p className="text-sm text-white/90">Welcome back, {userProfile?.name || 'User'}</p>

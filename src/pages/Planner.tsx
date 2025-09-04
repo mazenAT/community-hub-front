@@ -853,104 +853,6 @@ const Planner = () => {
           </div>
         </div>
 
-        {/* Date Range Selection */}
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button
-            variant={viewMode === 'week' ? 'default' : 'outline'}
-            size="sm"
-            className={`${
-              viewMode === 'week' 
-                ? 'bg-white text-brand-red border-white hover:bg-white/90' 
-                : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
-            } rounded-full px-4 py-2 text-sm font-medium`}
-            onClick={() => {
-              setViewMode('week');
-              setCustomStartDate(undefined);
-              setCustomEndDate(undefined);
-            }}
-          >
-            Week View
-          </Button>
-          
-          <Button
-            variant={viewMode === 'custom' ? 'default' : 'outline'}
-            size="sm"
-            className={`${
-              viewMode === 'custom' 
-                ? 'bg-white text-brand-red border-white hover:bg-white/90' 
-                : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
-            } rounded-full px-4 py-2 text-sm font-medium`}
-            onClick={() => {
-              setViewMode('custom');
-              setCustomStartDate(undefined);
-              setCustomEndDate(undefined);
-            }}
-          >
-            Custom Range
-          </Button>
-        </div>
-
-        {/* Custom Date Range Picker */}
-        {viewMode === 'custom' && (
-          <div className="mt-4 flex flex-wrap gap-2 items-center">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-white/20 text-white border-white/30 hover:bg-white/30"
-                >
-                  <CalendarIcon className="w-4 h-4 mr-2" />
-                  {customStartDate ? format(customStartDate, 'MMM dd') : 'Start Date'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={customStartDate}
-                  onSelect={(date) => {
-                    setCustomStartDate(date);
-                    // If end date is before start date, reset it
-                    if (customEndDate && date && customEndDate < date) {
-                      setCustomEndDate(undefined);
-                    }
-                  }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-            
-            <span className="text-white/80">to</span>
-            
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-white/20 text-white border-white/30 hover:bg-white/30"
-                >
-                  <CalendarIcon className="w-4 h-4 mr-2" />
-                  {customEndDate ? format(customEndDate, 'MMM dd') : 'End Date'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={customEndDate}
-                  onSelect={(date) => {
-                    setCustomEndDate(date);
-                  }}
-                  disabled={(date) => {
-                    // Allow same day selection
-                    return customStartDate ? date < customStartDate : false;
-                  }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        )}
-
         {/* Current Date Range */}
         <div className="mt-2 text-sm text-white/90">
           {getCurrentDateRange()}
@@ -965,15 +867,7 @@ const Planner = () => {
           )}
         </div>
 
-        {/* Pre-Order Warning Message */}
-        {activePlan && (
-          <div className="mt-4 p-3 bg-white/20 border border-white/30 rounded-lg">
-            <div className="flex items-start space-x-2">
-              <AlertCircle className="w-5 h-5 text-red-300 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-red-300">
-                <p className="font-medium mb-1">Pre-Order Deadline</p>
-                <p>Orders are closed by 11:59 the day before.</p>
-              </div>
+        
             </div>
           </div>
         )}
@@ -985,6 +879,19 @@ const Planner = () => {
 
       {/* Content */}
       <div className="px-4 py-4">
+        {/* Pre-Order Notice */}
+        <div className="px-4 py-2">
+          <div className="mb-4 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+            <div className="flex items-start space-x-2">
+              <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-red-500">
+                <p className="font-medium mb-1">Pre-Order Deadline</p>
+                <p>Orders are closed by 11:59 the day before.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Combined Filters Section */}
         <div 
           className="mb-6 space-y-4"
@@ -1101,7 +1008,7 @@ const Planner = () => {
                     ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
                     : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
                 } rounded-full px-4 py-2 text-sm font-medium`}
-                onClick={() => setGeneralFilter("daily_items")}
+                onClick={() => { setGeneralFilter("daily_items"); }}
               >
                 Daily Items
               </Button>
@@ -1121,6 +1028,7 @@ const Planner = () => {
             </Button>
           </div>
 
+        {generalFilter === "meals" && (
         {/* Meal Planner Cards */}
         {activePlan ? (
           <div className="mb-8">
@@ -1410,7 +1318,8 @@ const Planner = () => {
 
         </div>
 
-      {/* PDF Viewer Modal */}
+              )}
+{/* PDF Viewer Modal */}
       <Dialog open={showPdfModal} onOpenChange={setShowPdfModal}>
         <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>

@@ -20,7 +20,7 @@
       ]
     },
     {
-      "source": "/Logo.jpg",
+      "source": "/Logo.png",
       "headers": [
         {
           "key": "Cache-Control",

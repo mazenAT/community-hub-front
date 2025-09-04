@@ -56,7 +56,7 @@
 
 ## 📱 **Required Assets to Create**
 
-### **1. App Icons (Create from Logo.jpg):**
+### **1. App Icons (Create from Logo.png):**
 ```bash
 # Use online tools like:
 # - https://appicon.co/
