@@ -169,19 +169,25 @@ const Planner = () => {
   };
 
   const getDatesForView = (plan: WeeklyPlan): Date[] => {
-    if (!customStartDate || !customEndDate) return [];
+    if (!customStartDate) return [];
     
     const startDate = new Date(customStartDate);
-    const endDate = new Date(customEndDate);
-        const dates: Date[] = [];
-        
-    let currentDate = new Date(startDate);
-    while (isBefore(currentDate, endDate) || isSameDay(currentDate, endDate)) {
-          dates.push(new Date(currentDate));
-          currentDate = addDays(currentDate, 1);
-        }
+    const dates: Date[] = [];
     
-        return dates;
+    if (customEndDate) {
+      // Date range selected
+      const endDate = new Date(customEndDate);
+      let currentDate = new Date(startDate);
+      while (isBefore(currentDate, endDate) || isSameDay(currentDate, endDate)) {
+        dates.push(new Date(currentDate));
+        currentDate = addDays(currentDate, 1);
+      }
+    } else {
+      // Only start date selected - return just that date
+      dates.push(new Date(startDate));
+    }
+    
+    return dates;
   };
 
   const getMealsForDay = (date: Date, plans: WeeklyPlan[]): any[] => {
@@ -1002,6 +1008,10 @@ const Planner = () => {
                         if (customEndDate && date && customEndDate < date) {
                           setCustomEndDate(undefined);
                         }
+                        // Set view mode to custom when start date is selected
+                        if (date) {
+                          setViewMode('custom');
+                        }
                       }}
                       initialFocus
                     />
@@ -1027,6 +1037,10 @@ const Planner = () => {
                       selected={customEndDate}
                       onSelect={(date) => {
                         setCustomEndDate(date);
+                        // Set view mode to custom when end date is selected
+                        if (date) {
+                          setViewMode('custom');
+                        }
                       }}
                       disabled={(date) => {
                         return customStartDate ? date < customStartDate : false;
@@ -1035,6 +1049,22 @@ const Planner = () => {
                     />
                   </PopoverContent>
                 </Popover>
+                
+                {/* Clear custom range button */}
+                {(customStartDate || customEndDate) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200"
+                    onClick={() => {
+                      setCustomStartDate(undefined);
+                      setCustomEndDate(undefined);
+                      setViewMode('week');
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
               </div>
             </div>
           )}
@@ -1104,11 +1134,20 @@ const Planner = () => {
               // Get dates based on week filter or custom range
               let datesForView;
               
-              if (viewMode === 'custom') {
+              if (viewMode === 'custom' && customStartDate) {
                 datesForView = getDatesForView(activePlan);
+                console.log('Custom date range:', {
+                  startDate: customStartDate ? format(customStartDate, 'yyyy-MM-dd') : 'none',
+                  endDate: customEndDate ? format(customEndDate, 'yyyy-MM-dd') : 'none',
+                  dates: datesForView.map(d => format(d, 'yyyy-MM-dd'))
+                });
               } else {
                 // Week-based view
                 datesForView = getDatesForWeek(activePlan, parseInt(selectedWeek));
+                console.log('Week-based view:', {
+                  week: selectedWeek,
+                  dates: datesForView.map(d => format(d, 'yyyy-MM-dd'))
+                });
               }
               
               console.log('Dates for View:', datesForView);
