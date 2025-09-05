@@ -956,6 +956,9 @@ const Planner = () => {
                       console.log(`Selecting Week ${index + 1}, Plan ID: ${plan.id}, Start: ${plan.start_date}, End: ${plan.end_date}`);
                       setSelectedWeek((index + 1).toString());
                       setViewMode('week');
+                      // Clear custom dates when switching to week view
+                      setCustomStartDate(undefined);
+                      setCustomEndDate(undefined);
                     }
                   }}
                   title={!isPlanValid ? `Week ${index + 1} has no meals assigned` : `Select Week ${index + 1} (${plan.start_date} to ${plan.end_date})`}
@@ -1084,6 +1087,9 @@ const Planner = () => {
                 onClick={() => {
                   setGeneralFilter("meals");
                   setViewMode('week');
+                  // Clear custom dates when switching to meals filter
+                  setCustomStartDate(undefined);
+                  setCustomEndDate(undefined);
                 }}
               >
                 Food/Sandwich
