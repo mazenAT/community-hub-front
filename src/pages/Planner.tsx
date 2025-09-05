@@ -866,13 +866,6 @@ const Planner = () => {
             </span>
           )}
         </div>
-
-        
-            </div>
-          </div>
-        )}
-
-
       </div>
 
 
@@ -984,6 +977,68 @@ const Planner = () => {
           )}
           </div>
 
+          {/* Custom Date Range Filter - MEALS ONLY */}
+          {generalFilter === "meals" && (
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+              <h3 className="text-sm font-semibold text-brand-black mb-3">Custom Range (Meals Only)</h3>
+              <div className="flex flex-wrap gap-2 items-center">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-white text-brand-black border-brand-red hover:bg-brand-red/10"
+                    >
+                      <CalendarIcon className="w-4 h-4 mr-2" />
+                      {customStartDate ? format(customStartDate, 'MMM dd') : 'Start Date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={customStartDate}
+                      onSelect={(date) => {
+                        setCustomStartDate(date);
+                        if (customEndDate && date && customEndDate < date) {
+                          setCustomEndDate(undefined);
+                        }
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                
+                <span className="text-brand-black/60">to</span>
+                
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-white text-brand-black border-brand-red hover:bg-brand-red/10"
+                    >
+                      <CalendarIcon className="w-4 h-4 mr-2" />
+                      {customEndDate ? format(customEndDate, 'MMM dd') : 'End Date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={customEndDate}
+                      onSelect={(date) => {
+                        setCustomEndDate(date);
+                      }}
+                      disabled={(date) => {
+                        return customStartDate ? date < customStartDate : false;
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          )}
+
           {/* General Filter */}
           <div className="bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
             <h3 className="text-sm font-semibold text-brand-black mb-3">Filter</h3>
@@ -996,7 +1051,10 @@ const Planner = () => {
                     ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
                     : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
                 } rounded-full px-4 py-2 text-sm font-medium`}
-                onClick={() => setGeneralFilter("meals")}
+                onClick={() => {
+                  setGeneralFilter("meals");
+                  setViewMode('week');
+                }}
               >
                 Food/Sandwich
               </Button>
@@ -1008,7 +1066,10 @@ const Planner = () => {
                     ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
                     : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
                 } rounded-full px-4 py-2 text-sm font-medium`}
-                onClick={() => { setGeneralFilter("daily_items"); }}
+                onClick={() => {
+                  setGeneralFilter("daily_items");
+                  // No viewMode change needed for daily items
+                }}
               >
                 Daily Items
               </Button>
@@ -1029,7 +1090,8 @@ const Planner = () => {
           </div>
 
         {generalFilter === "meals" && (
-        {/* Meal Planner Cards */}
+          <>
+            {/* Meal Planner Cards */}
         {activePlan ? (
           <div className="mb-8">
             {(() => {
@@ -1233,6 +1295,37 @@ const Planner = () => {
           </div>
         ) : (
           <EmptyState message="No active weekly plan found for your school." />
+        )}
+          </>
+        )}
+
+        {/* Daily Items section - NO DATE FILTERING */}
+        {generalFilter === "daily_items" && (
+          <div className="mb-8">
+            <div className="bg-white rounded-xl border border-brand-yellow/30 overflow-hidden shadow-sm">
+              <div className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-6 py-4">
+                <h3 className="text-lg font-bold text-white">Daily Items</h3>
+                <p className="text-white/90 text-sm">Order daily items independently of meals</p>
+              </div>
+              
+              <div className="p-6">
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-gradient-to-br from-brand-orange to-brand-red rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                    <span className="text-4xl">🍽️</span>
+                  </div>
+                  <h4 className="text-xl font-bold text-brand-black mb-2">Order Daily Items</h4>
+                  <p className="text-gray-600 mb-6">Select daily items to order independently of meals. Choose your delivery date in the ordering modal.</p>
+                  
+                  <Button
+                    onClick={() => setShowAddOnOrderModal(true)}
+                    className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-red hover:from-brand-red/80 hover:via-brand-orange/80 hover:to-brand-red/80 text-white font-bold px-8 py-3 rounded-2xl shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                  >
+                    Browse Daily Items
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Dedicated Daily Items Ordering Card - Hidden for nursery meal plans */}
