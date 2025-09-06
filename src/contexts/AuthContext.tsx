@@ -51,22 +51,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const storedUser = localStorage.getItem('user');
 
       if (storedToken && storedUser) {
-        // Verify token is still valid by making a test API call
+        // First, set user as authenticated based on stored data
+        // This ensures the user stays logged in even if validation fails due to network issues
+        const parsedUser = JSON.parse(storedUser);
+        setToken(storedToken);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+        
+        // Try to verify token is still valid by making a test API call
+        // But don't logout on failure unless it's specifically an auth error
         try {
           const response = await authApi.me();
           const userData = response.data;
           
-          setToken(storedToken);
+          // Update with fresh user data from server
           setUser(userData);
-          setIsAuthenticated(true);
-          
-          // Update stored user data in case there are any changes
           localStorage.setItem('user', JSON.stringify(userData));
           
-        } catch (error) {
-          // Token is invalid, clear storage
-          console.warn('Token validation failed:', error);
-          logout();
+        } catch (error: any) {
+          // Only logout for specific authentication errors (401, 403)
+          // For network errors, server errors, etc., keep user logged in
+          if (error?.response?.status === 401 || error?.response?.status === 403) {
+            console.warn('Token is invalid, logging out:', error);
+            logout();
+          } else {
+            // For other errors (network, server issues), just log but keep user authenticated
+            console.warn('Token validation failed (non-auth error), keeping user logged in:', error);
+          }
         }
       } else {
         // No token found, user needs to login
