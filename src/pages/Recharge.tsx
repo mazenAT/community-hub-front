@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Wallet, Copy, Check } from "lucide-react";
@@ -17,8 +17,8 @@ const Recharge = () => {
   const [error, setError] = useState('');
   const [showTransferDetails, setShowTransferDetails] = useState(false);
   const [instaPayData, setInstaPayData] = useState<any>(null);
-  const [copied, setCopied] = useState(false);
-  const [parentName, setParentName] = useState("");
+  const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
+  const [copiedParentName, setCopiedParentName] = useState(false);
 
   const { data: profileData } = useQuery({
     queryKey: ["profile"],
@@ -40,10 +40,7 @@ const Recharge = () => {
         return;
       }
 
-      if (!parentName.trim()) {
-        toast.error("Please enter parent name for validation.");
-        return;
-      }
+
 
         await handleInstaPayTopup(finalAmount);
     } catch (error) {
@@ -61,13 +58,13 @@ const Recharge = () => {
       const response = await instaPayApi.createTopupRequest(amount);
       
       if (response.data.success) {
-        const { reference_code, bank_account, instructions, status } = response.data.data;
+        const { reference_code, bank_account, instructions } = response.data.data;
         setInstaPayData({
           reference_code,
           bank_account,
           instructions,
           amount: amount,
-          parent_name: parentName
+          parent_name: profile?.name || 'Parent Name'
         });
         setShowTransferDetails(true);
         
@@ -83,12 +80,18 @@ const Recharge = () => {
     }
   };
 
-  const copyToClipboard = async (text: string) => {
+  const copyToClipboard = async (text: string, type: 'account' | 'parent') => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(true);
-      toast.success('Account number copied to clipboard!');
-      setTimeout(() => setCopied(false), 2000);
+      if (type === 'account') {
+        setCopiedAccountNumber(true);
+        toast.success('Account number copied to clipboard!');
+        setTimeout(() => setCopiedAccountNumber(false), 2000);
+      } else {
+        setCopiedParentName(true);
+        toast.success('Parent name copied to clipboard!');
+        setTimeout(() => setCopiedParentName(false), 2000);
+      }
     } catch (error) {
       toast.error('Failed to copy to clipboard');
     }
@@ -105,8 +108,7 @@ const Recharge = () => {
       
       const response = await instaPayApi.uploadReceipt(
         instaPayData.reference_code,
-        receiptImage,
-        instaPayData.parent_name
+        receiptImage
       );
       if (response.data.success) {
         toast.success('Receipt uploaded successfully! We will validate and credit your wallet within minutes.');
@@ -114,7 +116,6 @@ const Recharge = () => {
         setShowTransferDetails(false);
         setInstaPayData(null);
         setReceiptImage(null);
-        setParentName("");
         
         navigate('/wallet');
       } else {
@@ -179,20 +180,7 @@ const Recharge = () => {
             </div>
         </div>
 
-        {/* Parent Name Input */}
-            <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="recharge-parent-name">
-          <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
-            <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
-            Parent Name for Validation
-          </h3>
-              <Input 
-                type="text" 
-                  placeholder="Enter parent name"
-                  value={parentName}
-                  onChange={(e) => setParentName(e.target.value)}
-                  className="text-lg"
-                />
-        </div>
+
 
         {/* Payment Method */}
             <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="recharge-payment-method">
@@ -222,7 +210,7 @@ const Recharge = () => {
             {/* Recharge Button */}
             <Button
               onClick={handleRechargeClick}
-              disabled={isSubmitting || !amount || parseFloat(amount) <= 0 || !parentName.trim()}
+              disabled={isSubmitting || !amount || parseFloat(amount) <= 0}
               className="w-full h-12 bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow hover:opacity-90 text-white rounded-xl font-medium text-base shadow-lg disabled:opacity-50"
             >
               {isSubmitting ? (
@@ -264,11 +252,11 @@ const Recharge = () => {
                   <div>
                     <div className="text-sm font-medium text-gray-700 mb-1">Account Number</div>
         <Button 
-                      onClick={() => copyToClipboard("100054480207")}
+                      onClick={() => copyToClipboard("100054480207", "account")}
                       variant="outline"
                       className="w-full justify-center gap-2"
                     >
-                      {copied ? (
+                      {copiedAccountNumber ? (
                         <>
                           <Check className="w-4 h-4" />
                           Copied!
@@ -283,15 +271,15 @@ const Recharge = () => {
       </div>
 
                   <div>
-                    <div className="text-sm font-medium text-gray-700 mb-1">Reference Code</div>
-                    <div className="text-lg font-mono bg-white p-2 rounded border mb-2">{instaPayData.reference_code}</div>
+                    <div className="text-sm font-medium text-gray-700 mb-1">Parent Name</div>
+                    <div className="text-lg font-semibold bg-white p-2 rounded border mb-2">{instaPayData.parent_name}</div>
                     <Button
-                      onClick={() => copyToClipboard(instaPayData.reference_code)}
+                      onClick={() => copyToClipboard(instaPayData.parent_name, "parent")}
                       variant="outline"
                       size="sm"
                       className="w-full justify-center gap-2"
                     >
-                      {copied ? (
+                      {copiedParentName ? (
                         <>
                           <Check className="w-4 h-4" />
                           Copied!
@@ -299,16 +287,13 @@ const Recharge = () => {
                       ) : (
                         <>
                           <Copy className="w-4 h-4" />
-                          Copy Reference Code
+                          Copy Parent Name
                         </>
                       )}
                     </Button>
               </div>
 
-              <div>
-                    <div className="text-sm font-medium text-gray-700 mb-1">Parent Name</div>
-                    <div className="text-lg font-semibold bg-white p-2 rounded border">{instaPayData.parent_name}</div>
-              </div>
+
             </div>
               </div>
             </div>
@@ -324,7 +309,7 @@ const Recharge = () => {
                 <div>
                   <h4 className="text-sm font-semibold text-blue-800 mb-1">Important</h4>
                   <p className="text-sm text-blue-700">
-                    When making the transfer in your InstaPay app, please use the reference code above as the <strong>"Reason for transfer"</strong> or <strong>"Transfer note"</strong>. Also ensure that the parent name matches exactly for validation.
+                    When making the transfer in your InstaPay app, please use the parent name above as the <strong>"Reason for transfer"</strong> or <strong>"Transfer note"</strong>. This helps us validate and process your payment faster.
                   </p>
                 </div>
               </div>

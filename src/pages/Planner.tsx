@@ -1382,24 +1382,17 @@ const Planner = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-brand-orange to-brand-red rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
-                      <span className="text-xl sm:text-2xl">🍽️</span>
+                      <img 
+                        src="/Logo.png" 
+                        alt="Brand Logo" 
+                        className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
+                      />
                     </div>
                     <div>
                       <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-brand-black">Daily Items</h2>
                       <p className="text-gray-600 text-sm sm:text-base font-medium">Order fresh daily items for specific dates</p>
                     </div>
                   </div>
-                  <Button
-                    onClick={() => {
-                      setSelectedDailyItemCategory("all");
-                      setSelectedDailyItemDate(null);
-                      setSelectedAddOnsForOrder({});
-                      setShowAddOnOrderModal(true);
-                    }}
-                    className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-red hover:from-brand-red/80 hover:via-brand-orange/80 hover:to-brand-red/80 text-white font-bold px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl text-sm sm:text-base"
-                  >
-                    Order Now
-                  </Button>
                 </div>
               </div>
               
@@ -1429,11 +1422,7 @@ const Planner = () => {
                         <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-200/60 hover:border-brand-orange/40 hover:shadow-lg transition-all duration-300 hover:scale-105">
                           <div className="text-center">
                             <div className={`w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br ${category.color} rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg group-hover:shadow-xl transition-all duration-300`}>
-                              <img 
-                                src="/Logo.png" 
-                                alt="Brand Logo" 
-                                className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
-                              />
+                              <span className="text-2xl sm:text-3xl">{category.emoji}</span>
                             </div>
                             <div className="text-xs sm:text-sm font-bold text-brand-black mb-1">{category.name}</div>
                             <div className="text-xs text-gray-600">
