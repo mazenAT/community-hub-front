@@ -58,6 +58,12 @@ const Wallet = () => {
   const [refundLoading, setRefundLoading] = useState<number | null>(null);
   const [successfulRefunds, setSuccessfulRefunds] = useState<Set<number>>(new Set());
   const [refundSuccessMessage, setRefundSuccessMessage] = useState<string | null>(null);
+  
+  // Edit InstaPay transaction states
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<any>(null);
+  const [newReceiptImage, setNewReceiptImage] = useState<File | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
 
   const clearSuccessMessages = () => {
     setRefundSuccessMessage(null);
@@ -345,6 +351,40 @@ const Wallet = () => {
     logout();
   };
 
+  const handleEditTransaction = (transaction: any) => {
+    setEditingTransaction(transaction);
+    setNewReceiptImage(null);
+    setEditModalOpen(true);
+  };
+
+  const handleReceiptImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewReceiptImage(file);
+    }
+  };
+
+  const handleUpdateReceipt = async () => {
+    if (!editingTransaction || !newReceiptImage) {
+      toast({ title: "Error", description: "Please select a new receipt image.", variant: "destructive" });
+      return;
+    }
+
+    setEditLoading(true);
+    try {
+      await instaPayApi.uploadReceipt(editingTransaction.reference_code, newReceiptImage);
+      toast({ title: "Success", description: "Receipt updated successfully. Processing will begin shortly." });
+      setEditModalOpen(false);
+      setEditingTransaction(null);
+      setNewReceiptImage(null);
+      fetchWalletData(); // Refresh data
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update receipt. Please try again.", variant: "destructive" });
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   // Combine regular transactions with InstaPay transactions and sort by date
   const allTransactions = [...transactions, ...instaPayTransactions].sort((a, b) => 
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -546,6 +586,88 @@ const Wallet = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Edit InstaPay Transaction Modal */}
+        <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+          <DialogContent>
+            <DialogTitle>Edit InstaPay Transaction</DialogTitle>
+            <div className="space-y-4 mt-2">
+              {editingTransaction && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Amount:</span>
+                      <span className="text-sm font-medium">{formatCurrency(editingTransaction.amount)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Reference:</span>
+                      <span className="text-sm font-medium">{editingTransaction.reference_code}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Parent Name:</span>
+                      <span className="text-sm font-medium">{editingTransaction.parent_name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className="text-sm font-medium text-yellow-600">⏳ {editingTransaction.status}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Date:</span>
+                      <span className="text-sm font-medium">{new Date(editingTransaction.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Upload New Receipt Image
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleReceiptImageChange}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  disabled={editLoading}
+                />
+                {newReceiptImage && (
+                  <p className="text-sm text-green-600 mt-2">
+                    ✅ New receipt selected: {newReceiptImage.name}
+                  </p>
+                )}
+              </div>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm text-blue-800">
+                  <strong>Note:</strong> Uploading a new receipt will replace the previous one and restart the validation process.
+                </p>
+              </div>
+              
+              <div className="flex gap-2 justify-end">
+                <Button 
+                  onClick={() => setEditModalOpen(false)} 
+                  variant="outline" 
+                  disabled={editLoading}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleUpdateReceipt} 
+                  disabled={editLoading || !newReceiptImage}
+                >
+                  {editLoading ? (
+                    <div className="flex items-center gap-2">
+                      <LoadingSpinner size={16} />
+                      Updating...
+                    </div>
+                  ) : (
+                    'Update Receipt'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Recent Transactions */}
         <div className="transactions-section space-y-3" data-tutorial="wallet-transactions">
           <div className="flex items-center justify-between">
@@ -667,24 +789,12 @@ const Wallet = () => {
                           <div className="mt-1 text-xs text-green-600 font-medium">Refunded</div>
                         )}
                         {transaction.isInstaPayTransaction && transaction.status === 'pending' && (
-                          <div className="mt-2 flex gap-2">
+                          <div className="mt-2">
                             <button
                               className="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors"
-                              onClick={() => {
-                                // Navigate to edit/retry the transaction
-                                navigate('/recharge');
-                              }}
+                              onClick={() => handleEditTransaction(transaction)}
                             >
-                              Edit
-                            </button>
-                            <button
-                              className="text-xs text-red-600 hover:text-red-700 font-medium transition-colors"
-                              onClick={() => {
-                                // TODO: Add delete functionality for pending transactions
-                                toast({ title: "Note", description: "Delete functionality will be added based on backend API availability." });
-                              }}
-                            >
-                              Delete
+                              Edit Receipt
                             </button>
                           </div>
                         )}
