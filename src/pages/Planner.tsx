@@ -1414,6 +1414,11 @@ const Planner = () => {
                       dailyItem.category === category.category
                     ).length;
                     
+                    // Only render the card if there are items available
+                    if (itemCount === 0) {
+                      return null;
+                    }
+                    
                     return (
                       <div key={category.name} className="group cursor-pointer" onClick={() => {
                         setSelectedDailyItemCategory(category.category);
