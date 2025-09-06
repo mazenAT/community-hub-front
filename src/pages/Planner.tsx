@@ -1412,30 +1412,28 @@ const Planner = () => {
                 {/* Daily Item Categories Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                   {[
-                    { name: 'Bakery', emoji: '🥐', color: 'from-yellow-400 to-orange-400' },
-                    { name: 'Snacks', emoji: '🍿', color: 'from-orange-400 to-red-400' },
-                    { name: 'Drinks', emoji: '🥤', color: 'from-blue-400 to-purple-400' },
-                    { name: 'Popsicles', emoji: '🍦', color: 'from-pink-400 to-red-400' }
+                    { name: 'Bakery', category: 'bakery', emoji: '🥐', color: 'from-yellow-400 to-orange-400' },
+                    { name: 'Snacks', category: 'snacks', emoji: '🍿', color: 'from-orange-400 to-red-400' },
+                    { name: 'Drinks', category: 'drinks', emoji: '🥤', color: 'from-blue-400 to-purple-400' },
+                    { name: 'Popsicles', category: 'greek_yoghurt_popsicle', emoji: '🍦', color: 'from-pink-400 to-red-400' }
                   ].map((category) => {
-                    const itemCount = filteredDailyItems.filter(dailyItem => {
-                      switch (category.name) {
-                        case 'Bakery': return dailyItem.category === 'bakery';
-                        case 'Snacks': return dailyItem.category === 'snacks';
-                        case 'Drinks': return dailyItem.category === 'drinks';
-                        case 'Popsicles': return dailyItem.category === 'greek_yoghurt_popsicle';
-                        default: return false;
-                      }
-                    }).length;
+                    const itemCount = filteredDailyItems.filter(dailyItem => 
+                      dailyItem.category === category.category
+                    ).length;
                     
                     return (
                       <div key={category.name} className="group cursor-pointer" onClick={() => {
-                        setSelectedAddOnCategory(category.name);
+                        setSelectedDailyItemCategory(category.category);
                         setShowAddOnOrderModal(true);
                       }}>
                         <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-200/60 hover:border-brand-orange/40 hover:shadow-lg transition-all duration-300 hover:scale-105">
                           <div className="text-center">
                             <div className={`w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br ${category.color} rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg group-hover:shadow-xl transition-all duration-300`}>
-                              <span className="text-2xl sm:text-3xl">{category.emoji}</span>
+                              <img 
+                                src="/Logo.png" 
+                                alt="Brand Logo" 
+                                className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+                              />
                             </div>
                             <div className="text-xs sm:text-sm font-bold text-brand-black mb-1">{category.name}</div>
                             <div className="text-xs text-gray-600">
@@ -1456,7 +1454,6 @@ const Planner = () => {
 
         </div>
 
-              )}
 {/* PDF Viewer Modal */}
       <Dialog open={showPdfModal} onOpenChange={setShowPdfModal}>
         <DialogContent className="max-w-4xl max-h-[90vh]">
@@ -1481,10 +1478,18 @@ const Planner = () => {
           <DialogHeader className="bg-gradient-to-r from-brand-orange/10 via-brand-red/10 to-brand-orange/10 p-8 border-b border-gray-200/30">
             <div className="text-center">
               <div className="w-16 h-16 bg-gradient-to-br from-brand-orange to-brand-red rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl">
-                <span className="text-4xl">🍽️</span>
+                <img 
+                  src="/Logo.png" 
+                  alt="Brand Logo" 
+                  className="w-10 h-10 object-contain"
+                />
               </div>
               <DialogTitle className="text-3xl font-bold text-brand-black mb-2">
-                {selectedAddOnCategory} Items
+                {selectedDailyItemCategory === 'bakery' ? 'Bakery' :
+                 selectedDailyItemCategory === 'snacks' ? 'Snacks' :
+                 selectedDailyItemCategory === 'drinks' ? 'Drinks' :
+                 selectedDailyItemCategory === 'greek_yoghurt_popsicle' ? 'Popsicles' :
+                 'Daily'} Items
             </DialogTitle>
               <p className="text-xl text-brand-black/70 mb-2">
                 {selectedMealForAddOns?.title || selectedMealForAddOns?.name}
@@ -1653,7 +1658,12 @@ const Planner = () => {
                 <span className="text-4xl">🍽️</span>
               </div>
               <DialogTitle className="text-3xl font-bold text-brand-black mb-2">
-                Order Daily Items - {selectedDailyItemCategory === "all" ? "All Categories" : selectedDailyItemCategory}
+                Order Daily Items - {selectedDailyItemCategory === "all" ? "All Categories" : 
+                                   selectedDailyItemCategory === 'bakery' ? 'Bakery' :
+                                   selectedDailyItemCategory === 'snacks' ? 'Snacks' :
+                                   selectedDailyItemCategory === 'drinks' ? 'Drinks' :
+                                   selectedDailyItemCategory === 'greek_yoghurt_popsicle' ? 'Popsicles' :
+                                   selectedDailyItemCategory}
               </DialogTitle>
               <p className="text-xl text-brand-black/70 mb-2">
                 Select daily items to order independently of meals

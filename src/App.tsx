@@ -2,11 +2,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import MobileErrorBoundary from "@/components/MobileErrorBoundary";
 import MobileNetworkStatus from "@/components/MobileNetworkStatus";
 import { TutorialProvider } from "@/contexts/TutorialContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import TutorialOverlay from "@/components/TutorialOverlay";
 import TutorialTrigger from "@/components/TutorialTrigger";
 import { useDeepLinking } from "@/hooks/useDeepLinking";
@@ -30,6 +31,7 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const isOnSignInPage = location.pathname === '/' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/reset-password';
 
   return (
@@ -37,15 +39,27 @@ const AppContent = () => {
       {/* Initialize deep linking for mobile app - now inside Router context */}
       <DeepLinkingInitializer />
       <TutorialProvider>
-      <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+        <Routes>
+          {/* Public Routes - only accessible when not authenticated */}
+          <Route 
+            path="/" 
+            element={isAuthenticated ? <Navigate to="/wallet" replace /> : <SignIn />} 
+          />
+          <Route 
+            path="/signup" 
+            element={isAuthenticated ? <Navigate to="/wallet" replace /> : <SignUp />} 
+          />
+          <Route 
+            path="/forgot-password" 
+            element={isAuthenticated ? <Navigate to="/wallet" replace /> : <ForgotPassword />} 
+          />
+          <Route 
+            path="/reset-password" 
+            element={isAuthenticated ? <Navigate to="/wallet" replace /> : <ResetPassword />} 
+          />
           <Route path="/fawry-callback" element={<FawryCallback />} />
 
-          {/* Protected Routes */}
+          {/* Protected Routes - only accessible when authenticated */}
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/family-member-setup" element={<ProtectedRoute><FamilyMemberSetup /></ProtectedRoute>} />
           <Route path="/planner" element={<ProtectedRoute><Planner /></ProtectedRoute>} />
@@ -96,7 +110,9 @@ const App = () => (
           </div>
         }>
           <BrowserRouter>
-            <AppContent />
+            <AuthProvider>
+              <AppContent />
+            </AuthProvider>
           </BrowserRouter>
         </MobileErrorBoundary>
       </MobileErrorBoundary>

@@ -4,7 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/BottomNavigation";
-import { walletApi, profileApi, mealRefundApi, api } from "@/services/api";
+import { walletApi, profileApi, mealRefundApi, api, instaPayApi } from "@/services/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { showToast } from "@/services/native";
 import { formatCurrency } from "@/utils/format";
 import { LogOut } from "lucide-react";
@@ -44,8 +45,10 @@ interface UserProfile {
 const Wallet = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { logout } = useAuth();
   const [balance, setBalance] = useState<number>(0);
   const [transactions, setTransactions] = useState<any[]>([]); // Changed to any[] to match API response
+  const [instaPayTransactions, setInstaPayTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -144,6 +147,46 @@ const Wallet = () => {
         // If transactions fail, just set empty array instead of showing error
         console.warn('Failed to fetch transactions:', transactionErr);
         setTransactions([]);
+      }
+
+      // Fetch InstaPay transactions
+      try {
+        const instaPayResponse = await instaPayApi.getTopupHistory();
+        let instaPayData = [];
+        if (Array.isArray(instaPayResponse.data)) {
+          instaPayData = instaPayResponse.data;
+        } else if (Array.isArray(instaPayResponse.data?.data)) {
+          instaPayData = instaPayResponse.data.data;
+        }
+        
+        // Transform InstaPay transactions to match wallet transaction format
+        const transformedInstaPayTransactions = instaPayData.map((transaction: any) => ({
+          id: `instapay_${transaction.id}`,
+          type: 'instapay_recharge',
+          amount: transaction.amount,
+          created_at: transaction.created_at,
+          description: `InstaPay Recharge`,
+          note: `InstaPay Recharge - ${transaction.status}`,
+          status: transaction.status,
+          reference_code: transaction.reference_code,
+          parent_name: transaction.parent_name,
+          details: {
+            payment_method: 'instapay',
+            status: transaction.status,
+            reference_code: transaction.reference_code,
+            parent_name: transaction.parent_name
+          },
+          refunded_at: null,
+          familyMemberName: null,
+          familyMemberId: null,
+          isFamilyMemberOrder: false,
+          isInstaPayTransaction: true
+        }));
+        
+        setInstaPayTransactions(transformedInstaPayTransactions);
+      } catch (instaPayErr) {
+        console.warn('Failed to fetch InstaPay transactions:', instaPayErr);
+        setInstaPayTransactions([]);
       }
 
     } catch (err: any) {
@@ -295,18 +338,19 @@ const Wallet = () => {
   };
 
   const handleLogout = () => {
-    // Clear authentication data
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    
     // Show success message
     toast({ title: "Logged out", description: "You have been successfully logged out." });
     
-    // Redirect to login page
-    navigate("/");
+    // Use auth context logout which handles clearing data and navigation
+    logout();
   };
 
-  const mappedTransactions = transactions.map((t: any) => {
+  // Combine regular transactions with InstaPay transactions and sort by date
+  const allTransactions = [...transactions, ...instaPayTransactions].sort((a, b) => 
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+  
+  const mappedTransactions = allTransactions.map((t: any) => {
     // For refund transactions, construct description from details if description is null
     let note = t.description || t.note || '';
     if (t.type === 'refund' && !note && t.details) {
@@ -324,8 +368,13 @@ const Wallet = () => {
     // Handle recharge transactions
     if (t.type === 'recharge' || t.type === 'top_up') {
       if (!note) {
-        note = t.details?.payment_method === 'instapay' ? 'InstaPay Recharge' : 'Wallet Recharge';
+        note = 'InstaPay Recharge';
       }
+    }
+
+    // Handle InstaPay transactions
+    if (t.type === 'instapay_recharge') {
+      note = `InstaPay Recharge - ${t.status?.charAt(0).toUpperCase() + t.status?.slice(1) || 'Unknown'}`;
     }
 
     return {
@@ -337,6 +386,10 @@ const Wallet = () => {
       note: note,
       refunded_at: t.refunded_at || null,
       details: t.details || {},
+      status: t.status,
+      reference_code: t.reference_code,
+      parent_name: t.parent_name,
+      isInstaPayTransaction: t.isInstaPayTransaction || false,
       familyMemberName: t.details?.family_member_name || null,
       familyMemberId: t.details?.family_member_id || null,
       isFamilyMemberOrder: !!(t.details?.family_member_id),
@@ -498,11 +551,11 @@ const Wallet = () => {
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-gray-800">Recent Transactions</h3>
             <div className="text-xs text-gray-500 text-right">
-              <p>Recharge transactions may take a moment to appear</p>
+              <p>InstaPay transactions appear instantly</p>
               <p>Pull down to refresh</p>
             </div>
           </div>
-          {loading && transactions.length === 0 ? (
+          {loading && allTransactions.length === 0 ? (
             <div className="text-center py-8">
               <LoadingSpinner size={32} />
               <p className="text-gray-500 text-sm mt-2">Loading transactions...</p>
@@ -535,12 +588,24 @@ const Wallet = () => {
                         )}
                         <div className="flex flex-wrap items-center gap-1 mt-2">
                           <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                            transaction.type === 'credit' || transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' ? 'bg-green-100 text-green-700' : 
-                            transaction.type === 'debit' || transaction.type === 'purchase' ? 'bg-red-100 text-red-700' : 
+                            transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? 'bg-green-100 text-green-700' : 
+                            transaction.type === 'purchase' ? 'bg-red-100 text-red-700' : 
                             'bg-gray-100 text-gray-700'
                           }`}>
-                            {transaction.type === 'credit' || transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' ? '+' : '-'}{transaction.type}
+                            {transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? '+' : '-'}{transaction.type === 'instapay_recharge' ? 'InstaPay' : transaction.type}
                           </span>
+                          {transaction.isInstaPayTransaction && transaction.status && (
+                            <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                              transaction.status === 'completed' ? 'bg-green-100 text-green-700' :
+                              transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                              transaction.status === 'failed' ? 'bg-red-100 text-red-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {transaction.status === 'completed' ? '✅' : 
+                               transaction.status === 'pending' ? '⏳' : 
+                               transaction.status === 'failed' ? '❌' : '❓'} {transaction.status}
+                            </span>
+                          )}
                           {transaction.isFamilyMemberOrder && transaction.familyMemberName && (
                             <span className="inline-block rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700">
                               👤 {transaction.familyMemberName}
@@ -552,14 +617,24 @@ const Wallet = () => {
                             </span>
                           )}
                         </div>
+                        {transaction.isInstaPayTransaction && (
+                          <div className="mt-2 text-xs text-gray-600 space-y-1">
+                            {transaction.reference_code && (
+                              <div>Reference: {transaction.reference_code}</div>
+                            )}
+                            {transaction.parent_name && (
+                              <div>Parent: {transaction.parent_name}</div>
+                            )}
+                          </div>
+                        )}
                       </div>
                       <div className="text-right">
                         <div className={`text-base sm:text-lg font-bold ${
-                          transaction.type === 'credit' || transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' ? 'text-green-600' : 
-                          transaction.type === 'debit' || transaction.type === 'purchase' ? 'text-red-600' : 
+                          transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? 'text-green-600' : 
+                          transaction.type === 'purchase' ? 'text-red-600' : 
                           'text-gray-900'
                         }`}>
-                          {transaction.type === 'credit' || transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' ? '+' : '-'}{formatCurrency(Math.abs(Number(transaction.amount)))}
+                          {transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? '+' : '-'}{formatCurrency(Math.abs(Number(transaction.amount)))}
                         </div>
                         {isRefundable && !successfulRefunds.has(transaction.reference_id) && (
                           <button
@@ -591,6 +666,44 @@ const Wallet = () => {
                         {transaction.refunded_at && (
                           <div className="mt-1 text-xs text-green-600 font-medium">Refunded</div>
                         )}
+                        {transaction.isInstaPayTransaction && transaction.status === 'pending' && (
+                          <div className="mt-2 flex gap-2">
+                            <button
+                              className="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                              onClick={() => {
+                                // Navigate to edit/retry the transaction
+                                navigate('/recharge');
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="text-xs text-red-600 hover:text-red-700 font-medium transition-colors"
+                              onClick={() => {
+                                // TODO: Add delete functionality for pending transactions
+                                toast({ title: "Note", description: "Delete functionality will be added based on backend API availability." });
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                        {transaction.isInstaPayTransaction && transaction.status === 'completed' && (
+                          <div className="mt-2 text-xs text-green-600 font-medium flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Validated & Credited
+                          </div>
+                        )}
+                        {transaction.isInstaPayTransaction && transaction.status === 'failed' && (
+                          <div className="mt-2 text-xs text-red-600 font-medium flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Validation Failed
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -598,7 +711,7 @@ const Wallet = () => {
               })}
             </div>
           )}
-          {!loading && transactions.length === 0 && (
+          {!loading && allTransactions.length === 0 && (
             <div className="text-center py-8">
               <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                 <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -618,6 +731,14 @@ const Wallet = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Floating Tutorial Button */}
+      <div className="fixed bottom-20 right-4 z-40">
+        <TutorialTrigger 
+          variant="floating"
+          className="shadow-lg"
+        />
       </div>
 
       <BottomNavigation activeTab="wallet" />

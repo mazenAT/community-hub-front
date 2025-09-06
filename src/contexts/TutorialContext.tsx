@@ -102,7 +102,7 @@ const defaultTutorialSteps: TutorialStep[] = [
   {
     id: 'wallet-recharge',
     title: 'Add Money to Wallet ➕',
-    description: 'Click this button to add money to your wallet:\n\n• Fawry payment gateway\n• InstaPay bank transfer\n• Secure authentication\n• Instant balance updates',
+    description: 'Click this button to add money to your wallet:\n\n• InstaPay bank transfer\n• Secure authentication\n• Instant balance updates\n• Parent name validation',
     target: '[data-tutorial="wallet-recharge"]',
     position: 'top',
     order: 4,
@@ -176,7 +176,7 @@ const defaultTutorialSteps: TutorialStep[] = [
   {
     id: 'recharge-payment-method',
     title: 'Payment Method 💳',
-    description: 'Secure payment processing:\n\n• Fawry payment gateway\n• Safe and encrypted transactions\n• 3DS authentication for security',
+    description: 'Secure payment processing:\n\n• InstaPay bank transfer\n• Safe and encrypted transactions\n• Parent name validation for security',
     target: '[data-tutorial="recharge-payment-method"]',
     position: 'right',
     order: 8,
@@ -189,10 +189,10 @@ const defaultTutorialSteps: TutorialStep[] = [
     interactive: false
   },
   {
-    id: 'recharge-card-info',
-    title: 'Payment Information 🏦',
-    description: 'Enter your payment details:\n\n• Use saved cards for quick checkout\n• Add new card information\n• Secure card tokenization via Fawry',
-    target: '[data-tutorial="recharge-card-info"]',
+    id: 'recharge-instapay-info',
+    title: 'InstaPay Information 🏦',
+    description: 'Enter your recharge details:\n\n• Enter amount to recharge\n• Provide parent name for validation\n• Upload receipt after transfer\n• Instant processing',
+    target: '[data-tutorial="recharge-parent-name"]',
     position: 'left',
     order: 9,
     completed: false,
@@ -202,8 +202,8 @@ const defaultTutorialSteps: TutorialStep[] = [
     spotlightRadius: 120,
     animation: 'glow',
     interactive: true,
-    actionRequired: 'click',
-    hint: 'Choose between saved card or new card',
+    actionRequired: 'input',
+    hint: 'Enter your parent name for validation',
     showArrow: true,
     arrowDirection: 'right'
   },

@@ -18,6 +18,7 @@ const Recharge = () => {
   const [showTransferDetails, setShowTransferDetails] = useState(false);
   const [instaPayData, setInstaPayData] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+  const [parentName, setParentName] = useState("");
 
   const { data: profileData } = useQuery({
     queryKey: ["profile"],
@@ -36,6 +37,11 @@ const Recharge = () => {
       
       if (finalAmount <= 0) {
         toast.error("Please enter a valid amount.");
+        return;
+      }
+
+      if (!parentName.trim()) {
+        toast.error("Please enter parent name for validation.");
         return;
       }
 
@@ -60,7 +66,8 @@ const Recharge = () => {
           reference_code,
           bank_account,
           instructions,
-          amount: amount
+          amount: amount,
+          parent_name: parentName
         });
         setShowTransferDetails(true);
         
@@ -88,7 +95,7 @@ const Recharge = () => {
   };
 
   const handleReceiptUpload = async () => {
-    if (!receiptImage || !instaPayData?.reference_code) {
+    if (!receiptImage || !instaPayData?.parent_name) {
       toast.error('Please select a receipt image to upload.');
       return;
     }
@@ -98,7 +105,8 @@ const Recharge = () => {
       
       const response = await instaPayApi.uploadReceipt(
         instaPayData.reference_code,
-        receiptImage
+        receiptImage,
+        instaPayData.parent_name
       );
       if (response.data.success) {
         toast.success('Receipt uploaded successfully! We will validate and credit your wallet within minutes.');
@@ -106,6 +114,7 @@ const Recharge = () => {
         setShowTransferDetails(false);
         setInstaPayData(null);
         setReceiptImage(null);
+        setParentName("");
         
         navigate('/wallet');
       } else {
@@ -153,7 +162,7 @@ const Recharge = () => {
         {!showTransferDetails ? (
           <>
             {/* Amount Input */}
-            <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+            <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="recharge-amount">
           <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
             <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
                 Enter Amount
@@ -170,8 +179,23 @@ const Recharge = () => {
             </div>
         </div>
 
+        {/* Parent Name Input */}
+            <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="recharge-parent-name">
+          <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
+            <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
+            Parent Name for Validation
+          </h3>
+              <Input 
+                type="text" 
+                  placeholder="Enter parent name"
+                  value={parentName}
+                  onChange={(e) => setParentName(e.target.value)}
+                  className="text-lg"
+                />
+        </div>
+
         {/* Payment Method */}
-            <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+            <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="recharge-payment-method">
           <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
             <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
             Payment Method
@@ -198,7 +222,7 @@ const Recharge = () => {
             {/* Recharge Button */}
             <Button
               onClick={handleRechargeClick}
-              disabled={isSubmitting || !amount || parseFloat(amount) <= 0}
+              disabled={isSubmitting || !amount || parseFloat(amount) <= 0 || !parentName.trim()}
               className="w-full h-12 bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow hover:opacity-90 text-white rounded-xl font-medium text-base shadow-lg disabled:opacity-50"
             >
               {isSubmitting ? (
@@ -280,6 +304,11 @@ const Recharge = () => {
                       )}
                     </Button>
               </div>
+
+              <div>
+                    <div className="text-sm font-medium text-gray-700 mb-1">Parent Name</div>
+                    <div className="text-lg font-semibold bg-white p-2 rounded border">{instaPayData.parent_name}</div>
+              </div>
             </div>
               </div>
             </div>
@@ -295,9 +324,34 @@ const Recharge = () => {
                 <div>
                   <h4 className="text-sm font-semibold text-blue-800 mb-1">Important</h4>
                   <p className="text-sm text-blue-700">
-                    When making the transfer in your InstaPay app, please use the reference code above as the <strong>"Reason for transfer"</strong> or <strong>"Transfer note"</strong>. This helps us process your payment faster.
+                    When making the transfer in your InstaPay app, please use the reference code above as the <strong>"Reason for transfer"</strong> or <strong>"Transfer note"</strong>. Also ensure that the parent name matches exactly for validation.
                   </p>
                 </div>
+              </div>
+            </div>
+
+            {/* Receipt Example */}
+            <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+              <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
+                <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
+                Receipt Example
+              </h3>
+              
+              <div className="text-center mb-4">
+                <img 
+                  src="/receipt-example.jpg" 
+                  alt="Receipt Example" 
+                  className="max-w-full h-auto rounded-lg border border-gray-200 mx-auto"
+                  style={{ maxHeight: '300px' }}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => window.open('/receipt-example.jpg', '_blank')}
+                >
+                  View Example
+                </Button>
               </div>
             </div>
 

@@ -184,10 +184,13 @@ export const instaPayApi = {
   createTopupRequest: (amount: number) => {
     return api.post('/instapay/create-topup', { amount });
   },
-  uploadReceipt: (referenceCode: string, receiptImage: File) => {
+  uploadReceipt: (referenceCode: string, receiptImage: File, parentName?: string) => {
     const formData = new FormData();
     formData.append('reference_code', referenceCode);
     formData.append('receipt_image', receiptImage);
+    if (parentName) {
+      formData.append('parent_name', parentName);
+    }
     return api.post('/instapay/upload-receipt', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',

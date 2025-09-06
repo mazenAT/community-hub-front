@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { secureStorage } from "@/services/native";
-import { authApi, familyMembersApi } from "@/services/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { useTutorial } from "@/contexts/TutorialContext";
 
 const shakeClass = "animate-shake border-brand-red";
@@ -17,50 +15,46 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [shake, setShake] = useState<{ email: boolean; password: boolean }>({ email: false, password: false });
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
   const { checkTutorialStatus } = useTutorial();
 
-  const signInMutation = useMutation({
-    mutationFn: (data: { email: string; password: string }) =>
-      authApi.login(data),
-    onSuccess: async (response) => {
-      const { user, token } = response.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+  const handleSignIn = async () => {
+    let newErrors: { email?: string; password?: string } = {};
+    let newShake = { email: false, password: false };
+    
+    if (!email) {
+      newErrors.email = "Email is required";
+      newShake.email = true;
+    }
+    if (!password) {
+      newErrors.password = "Password is required";
+      newShake.password = true;
+    }
+    
+    setErrors(newErrors);
+    setShake(newShake);
+    
+    if (Object.keys(newErrors).length > 0) {
+      setTimeout(() => setShake({ email: false, password: false }), 600);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await login(email, password);
       toast.success("Signed in successfully");
       
-      // Check if user has family members
-      try {
-        const familyMembersResponse = await familyMembersApi.getFamilyMembers();
-        const familyMembers = familyMembersResponse.data;
-        
-        // Store family members status for tutorial
-        if (familyMembers && familyMembers.length > 0) {
-          await secureStorage.set('has-family-members', 'true');
-          // User has family members, go to wallet
-          navigate("/wallet");
-        } else {
-          await secureStorage.set('has-family-members', 'false');
-          // User has no family members, go to family setup
-          navigate("/family-member-setup");
-        }
-        
-        // Check tutorial status after successful authentication
-        // This will only show tutorial if user hasn't seen it and has family members
-        setTimeout(() => {
-          checkTutorialStatus();
-        }, 1000); // Small delay to ensure navigation is complete
-        
-      } catch (error) {
-        // If there's an error checking family members, default to family setup
-        await secureStorage.set('has-family-members', 'false');
-        navigate("/family-member-setup");
-      }
-    },
-    onError: (error: any) => {
+      // Check tutorial status after successful authentication
+      setTimeout(() => {
+        checkTutorialStatus();
+      }, 1000);
+      
+    } catch (error: any) {
       const apiMsg = error.response?.data?.message || "Failed to sign in";
       toast.error(apiMsg);
-      // Example: if API returns field errors, set them here
+      
       if (error.response?.data?.errors) {
         setErrors(error.response.data.errors);
         setShake({
@@ -72,30 +66,9 @@ const SignIn = () => {
         setShake({ email: true, password: true });
       }
       setTimeout(() => setShake({ email: false, password: false }), 600);
-    },
-  });
-
-  const handleSignIn = () => {
-    let newErrors: { email?: string; password?: string } = {};
-    let newShake = { email: false, password: false };
-    if (!email) {
-      newErrors.email = "Email is required";
-      newShake.email = true;
+    } finally {
+      setIsLoading(false);
     }
-    if (!password) {
-      newErrors.password = "Password is required";
-      newShake.password = true;
-    }
-    setErrors(newErrors);
-    setShake(newShake);
-    if (Object.keys(newErrors).length > 0) {
-      setTimeout(() => setShake({ email: false, password: false }), 600);
-      return;
-    }
-    signInMutation.mutate({
-      email,
-      password,
-    });
   };
 
   return (
@@ -159,10 +132,10 @@ const SignIn = () => {
 
           <Button 
             onClick={handleSignIn}
-            disabled={signInMutation.isPending}
+            disabled={isLoading}
             className="w-full h-14 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold text-lg rounded-2xl shadow-2xl shadow-orange-500/30 transition-all duration-300 transform hover:scale-105"
           >
-            {signInMutation.isPending ? (
+            {isLoading ? (
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 <span>Signing in...</span>
