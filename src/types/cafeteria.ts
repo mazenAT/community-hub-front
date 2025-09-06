@@ -19,7 +19,9 @@ export type DailyItemCategory =
   | 'snacks'                    // Everyday snacks (30LE - 90LE)
   | 'bakery'                    // Bakery items (30LE - 65LE)
   | 'greek_yoghurt_popsicle'    // Greek yogurt popsicles (60LE - 70LE)
-  | 'drinks';                   // Beverages (10LE - 45LE, some TBD)
+  | 'drinks'                    // Beverages (10LE - 45LE, some TBD)
+  | 'dessert'                   // Dessert items (40LE - 50LE)
+  | 'salad';                    // Salad items (50LE - 90LE)
 
 // Meal Interface
 export interface Meal {
@@ -132,7 +134,9 @@ export const DAILY_ITEM_CATEGORY_LABELS: Record<DailyItemCategory, string> = {
   snacks: 'Snacks',
   bakery: 'Bakery',
   greek_yoghurt_popsicle: 'Greek Yogurt Popsicle',
-  drinks: 'Drinks'
+  drinks: 'Drinks',
+  dessert: 'Dessert',
+  salad: 'Salad'
 };
 
 // Price Range Information
@@ -140,7 +144,9 @@ export const PRICE_RANGES = {
   snacks: { min: 30, max: 90, unit: 'LE' },
   bakery: { min: 30, max: 65, unit: 'LE' },
   greek_yoghurt_popsicle: { min: 60, max: 70, unit: 'LE' },
-  drinks: { min: 10, max: 45, unit: 'LE' }
+  drinks: { min: 10, max: 45, unit: 'LE' },
+  dessert: { min: 40, max: 50, unit: 'LE' },
+  salad: { min: 50, max: 90, unit: 'LE' }
 } as const;
 
 // Helper Functions

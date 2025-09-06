@@ -584,6 +584,10 @@ const Planner = () => {
           return dailyItem.category === 'snacks';
         case 'Drinks':
           return dailyItem.category === 'drinks';
+        case 'Dessert':
+          return dailyItem.category === 'dessert';
+        case 'Salad':
+          return dailyItem.category === 'salad';
         default:
           return true;
       }
@@ -731,7 +735,7 @@ const Planner = () => {
       .catch((error) => {
         console.error('Failed to load categories:', error);
         // Fallback to default categories
-        setAvailableCategories(['bakery', 'snacks', 'drinks', 'greek_yoghurt_popsicle']);
+        setAvailableCategories(['bakery', 'snacks', 'drinks', 'greek_yoghurt_popsicle', 'dessert', 'salad']);
       });
   }, [schoolId]);
 
@@ -1408,7 +1412,9 @@ const Planner = () => {
                     { name: 'Bakery', category: 'bakery', emoji: '🥐', color: 'from-yellow-400 to-orange-400' },
                     { name: 'Snacks', category: 'snacks', emoji: '🍿', color: 'from-orange-400 to-red-400' },
                     { name: 'Drinks', category: 'drinks', emoji: '🥤', color: 'from-blue-400 to-purple-400' },
-                    { name: 'Popsicles', category: 'greek_yoghurt_popsicle', emoji: '🍦', color: 'from-pink-400 to-red-400' }
+                    { name: 'Popsicles', category: 'greek_yoghurt_popsicle', emoji: '🍦', color: 'from-pink-400 to-red-400' },
+                    { name: 'Dessert', category: 'dessert', emoji: '🍰', color: 'from-purple-400 to-pink-400' },
+                    { name: 'Salad', category: 'salad', emoji: '🥗', color: 'from-green-400 to-teal-400' }
                   ].map((category) => {
                     const itemCount = filteredDailyItems.filter(dailyItem => 
                       dailyItem.category === category.category
@@ -1483,6 +1489,8 @@ const Planner = () => {
                  selectedDailyItemCategory === 'snacks' ? 'Snacks' :
                  selectedDailyItemCategory === 'drinks' ? 'Drinks' :
                  selectedDailyItemCategory === 'greek_yoghurt_popsicle' ? 'Popsicles' :
+                 selectedDailyItemCategory === 'dessert' ? 'Dessert' :
+                 selectedDailyItemCategory === 'salad' ? 'Salad' :
                  'Daily'} Items
             </DialogTitle>
               <p className="text-xl text-brand-black/70 mb-2">
@@ -1506,6 +1514,10 @@ const Planner = () => {
                     return dailyItem.category === 'drinks';
                   case 'Greek Yogurt Popsicle':
                     return dailyItem.category === 'greek_yoghurt_popsicle';
+                  case 'Dessert':
+                    return dailyItem.category === 'dessert';
+                  case 'Salad':
+                    return dailyItem.category === 'salad';
                   default:
                     return true;
                 }
@@ -1657,6 +1669,8 @@ const Planner = () => {
                                    selectedDailyItemCategory === 'snacks' ? 'Snacks' :
                                    selectedDailyItemCategory === 'drinks' ? 'Drinks' :
                                    selectedDailyItemCategory === 'greek_yoghurt_popsicle' ? 'Popsicles' :
+                                   selectedDailyItemCategory === 'dessert' ? 'Dessert' :
+                                   selectedDailyItemCategory === 'salad' ? 'Salad' :
                                    selectedDailyItemCategory}
               </DialogTitle>
               <p className="text-xl text-brand-black/70 mb-2">
@@ -1713,6 +1727,8 @@ const Planner = () => {
                            category === 'bakery' ? 'Bakery' :
                            category === 'snacks' ? 'Snacks' :
                            category === 'drinks' ? 'Drinks' :
+                           category === 'dessert' ? 'Dessert' :
+                           category === 'salad' ? 'Salad' :
                            category.charAt(0).toUpperCase() + category.slice(1)}
                         </SelectItem>
                       ))}
