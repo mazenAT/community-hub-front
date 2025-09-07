@@ -324,7 +324,7 @@ const Recharge = () => {
               
               <div className="text-center mb-4">
                 <img 
-                  src="/receipt-example.jpg" 
+                  src="/insta-example.jpg" 
                   alt="Receipt Example" 
                   className="max-w-full h-auto rounded-lg border border-gray-200 mx-auto"
                   style={{ maxHeight: '300px' }}
