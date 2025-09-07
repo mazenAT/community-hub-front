@@ -168,7 +168,7 @@ const Planner = () => {
     return dates;
   };
 
-  const getDatesForView = (): Date[] => {
+  const getDatesForView = (plan: WeeklyPlan): Date[] => {
     if (!customStartDate) return [];
     
     const startDate = new Date(customStartDate);
@@ -1145,7 +1145,7 @@ const Planner = () => {
               let datesForView;
               
               if (viewMode === 'custom' && customStartDate) {
-                datesForView = getDatesForView();
+                datesForView = getDatesForView(activePlan);
                 console.log('Custom date range:', {
                   startDate: customStartDate ? format(customStartDate, 'yyyy-MM-dd') : 'none',
                   endDate: customEndDate ? format(customEndDate, 'yyyy-MM-dd') : 'none',
@@ -1164,7 +1164,7 @@ const Planner = () => {
               
               // Filter dates that have meals
               const datesWithMeals = datesForView.filter((date) => {
-                const mealsForDay = getMealsForDay(date, normalizedPlans);
+                const mealsForDay = getMealsForDay(date, [activePlan]);
                 console.log(`Meals for ${format(date, 'yyyy-MM-dd')}:`, mealsForDay);
                 return mealsForDay.length > 0;
               });
