@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Wallet, Copy, Check } from "lucide-react";
+import { Loader2, Wallet, Copy, Check, Building2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { profileApi, instaPayApi } from "../services/api";
 import { useNavigate } from "react-router-dom";
@@ -229,7 +229,8 @@ const Recharge = () => {
           <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
             <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
                 <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
-                Send money to this account
+                <Building2 className="w-4 h-4 text-blue-600" />
+                Send money to this Bank account
             </h3>
             
               <div className="space-y-4">

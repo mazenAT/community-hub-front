@@ -156,8 +156,8 @@ const defaultTutorialSteps: TutorialStep[] = [
   // RECHARGE PAGE TUTORIAL
   {
     id: 'recharge-amount',
-    title: 'Select Recharge Amount 💰',
-    description: 'Choose how much money to add to your wallet:\n\n• Quick preset amounts (50, 100, 200, 500 EGP)\n• Custom amount option\n• Secure payment processing',
+    title: 'Enter Recharge Amount 💰',
+    description: 'Enter how much money to add to your wallet:\n\n• Enter any amount (minimum 10 EGP)\n• Amount will be validated with receipt\n• Secure payment processing',
     target: '[data-tutorial="recharge-amount"]',
     position: 'bottom',
     order: 7,
@@ -168,8 +168,8 @@ const defaultTutorialSteps: TutorialStep[] = [
     spotlightRadius: 120,
     animation: 'pulse',
     interactive: true,
-    actionRequired: 'click',
-    hint: 'Click on an amount or enter a custom value',
+    actionRequired: 'input',
+    hint: 'Enter the amount you want to add to your wallet',
     showArrow: true,
     arrowDirection: 'up'
   },
