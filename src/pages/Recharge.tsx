@@ -324,7 +324,7 @@ const Recharge = () => {
               
               <div className="text-center mb-4">
                 <img 
-                  src="/insta-example.jpg" 
+                  src="/insta-example.jpeg" 
                   alt="Receipt Example" 
                   className="max-w-full h-auto rounded-lg border border-gray-200 mx-auto"
                   style={{ maxHeight: '300px' }}
@@ -333,7 +333,7 @@ const Recharge = () => {
                   variant="outline"
                   size="sm"
                   className="mt-2"
-                  onClick={() => window.open('/receipt-example.jpg', '_blank')}
+                  onClick={() => window.open('/insta-example.jpeg', '_blank')}
                 >
                   View Example
                 </Button>
