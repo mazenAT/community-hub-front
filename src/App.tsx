@@ -23,7 +23,7 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import OrderDetails from "./pages/orders/OrderDetails";
 import MyOrders from "./pages/orders/MyOrders";
-import FawryCallback from "./pages/FawryCallback";
+
 import ContactUs from "./pages/ContactUs";
 import Notifications from "./pages/Notifications";
 
@@ -57,7 +57,7 @@ const AppContent = () => {
             path="/reset-password" 
             element={isAuthenticated ? <Navigate to="/wallet" replace /> : <ResetPassword />} 
           />
-          <Route path="/fawry-callback" element={<FawryCallback />} />
+
 
           {/* Protected Routes - only accessible when authenticated */}
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
