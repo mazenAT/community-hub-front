@@ -133,10 +133,7 @@ const Recharge = () => {
     const file = e.target.files?.[0];
     if (file) {
       setReceiptImage(file);
-      // Auto-upload after file selection
-      setTimeout(() => {
-        handleReceiptUpload();
-      }, 100);
+      toast.success('Receipt image selected! Please click "Upload Receipt" to submit.');
     }
   };
 
@@ -347,13 +344,29 @@ const Recharge = () => {
                 Upload Receipt
               </h3>
               
-                <input
-                  type="file"
-                  accept="image/*"
+              <input
+                type="file"
+                accept="image/*"
                 onChange={handleFileChange}
                 className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-center cursor-pointer hover:border-blue-400 transition-colors"
                 disabled={isSubmitting}
               />
+              
+              {receiptImage && !isSubmitting && (
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-sm text-green-700 mb-3">
+                    <Check className="w-4 h-4" />
+                    <span>Selected: {receiptImage.name}</span>
+                  </div>
+                  <Button
+                    onClick={handleReceiptUpload}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    disabled={isSubmitting}
+                  >
+                    Upload Receipt
+                  </Button>
+                </div>
+              )}
               
               {isSubmitting && (
                 <div className="mt-3 text-center">
