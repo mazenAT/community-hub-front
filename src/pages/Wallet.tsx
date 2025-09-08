@@ -64,10 +64,25 @@ const Wallet = () => {
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
   const [newReceiptImage, setNewReceiptImage] = useState<File | null>(null);
   const [editLoading, setEditLoading] = useState(false);
+  
+  // Delete transaction states
+  const [deletedTransactions, setDeletedTransactions] = useState<Set<number | string>>(new Set());
 
   const clearSuccessMessages = () => {
     setRefundSuccessMessage(null);
     setSuccessfulRefunds(new Set());
+  };
+
+  const handleDeleteTransaction = (transactionId: number | string) => {
+    // Add confirmation dialog
+    if (window.confirm('Are you sure you want to delete this transaction? This action cannot be undone.')) {
+      setDeletedTransactions(prev => new Set([...prev, transactionId]));
+      toast({
+        title: "Transaction Deleted",
+        description: "The transaction has been removed from your view.",
+        variant: "default",
+      });
+    }
   };
 
   const fetchWalletData = async () => {
@@ -390,7 +405,9 @@ const Wallet = () => {
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
   
-  const mappedTransactions = allTransactions.map((t: any) => {
+  const mappedTransactions = allTransactions
+    .filter((t: any) => !deletedTransactions.has(t.id)) // Filter out deleted transactions
+    .map((t: any) => {
     // For refund transactions, construct description from details if description is null
     let note = t.description || t.note || '';
     if (t.type === 'refund' && !note && t.details) {
@@ -814,6 +831,20 @@ const Wallet = () => {
                             Validation Failed
                           </div>
                         )}
+                        {/* Delete button for InstaPay recharge transactions */}
+                        {transaction.isInstaPayTransaction || (transaction.type === 'recharge' && transaction.note?.includes('InstaPay')) ? (
+                          <div className="mt-2">
+                            <button
+                              className="text-xs text-red-600 hover:text-red-700 font-medium transition-colors flex items-center gap-1"
+                              onClick={() => handleDeleteTransaction(transaction.id)}
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              Delete
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   </div>
