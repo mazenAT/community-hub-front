@@ -310,7 +310,7 @@ const Recharge = () => {
                 <div>
                   <h4 className="text-sm font-semibold text-blue-800 mb-1">Important</h4>
                   <p className="text-sm text-blue-700">
-                    When making the transfer in your InstaPay app, please use the parent name above as the <strong>"Reason for transfer"</strong>. This helps us validate and process your payment faster.
+                    When making the transfer in your InstaPay app, please paste the parent name above as the <strong>"Reason for transfer"</strong>. This helps us validate and process your payment faster.
                   </p>
                 </div>
               </div>
