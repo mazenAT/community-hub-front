@@ -210,4 +210,4 @@ content = content.replace(
 
 // Write the file back
 fs.writeFileSync('src/pages/Planner.tsx', content);
-console.log('File updated successfully!');
+// File updated successfully

@@ -158,12 +158,7 @@ const Planner = () => {
       currentDate = addDays(currentDate, 1);
     }
     
-    console.log(`Week ${weekNumber} dates (using plan dates):`, {
-      planStart: format(startDate, 'yyyy-MM-dd'),
-      planEnd: format(endDate, 'yyyy-MM-dd'),
-      datesCount: dates.length,
-      dates: dates.map(d => format(d, 'yyyy-MM-dd'))
-    });
+
     
     return dates;
   };
@@ -197,31 +192,28 @@ const Planner = () => {
     const dayOfWeek = getDay(date);
     const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek];
     
-    console.log(`\n=== Getting meals for ${dateString} (${dayName}, JS day=${dayOfWeek}) ===`);
+
     
     const allMeals: any[] = [];
     
     for (const plan of plans) {
-      console.log(`\n--- Checking plan ${plan.id} ---`);
+
       
       // Check if we have meals_by_day structure (new API format) - this is the primary method
       if (plan.meals_by_day && plan.meals_by_day[dateString]) {
         const mealsForDate = plan.meals_by_day[dateString];
-        console.log(`Found ${mealsForDate.length} meals in meals_by_day for ${dateString}`);
+
         allMeals.push(...mealsForDate);
         continue; // Skip fallback logic if we found meals for this date
       }
       
       // Fallback to pivot structure if meals_by_day doesn't exist
       if (plan.meals && Array.isArray(plan.meals)) {
-        console.log(`Checking ${plan.meals.length} meals in pivot structure`);
-        
         const mealsForDate = plan.meals.filter((meal: any) => {
           // First priority: Check if meal is assigned to this specific date
           if (meal.pivot && meal.pivot.meal_date) {
             const mealDateString = format(parseISO(meal.pivot.meal_date), 'yyyy-MM-dd');
             const matches = mealDateString === dateString;
-            console.log(`Meal ${meal.name}: specific date ${mealDateString} matches ${dateString}? ${matches}`);
             return matches;
           }
           
@@ -233,19 +225,14 @@ const Planner = () => {
             const jsDayOfWeek = dayOfWeek === 0 ? 1 : dayOfWeek + 1; // Sunday=0 becomes 1, Monday=1 becomes 2, etc.
             const mealDayOfWeek = meal.pivot.day_of_week;
             const matches = mealDayOfWeek === jsDayOfWeek;
-            console.log(`Meal ${meal.name}: day of week check - JS day=${dayOfWeek} (${dayName}), converted=${jsDayOfWeek}, meal day=${mealDayOfWeek}, matches? ${matches}`);
             return matches;
           }
           
-          console.log(`Meal ${meal.name}: no pivot data, skipping`);
           return false;
         });
         
         if (mealsForDate.length > 0) {
-          console.log(`Found ${mealsForDate.length} meals via pivot structure`);
           allMeals.push(...mealsForDate);
-        } else {
-          console.log('No meals found via pivot structure');
         }
       }
     }
@@ -253,7 +240,7 @@ const Planner = () => {
     // Filter by selected meal type
     if (selectedType !== 'all') {
       const filteredMeals = allMeals.filter(meal => meal.category === selectedType);
-      console.log(`Meals after filtering by ${selectedType}:`, filteredMeals);
+
       return filteredMeals;
     }
     
@@ -369,17 +356,12 @@ const Planner = () => {
   // Extract categories and subcategories from weekly plans meals
   useEffect(() => {
     if (weeklyPlans?.data) {
-      console.log('Raw weekly plans data:', weeklyPlans.data);
-      
       const allMealsFromPlans = weeklyPlans.data.flatMap((plan: any) => 
         Array.isArray(plan.meals) ? plan.meals : []
       );
       
       const uniqueCategories = Array.from(new Set(allMealsFromPlans.map((meal: any) => meal.category).filter(Boolean))) as MealCategory[];
       const uniqueSubcategories = Array.from(new Set(allMealsFromPlans.map((meal: any) => meal.subcategory).filter(Boolean))) as string[];
-      
-      console.log('Extracted categories:', uniqueCategories);
-      console.log('Extracted subcategories:', uniqueSubcategories);
       
       setCategories(["all", ...uniqueCategories]);
       setSubcategories(["all", ...uniqueSubcategories]);
@@ -670,26 +652,21 @@ const Planner = () => {
       };
     }).filter(Boolean); // Remove invalid plans
     
-    console.log('Normalized plans:', normalized);
     return normalized;
   })();
 
   // Find the active plan based on selected week
   const activePlan = (() => {
     if (normalizedPlans.length === 0) {
-      console.log('No normalized plans available');
       return null;
     }
     
     // Find the plan that matches the selected week
     const selectedWeekNumber = parseInt(selectedWeek);
-    console.log(`Looking for plan for Week ${selectedWeekNumber}, Total plans: ${normalizedPlans.length}`);
     
     // If selectedWeek is 1, 2, 3, etc., find the corresponding plan
     if (selectedWeekNumber >= 1 && selectedWeekNumber <= normalizedPlans.length) {
       const plan = normalizedPlans[selectedWeekNumber - 1];
-      console.log(`Selected Week ${selectedWeekNumber}, Plan:`, plan);
-      console.log(`Plan has meals: ${plan.meals?.length || 0}, meals_by_day keys: ${Object.keys(plan.meals_by_day || {}).length}`);
       return plan;
     }
     
@@ -698,11 +675,9 @@ const Planner = () => {
     if (normalizedPlans.length > 0) {
       // Update selectedWeek to match the first available plan
       if (selectedWeek !== "1") {
-        console.log(`Invalid week selection ${selectedWeek}, resetting to 1`);
         setSelectedWeek("1");
       }
       const firstPlan = normalizedPlans[0];
-      console.log('Using first plan as fallback:', firstPlan);
       return firstPlan;
     }
     
@@ -720,7 +695,7 @@ const Planner = () => {
     // Fetch school-specific daily items
     dailyItemsApi.getDailyItems(schoolId)
       .then((res) => {
-        console.log("Daily items response:", res.data); setDailyItems(res.data.filter((dailyItem: DailyItem) => dailyItem.is_active));
+        setDailyItems(res.data.filter((dailyItem: DailyItem) => dailyItem.is_active));
       })
       .catch((error) => {
         console.error('Failed to load daily items:', error);
@@ -957,7 +932,6 @@ const Planner = () => {
                   } rounded-full px-3 py-1 text-xs font-medium`}
                   onClick={() => {
                     if (isPlanValid) {
-                      console.log(`Selecting Week ${index + 1}, Plan ID: ${plan.id}, Start: ${plan.start_date}, End: ${plan.end_date}`);
                       setSelectedWeek((index + 1).toString());
                       setViewMode('week');
                       // Clear custom dates when switching to week view
@@ -1135,41 +1109,21 @@ const Planner = () => {
         {activePlan ? (
           <div className="mb-8">
             {(() => {
-              // Debug: Log the active plan and its meals
-              console.log('Active Plan:', activePlan);
-              console.log('Active Plan Meals:', activePlan.meals);
-              console.log('Selected Week:', selectedWeek);
-              console.log('View Mode:', viewMode);
-              
               // Get dates based on week filter or custom range
               let datesForView;
               
               if (viewMode === 'custom' && customStartDate) {
                 datesForView = getDatesForView();
-                console.log('Custom date range:', {
-                  startDate: customStartDate ? format(customStartDate, 'yyyy-MM-dd') : 'none',
-                  endDate: customEndDate ? format(customEndDate, 'yyyy-MM-dd') : 'none',
-                  dates: datesForView.map(d => format(d, 'yyyy-MM-dd'))
-                });
               } else {
                 // Week-based view
                 datesForView = getDatesForWeek(activePlan, parseInt(selectedWeek));
-                console.log('Week-based view:', {
-                  week: selectedWeek,
-                  dates: datesForView.map(d => format(d, 'yyyy-MM-dd'))
-                });
               }
-              
-              console.log('Dates for View:', datesForView);
               
               // Filter dates that have meals
               const datesWithMeals = datesForView.filter((date) => {
                 const mealsForDay = getMealsForDay(date, normalizedPlans);
-                console.log(`Meals for ${format(date, 'yyyy-MM-dd')}:`, mealsForDay);
                 return mealsForDay.length > 0;
               });
-              
-              console.log('Dates with Meals:', datesWithMeals);
 
               if (datesWithMeals.length === 0) {
                 return (

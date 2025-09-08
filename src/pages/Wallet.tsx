@@ -406,7 +406,7 @@ const Wallet = () => {
     }
 
     // Handle recharge transactions
-    if (t.type === 'recharge' || t.type === 'top_up') {
+            if (t.type === 'recharge') {
       if (!note) {
         note = 'InstaPay Recharge';
       }
@@ -710,11 +710,11 @@ const Wallet = () => {
                         )}
                         <div className="flex flex-wrap items-center gap-1 mt-2">
                           <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                            transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? 'bg-green-100 text-green-700' : 
+                            transaction.type === 'recharge' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? 'bg-green-100 text-green-700' : 
                             transaction.type === 'purchase' ? 'bg-red-100 text-red-700' : 
                             'bg-gray-100 text-gray-700'
                           }`}>
-                            {transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? '+' : '-'}{transaction.type === 'instapay_recharge' ? 'InstaPay' : transaction.type}
+                            {transaction.type === 'recharge' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? '+' : '-'}{transaction.type === 'instapay_recharge' ? 'InstaPay' : transaction.type}
                           </span>
                           {transaction.isInstaPayTransaction && transaction.status && (
                             <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -752,11 +752,11 @@ const Wallet = () => {
                       </div>
                       <div className="text-right">
                         <div className={`text-base sm:text-lg font-bold ${
-                          transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? 'text-green-600' : 
+                          transaction.type === 'recharge' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? 'text-green-600' : 
                           transaction.type === 'purchase' ? 'text-red-600' : 
                           'text-gray-900'
                         }`}>
-                          {transaction.type === 'recharge' || transaction.type === 'top_up' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? '+' : '-'}{formatCurrency(Math.abs(Number(transaction.amount)))}
+                          {transaction.type === 'recharge' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? '+' : '-'}{formatCurrency(Math.abs(Number(transaction.amount)))}
                         </div>
                         {isRefundable && !successfulRefunds.has(transaction.reference_id) && (
                           <button

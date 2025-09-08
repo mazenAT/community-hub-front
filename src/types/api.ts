@@ -21,7 +21,7 @@ export interface PaginatedResponse<T> {
 
 export interface WalletTransaction {
   id: number;
-  type: 'credit' | 'debit' | 'top_up' | 'withdrawal';
+  type: 'credit' | 'debit' | 'recharge' | 'withdrawal';
   amount: number;
   status: 'pending' | 'completed' | 'failed';
   note?: string;
