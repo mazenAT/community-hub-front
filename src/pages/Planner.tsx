@@ -714,6 +714,13 @@ const Planner = () => {
       });
   }, [schoolId]);
 
+  // Auto-set general filter to meals if nursery meals are present
+  useEffect(() => {
+    if (activePlan && hasNurseryMeals(activePlan)) {
+      setGeneralFilter("meals");
+    }
+  }, [activePlan]);
+
   const navigate = useNavigate();
 
   const dailyItemOrderMutation = useMutation({
@@ -1050,45 +1057,47 @@ const Planner = () => {
             </div>
           )}
 
-          {/* General Filter */}
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
-            <h3 className="text-sm font-semibold text-brand-black mb-3">Filter</h3>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={generalFilter === "meals" ? 'default' : 'outline'}
-                size="sm"
-                className={`${
-                  generalFilter === "meals" 
-                    ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
-                    : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
-                } rounded-full px-4 py-2 text-sm font-medium`}
-                onClick={() => {
-                  setGeneralFilter("meals");
-                  setViewMode('week');
-                  // Clear custom dates when switching to meals filter
-                  setCustomStartDate(undefined);
-                  setCustomEndDate(undefined);
-                }}
-              >
-                Food/Sandwich
-              </Button>
-              <Button
-                variant={generalFilter === "daily_items" ? 'default' : 'outline'}
-                size="sm"
-                className={`${
-                  generalFilter === "daily_items" 
-                    ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
-                    : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
-                } rounded-full px-4 py-2 text-sm font-medium`}
-                onClick={() => {
-                  setGeneralFilter("daily_items");
-                  // No viewMode change needed for daily items
-                }}
-              >
-                Daily Items
-              </Button>
+          {/* General Filter - Hidden for nursery meal plans */}
+          {!hasNurseryMeals(activePlan) && (
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+              <h3 className="text-sm font-semibold text-brand-black mb-3">Filter</h3>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={generalFilter === "meals" ? 'default' : 'outline'}
+                  size="sm"
+                  className={`${
+                    generalFilter === "meals" 
+                      ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
+                      : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
+                  } rounded-full px-4 py-2 text-sm font-medium`}
+                  onClick={() => {
+                    setGeneralFilter("meals");
+                    setViewMode('week');
+                    // Clear custom dates when switching to meals filter
+                    setCustomStartDate(undefined);
+                    setCustomEndDate(undefined);
+                  }}
+                >
+                  Meals/Sandwiches
+                </Button>
+                <Button
+                  variant={generalFilter === "daily_items" ? 'default' : 'outline'}
+                  size="sm"
+                  className={`${
+                    generalFilter === "daily_items" 
+                      ? 'bg-brand-red text-white border-brand-red hover:bg-brand-red/90' 
+                      : 'bg-white text-brand-black border-brand-red hover:bg-brand-red/10'
+                  } rounded-full px-4 py-2 text-sm font-medium`}
+                  onClick={() => {
+                    setGeneralFilter("daily_items");
+                    // No viewMode change needed for daily items
+                  }}
+                >
+                  Daily Items
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* View Full Menu Button */}
@@ -1302,8 +1311,8 @@ const Planner = () => {
           </>
         )}
 
-        {/* Daily Items section - NO DATE FILTERING */}
-        {generalFilter === "daily_items" && (
+        {/* Daily Items section - Hidden for nursery meal plans */}
+        {generalFilter === "daily_items" && !hasNurseryMeals(activePlan) && (
           <div className="mb-8">
             <div className="bg-white rounded-xl border border-brand-yellow/30 overflow-hidden shadow-sm">
               <div className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-6 py-4">
