@@ -1,20 +1,18 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { plannerApi, profileApi, dailyItemsApi, familyMembersApi, dailyItemOrderApi } from "@/services/api";
-import { format, parseISO, getDay, isBefore, startOfDay, subDays, addDays, isSameDay } from "date-fns";
-import { CalendarIcon, AlertCircle, FileText, Users } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { dailyItemOrderApi, dailyItemsApi, familyMembersApi, plannerApi, profileApi } from "@/services/api";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { addDays, format, getDay, isBefore, isSameDay, parseISO, startOfDay, subDays } from "date-fns";
+import { AlertCircle, CalendarIcon, FileText, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import NotificationBell from "@/components/NotificationBell";
-import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
-import { formatCurrency } from "@/utils/format";
-import { MealCategory, DailyItemCategory, CATEGORY_LABELS } from "@/types/cafeteria";
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CATEGORY_LABELS, DailyItemCategory, MealCategory } from "@/types/cafeteria";
+import { formatCurrency } from "@/utils/format";
 
 interface Meal {
   id: number;
@@ -1111,6 +1111,25 @@ const Planner = () => {
             View Full Menu
             </Button>
           </div>
+
+        {/* Transaction Fee Note for BICC School */}
+        {profile?.data?.school?.name && profile.data.school.name.toLowerCase().includes('bicc') && (
+          <div className="mb-6 flex justify-center">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 max-w-md">
+              <div className="flex items-start space-x-2">
+                <div className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="text-sm text-blue-700">
+                  <p className="font-medium mb-1">Note</p>
+                  <p>Prices include transaction fees</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {generalFilter === "meals" && (
           <>
