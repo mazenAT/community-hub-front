@@ -1240,11 +1240,18 @@ const Planner = () => {
                             className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6"
                             data-tutorial="meal-list"
                           >
-                            {mealsForDay.map((meal: any, mealIndex: number) => (
+                            {mealsForDay.map((meal: any, mealIndex: number) => {
+                              const isOrderingClosed = !isOrderingWindowOpen(date);
+                              
+                              return (
                               <div 
                                 key={`${date.toISOString()}-${meal.id}-${mealIndex}`} 
-                                className="bg-gradient-to-br from-white via-gray-50/50 to-white rounded-2xl border-0 hover:border hover:border-brand-orange/40 hover:shadow-lg transition-all duration-200 overflow-hidden group relative cursor-pointer"
-                                onClick={() => handlePreOrder(meal, date)}
+                                className={`bg-gradient-to-br from-white via-gray-50/50 to-white rounded-2xl border-0 transition-all duration-200 overflow-hidden group relative ${
+                                  isOrderingClosed 
+                                    ? 'opacity-50 cursor-not-allowed grayscale' 
+                                    : 'hover:border hover:border-brand-orange/40 hover:shadow-lg cursor-pointer'
+                                }`}
+                                onClick={() => !isOrderingClosed && handlePreOrder(meal, date)}
                               >
 
                                 
@@ -1254,27 +1261,37 @@ const Planner = () => {
                                   <div className="mb-4">
                                     <div className="flex-1">
                                       <h4 
-                                        className="font-bold text-brand-black text-lg sm:text-xl leading-tight mb-2 bg-gradient-to-r from-brand-black to-brand-black/80 bg-clip-text break-words cursor-pointer hover:opacity-80 transition-opacity"
+                                        className={`font-bold text-brand-black text-lg sm:text-xl leading-tight mb-2 bg-gradient-to-r from-brand-black to-brand-black/80 bg-clip-text break-words transition-opacity ${
+                                          isOrderingClosed 
+                                            ? 'cursor-not-allowed opacity-50' 
+                                            : 'cursor-pointer hover:opacity-80'
+                                        }`}
                                         onClick={() => {
-                                          // Show full title in a mobile-friendly modal
-                                          if (meal.title && meal.title.length > 50) {
-                                            setSelectedMealTitle(meal.title);
-                                            setShowMealTitleModal(true);
+                                          if (!isOrderingClosed) {
+                                            // Show full title in a mobile-friendly modal
+                                            if (meal.title && meal.title.length > 50) {
+                                              setSelectedMealTitle(meal.title);
+                                              setShowMealTitleModal(true);
+                                            }
                                           }
                                         }}
-                                        title={meal.title && meal.title.length > 50 ? "Tap to see full title" : ""}
+                                        title={meal.title && meal.title.length > 50 && !isOrderingClosed ? "Tap to see full title" : ""}
                                       >
                                         {meal.title || meal.name}
                                         {meal.title && meal.title.length > 50 && (
                                           <span className="ml-2 text-sm text-blue-600 opacity-75">📱</span>
                                         )}
                                       </h4>
-                                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-2 font-medium">
+                                      <p className={`text-sm leading-relaxed line-clamp-2 mb-2 font-medium ${
+                                        isOrderingClosed ? 'text-gray-400' : 'text-gray-600'
+                                      }`}>
                                         {meal.description || 'Delicious meal prepared with fresh ingredients'}
                                   </p>
                                       {/* Price under description */}
                                       <div className="inline-flex items-center">
-                                        <span className="text-sm font-semibold text-brand-orange">
+                                        <span className={`text-sm font-semibold ${
+                                          isOrderingClosed ? 'text-gray-400' : 'text-brand-orange'
+                                        }`}>
                                       {meal.price ? formatCurrency(meal.price) : 'N/A'}
                                     </span>
                                       </div>
@@ -1283,9 +1300,17 @@ const Planner = () => {
                                   
                                   {/* Meal Category Badge */}
                                   <div className="mb-4">
-                                    <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-brand-orange/10 via-brand-orange/20 to-brand-red/10 border border-brand-orange/30 shadow-md backdrop-blur-sm">
-                                      <div className="w-1.5 h-1.5 bg-brand-orange rounded-full animate-pulse"></div>
-                                      <span className="text-xs font-semibold text-brand-orange uppercase tracking-wide">
+                                    <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border shadow-md backdrop-blur-sm ${
+                                      isOrderingClosed 
+                                        ? 'bg-gray-100 border-gray-200' 
+                                        : 'bg-gradient-to-r from-brand-orange/10 via-brand-orange/20 to-brand-red/10 border-brand-orange/30'
+                                    }`}>
+                                      <div className={`w-1.5 h-1.5 rounded-full ${
+                                        isOrderingClosed ? 'bg-gray-400' : 'bg-brand-orange animate-pulse'
+                                      }`}></div>
+                                      <span className={`text-xs font-semibold uppercase tracking-wide ${
+                                        isOrderingClosed ? 'text-gray-500' : 'text-brand-orange'
+                                      }`}>
                                         {CATEGORY_LABELS[meal.category as MealCategory] || meal.category || 'N/A'}
                                         </span>
                                       </div>
@@ -1299,21 +1324,37 @@ const Planner = () => {
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="flex-1 h-10 border-2 border-brand-blue/60 text-brand-blue hover:bg-gradient-to-r hover:from-brand-blue/10 hover:to-blue-500/10 hover:border-brand-blue/80 rounded-xl font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm"
+                                        className={`flex-1 h-10 border-2 rounded-xl font-bold transition-all duration-300 text-sm ${
+                                          isOrderingClosed
+                                            ? 'border-gray-300 text-gray-400 cursor-not-allowed opacity-50'
+                                            : 'border-brand-blue/60 text-brand-blue hover:bg-gradient-to-r hover:from-brand-blue/10 hover:to-blue-500/10 hover:border-brand-blue/80 hover:scale-105 hover:shadow-lg'
+                                        }`}
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          handleViewPdf(meal);
+                                          if (!isOrderingClosed) {
+                                            handleViewPdf(meal);
+                                          }
                                         }}
-                                        disabled={loadingPdf}
+                                        disabled={loadingPdf || isOrderingClosed}
                                       >
                                         <FileText className="w-4 h-4 mr-2" />
                                         View PDF
                                       </Button>
                                     )}
                                   </div>
+                                  
+                                  {/* Ordering Closed Indicator */}
+                                  {isOrderingClosed && (
+                                    <div className="absolute inset-0 bg-gray-900/20 flex items-center justify-center rounded-2xl">
+                                      <div className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                        Ordering Closed
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       </div>
