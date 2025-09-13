@@ -339,6 +339,7 @@ const Planner = () => {
   });
 
   const schoolId = profile?.data?.school_id;
+  const schoolName = profile?.data?.school?.name;
 
   const { data: weeklyPlans, isLoading: isLoadingPlans, error: plansError, refetch } = useQuery({
     queryKey: ["weeklyPlans", schoolId],
@@ -1101,7 +1102,7 @@ const Planner = () => {
         </div>
 
         {/* View Full Menu Button */}
-        <div className="mb-6 flex justify-center" data-tutorial="planner-order-button">
+        <div className="mb-6 flex flex-col items-center" data-tutorial="planner-order-button">
             <Button
             onClick={handleViewGeneralPdf}
             className="bg-brand-orange hover:bg-brand-orange/90 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow-lg"
@@ -1110,6 +1111,11 @@ const Planner = () => {
               <FileText className="w-5 h-5 mr-2" />
             View Full Menu
             </Button>
+            {schoolName && schoolName.toLowerCase().includes('bicc') && (
+              <p className="text-sm text-gray-600 mt-2 text-center max-w-md">
+                * Prices include transaction fees
+              </p>
+            )}
           </div>
 
         {/* Transaction Fee Note for BICC School */}
