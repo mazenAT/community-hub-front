@@ -1,7 +1,7 @@
 import AmountSelector from '@/components/AmountSelector';
 import PaymentForm from '@/components/PaymentForm';
 import PaymentMethodSelector from '@/components/PaymentMethodSelector';
-import { walletApi } from '@/services/api';
+import { walletApi, instaPayApi } from '@/services/api';
 import { BillingData, PaymentMethod } from '@/types/payment';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import React, { useState } from 'react';
@@ -41,23 +41,46 @@ const RechargeWallet: React.FC = () => {
     try {
       setIsSubmitting(true);
       
-      const response = await walletApi.recharge({
-        amount,
-        payment_method: selectedMethod.id,
-        payment_details: {
-          order_id: `wallet_recharge_${Date.now()}`,
-          item_name: 'Wallet Recharge',
-          description: 'Recharge wallet balance',
-          billing_data: billingData
+      // Handle different payment methods
+      if (selectedMethod.id === 'instapay') {
+        // For InstaPay, use the existing InstaPay API
+        const response = await instaPayApi.createTopupRequest(amount);
+        
+        if (response.data.success) {
+          const { reference_code, bank_account, instructions } = response.data.data;
+          // Store InstaPay data and redirect to InstaPay flow
+          localStorage.setItem('instapay_data', JSON.stringify({
+            reference_code,
+            bank_account,
+            instructions,
+            amount,
+            parent_name: billingData.first_name + ' ' + billingData.last_name
+          }));
+          navigate('/recharge');
+        } else {
+          toast.error(response.data.message || 'Failed to create InstaPay request');
+          setStep('billing');
         }
-      });
-
-      if (response.data.success) {
-        // Redirect to Paymob payment page
-        window.location.href = response.data.data.payment_url;
       } else {
-        toast.error(response.data.message || 'Failed to initiate payment');
-        setStep('billing');
+        // For Paymob methods (card/wallet)
+        const response = await walletApi.recharge({
+          amount,
+          payment_method: selectedMethod.id,
+          payment_details: {
+            order_id: `wallet_recharge_${Date.now()}`,
+            item_name: 'Wallet Recharge',
+            description: 'Recharge wallet balance',
+            billing_data: billingData
+          }
+        });
+
+        if (response.data.success) {
+          // Redirect to Paymob payment page
+          window.location.href = response.data.data.payment_url;
+        } else {
+          toast.error(response.data.message || 'Failed to initiate payment');
+          setStep('billing');
+        }
       }
     } catch (error: any) {
       console.error('Payment initiation error:', error);
@@ -98,8 +121,14 @@ const RechargeWallet: React.FC = () => {
             <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center">
               <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
             </div>
-            <h2 className="text-xl font-semibold">Redirecting to Payment...</h2>
-            <p className="text-gray-600">Please complete your payment in the new window.</p>
+            <h2 className="text-xl font-semibold">
+              {selectedMethod?.id === 'instapay' ? 'Redirecting to InstaPay...' : 'Redirecting to Payment...'}
+            </h2>
+            <p className="text-gray-600">
+              {selectedMethod?.id === 'instapay' 
+                ? 'Please complete your bank transfer using InstaPay.' 
+                : 'Please complete your payment in the new window.'}
+            </p>
             <p className="text-sm text-gray-500">
               Amount: {amount} EGP via {selectedMethod?.name}
             </p>
@@ -125,7 +154,7 @@ const RechargeWallet: React.FC = () => {
           <div className="w-6"></div>
         </div>
         <p className="text-white/90 text-sm mt-1">
-          {step === 'amount' && 'Select recharge amount'}
+          {step === 'amount' && 'Enter recharge amount'}
           {step === 'method' && 'Choose payment method'}
           {step === 'billing' && 'Enter billing details'}
           {step === 'payment' && 'Processing payment...'}
