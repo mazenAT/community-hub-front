@@ -276,6 +276,17 @@ export const walletApi = {
   topUp: (data: { amount: number; payment_method: string }) => 
     api.post('/wallet/topup', data),
   getBalance: () => api.get('/wallet'),
+  // Paymob integration
+  recharge: (data: { 
+    amount: number; 
+    payment_method: string; 
+    payment_details: {
+      order_id: string;
+      item_name: string;
+      description: string;
+      billing_data: any;
+    }
+  }) => api.post('/wallet/recharge', data),
 };
 
 export { api }; 

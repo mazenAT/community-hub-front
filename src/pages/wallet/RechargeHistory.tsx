@@ -167,8 +167,8 @@ const RechargeHistory = () => {
               <div className="flex items-center space-x-3">
                 <CreditCard className="w-8 h-8 text-blue-600" />
                 <div>
-                  <h3 className="font-semibold text-blue-900">Credit/Debit Card</h3>
-                  <p className="text-sm text-blue-700">All recharges are processed via Fawry payment gateway</p>
+                  <h3 className="font-semibold text-blue-900">Credit/Debit Card & Mobile Wallet</h3>
+                  <p className="text-sm text-blue-700">All recharges are processed via Paymob payment gateway</p>
                 </div>
               </div>
             </div>
@@ -242,7 +242,7 @@ const RechargeHistory = () => {
                   </Button>
                 ) : (
                   <Button
-                    onClick={() => navigate("/recharge")}
+                    onClick={() => navigate("/wallet/recharge")}
                     className="bg-brand-red hover:bg-brand-red/90 text-white rounded-xl"
                   >
                     Recharge Now
@@ -259,7 +259,9 @@ const RechargeHistory = () => {
                       <CreditCard className="w-4 h-4 text-blue-600" />
                       <div>
                         <p className="font-semibold text-gray-900">
-                          Credit/Debit Card
+                          {item.payment_method === 'paymob_card' ? 'Credit/Debit Card (Paymob)' : 
+                           item.payment_method === 'paymob_wallet' ? 'Mobile Wallet (Paymob)' : 
+                           'Credit/Debit Card'}
                         </p>
                         <p className="text-sm text-gray-500">
                           {item.transaction_id}
@@ -301,7 +303,7 @@ const RechargeHistory = () => {
           <CardContent className="p-4">
             <div className="grid grid-cols-2 gap-3">
               <Button
-                onClick={() => navigate("/recharge")}
+                onClick={() => navigate("/wallet/recharge")}
                 className="h-12 bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-orange hover:to-brand-red text-white rounded-xl font-medium"
               >
                 Recharge Wallet

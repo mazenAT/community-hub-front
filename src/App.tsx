@@ -19,6 +19,7 @@ import FamilyMemberSetup from "./pages/FamilyMemberSetup";
 import Wallet from "./pages/Wallet";
 import Planner from "./pages/Planner";
 import Recharge from "./pages/Recharge";
+import RechargeWallet from "./pages/wallet/RechargeWallet";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import OrderDetails from "./pages/orders/OrderDetails";
@@ -26,6 +27,7 @@ import MyOrders from "./pages/orders/MyOrders";
 
 import ContactUs from "./pages/ContactUs";
 import Notifications from "./pages/Notifications";
+import PaymentCallback from "./pages/wallet/PaymentCallback";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +69,8 @@ const AppContent = () => {
           <Route path="/order/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
           <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
           <Route path="/recharge" element={<ProtectedRoute><Recharge /></ProtectedRoute>} />
+          <Route path="/wallet/recharge" element={<ProtectedRoute><RechargeWallet /></ProtectedRoute>} />
+          <Route path="/payment/callback" element={<PaymentCallback />} />
           <Route path="/contact" element={<ProtectedRoute><ContactUs /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
