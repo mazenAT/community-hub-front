@@ -1,0 +1,154 @@
+{
+  "tutorial": {
+    "welcome": {
+      "title": "Welcome to Lite Bite Cafeteria System! 🎉",
+      "description": "Your all-in-one app for managing school meals, payments, and wallet management. Let's take a guided tour through each feature!"
+    },
+    "wallet": {
+      "header": "Wallet Dashboard 💳",
+      "description": "This is your financial command center! Here you can:\n\n• View your current balance\n• See recent transactions\n• Access payment gateways\n• Manage your account",
+      "balance": "Your Balance 💰",
+      "balanceDescription": "This card shows your current wallet balance. You can:\n\n• Add money using the \"Recharge\" button\n• Request refunds if needed\n• See your total available funds",
+      "recharge": "Add Money to Wallet ➕",
+      "rechargeDescription": "Click this button to add money to your wallet:\n\n• Paymob card payments\n• Mobile wallet payments\n• Secure authentication\n• Instant balance updates",
+      "transactions": "Transaction History 📊",
+      "transactionsDescription": "Keep track of all your financial activities:\n\n• See when money was added\n• Track spending on meals\n• View refund requests\n• Monitor payment confirmations"
+    },
+    "payment": {
+      "title": "Payment & Wallet Management 💳",
+      "description": "Secure payment processing with Paymob:\n\n• Credit/Debit Card payments\n• Mobile wallet payments (Vodafone Cash, Orange Money)\n• Safe and encrypted transactions\n• Instant balance updates",
+      "cardPayment": {
+        "title": "Card Payments with Paymob 💳",
+        "description": "Learn how to pay securely with your credit/debit card:\n\n• Select \"Card Payment\" from payment options\n• Enter your card details securely\n• Complete billing information\n• Confirm payment and receive instant confirmation"
+      },
+      "walletPayment": {
+        "title": "Mobile Wallet Payments 📱",
+        "description": "Pay using Vodafone Cash, Orange Money, and other wallets:\n\n• Choose \"Mobile Wallet\" payment method\n• Select your preferred wallet provider\n• Enter wallet phone number\n• Complete payment through wallet app"
+      },
+      "methods": {
+        "card": "Credit/Debit Card",
+        "wallet": "Mobile Wallet",
+        "instapay": "InstaPay Bank Transfer"
+      }
+    },
+    "recharge": {
+      "amount": "Enter Recharge Amount 💰",
+      "amountDescription": "Enter how much money to add to your wallet:\n\n• Enter any amount (minimum 10 EGP)\n• Amount will be validated with receipt\n• Secure payment processing",
+      "method": "Payment Method 💳",
+      "methodDescription": "Choose your preferred payment method:\n\n• Paymob Card Payment\n• Mobile Wallet Payment\n• InstaPay Bank Transfer\n• Safe and encrypted transactions",
+      "billing": "Billing Information 📝",
+      "billingDescription": "Enter your billing details:\n\n• Complete billing information\n• Required for payment processing\n• Secure data transmission\n• Instant processing",
+      "pay": "Complete Payment 💳",
+      "payDescription": "Ready to add money to your wallet:\n\n• Secure 3DS authentication\n• Instant balance update\n• Transaction confirmation"
+    },
+    "instapay": {
+      "overview": "InstaPay Bank Transfer 💳",
+      "overviewDescription": "Alternative payment method for adding money:\n\n• Direct bank transfer via InstaPay\n• Generate unique reference code\n• Upload receipt for verification\n• Automatic balance update",
+      "reference": "Generate Reference Code 🔑",
+      "referenceDescription": "Get a unique reference code for your transfer:\n\n• Click \"InstaPay Transfer\" button\n• Copy the generated reference code\n• Use it in bank transfer description\n• Ensures proper credit to your account",
+      "transfer": "Complete Bank Transfer 🏦",
+      "transferDescription": "Transfer money using your bank app:\n\n• Use the reference code in transfer description\n• Transfer to the provided account\n• Keep the transfer receipt\n• Upload receipt to complete process",
+      "receipt": "Upload Transfer Receipt 📸",
+      "receiptDescription": "Complete your InstaPay top-up:\n\n• Take photo of transfer receipt\n• Ensure reference code is visible\n• Upload image through the app\n• Automatic verification and balance update"
+    },
+    "planner": {
+      "header": "Meal Planning Hub 🍽️",
+      "description": "Welcome to your meal planning center! Here you can:\n\n• Browse weekly meal schedules\n• Pre-order meals for your family\n• View meal details and pricing\n• Manage meal selections",
+      "familySelector": "Choose Family Member 👨‍👩‍👧‍👦",
+      "familySelectorDescription": "Select which family member you're ordering for:\n\n• Different meal preferences\n• Separate order tracking\n• Individual meal management\n• Family meal coordination",
+      "filters": "Filter and Organize Options 🔍",
+      "filtersDescription": "Use these controls to organize your meal planning:\n\n• Week Selection - Choose different time periods\n• Meal Type Filters - Browse specific categories\n• Custom Date Ranges - Plan for specific dates\n• Family Member Selection - Order for different family members",
+      "mealGrid": "Meal Options 🥗",
+      "mealGridDescription": "Explore the available meals for each day:\n\n• Different meal categories\n• Pricing information\n• Meal details\n• Pre-order options",
+      "orderButton": "View Full Menu 📋",
+      "orderButtonDescription": "Access the complete menu:\n\n• Download PDF menu\n• See all available options\n• Plan your family's meals\n• Review meal selections"
+    },
+    "orders": {
+      "header": "Order Management 📋",
+      "description": "Track all your meal and add-on orders:\n\n• View order history\n• Check order status\n• Filter by family member\n• Monitor deliveries",
+      "filter": "Filter Orders 👨‍👩‍👧‍👦",
+      "filterDescription": "Organize your orders by family member:\n\n• View all orders together\n• Filter by specific family member\n• Track individual orders\n• Manage multiple accounts"
+    },
+    "profile": {
+      "header": "Your Profile & Settings ⚙️",
+      "description": "Manage your personal information and preferences:\n\n• Update contact details\n• Change passwords\n• Manage family members\n• Set account preferences",
+      "familyManagement": "Family Member Management 👨‍👩‍👧‍👦",
+      "familyManagementDescription": "Add and manage your family members:\n\n• Add new family members\n• Set individual preferences\n• Manage account settings\n• Track orders per member",
+      "edit": "Edit Profile Information ✏️",
+      "editDescription": "Update your personal details:\n\n• Change your name\n• Update phone number\n• Modify account settings\n• Save preferences",
+      "settings": "Account Settings 🔧",
+      "settingsDescription": "Customize your app experience:\n\n• Update personal information\n• Change security settings\n• Manage notifications\n• View activity history"
+    },
+    "contact": {
+      "header": "Get Help & Support 📞",
+      "description": "Need assistance? The Contact Us page is here to help:\n\n• Send us messages and questions\n• Get support for any issues\n• Report problems or suggestions\n• Quick response within 48 hours",
+      "form": "Contact Form 📝",
+      "formDescription": "Fill out this form to get in touch:\n\n• Provide your contact information\n• Describe your question or issue\n• Submit and get a quick response\n• Track your support requests"
+    },
+    "completion": {
+      "title": "Tutorial Complete! 🎓",
+      "description": "Excellent! You now know how to use Cafeteria Smart System:\n\n• Navigate between features\n• Manage your wallet and recharge\n• Use Paymob payment methods (Card & Mobile Wallet)\n• Use InstaPay bank transfers\n• Plan and order meals\n• Track orders and manage profile\n• Get help and support\n\nStart exploring and enjoy the convenience!"
+    },
+    "navigation": {
+      "previous": "Previous",
+      "next": "Next",
+      "skip": "Skip Tutorial",
+      "complete": "Get Started!",
+      "close": "Close"
+    },
+    "hints": {
+      "click": "Click to continue",
+      "scroll": "Scroll to see more",
+      "input": "Enter information",
+      "select": "Select an option"
+    }
+  },
+  "payment": {
+    "methods": {
+      "paymob_card": "Credit/Debit Card",
+      "paymob_wallet": "Mobile Wallet",
+      "instapay": "InstaPay Bank Transfer"
+    },
+    "descriptions": {
+      "paymob_card": "Pay securely with your card via Paymob",
+      "paymob_wallet": "Pay with Vodafone Cash, Orange Money, etc.",
+      "instapay": "Direct bank transfer via InstaPay"
+    },
+    "errors": {
+      "card_payment_failed": "Card payment failed. Please try again.",
+      "wallet_payment_failed": "Mobile wallet payment failed. Please try again.",
+      "instapay_failed": "InstaPay transfer failed. Please try again.",
+      "billing_required": "Billing information is required for payment processing.",
+      "amount_invalid": "Please enter a valid amount (minimum 10 EGP)."
+    },
+    "success": {
+      "card_payment_success": "Card payment completed successfully!",
+      "wallet_payment_success": "Mobile wallet payment completed successfully!",
+      "instapay_success": "InstaPay transfer completed successfully!",
+      "balance_updated": "Your wallet balance has been updated."
+    }
+  },
+  "help": {
+    "payment_issues": {
+      "title": "Paymob Payment Issues",
+      "card_problems": "Card Payment Problems",
+      "wallet_problems": "Mobile Wallet Problems",
+      "instapay_problems": "InstaPay Transfer Problems",
+      "billing_issues": "Billing Information Issues",
+      "common_solutions": "Common Solutions",
+      "contact_support": "Contact Support"
+    },
+    "faq": {
+      "card_payment_question": "How do I pay with my credit/debit card?",
+      "card_payment_answer": "Select 'Card Payment' from payment options, enter your card details securely, complete billing information, and confirm payment.",
+      "wallet_payment_question": "How do I pay with mobile wallet?",
+      "wallet_payment_answer": "Choose 'Mobile Wallet' payment method, select your preferred wallet provider (Vodafone Cash, Orange Money, etc.), enter wallet phone number, and complete payment through wallet app.",
+      "instapay_question": "How do I use InstaPay bank transfer?",
+      "instapay_answer": "Click 'InstaPay Transfer' button, copy the generated reference code, use it in bank transfer description, transfer to the provided account, and upload receipt to complete process.",
+      "billing_question": "Why do I need to provide billing information?",
+      "billing_answer": "Billing information is required by Paymob for payment processing and compliance with financial regulations. Your data is securely transmitted and protected.",
+      "security_question": "Is my payment information secure?",
+      "security_answer": "Yes, all payments are processed securely through Paymob's encrypted infrastructure. We never store your card details or sensitive payment information."
+    }
+  }
+}

@@ -12,24 +12,29 @@ The Smart Community app includes a comprehensive in-app tutorial system that gui
 - Only shows for first-time users
 
 ### **2. Tutorial Flow**
-The tutorial covers 10 key steps:
+The tutorial covers 12 key steps:
 
 1. **Welcome** - Introduction to the app
 2. **Wallet Overview** - Understanding the digital wallet
 3. **Add Money** - How to recharge the wallet
-4. **Transactions** - Viewing transaction history
-5. **Meal Planning** - Introduction to meal planning
-6. **Order Meals** - How to order meals
-7. **Family Members** - Managing family profiles
-8. **Notifications** - Staying updated
-9. **Profile & Settings** - Customizing the app
-10. **Support** - Getting help
+4. **Payment Methods** - Paymob payment options (Card & Mobile Wallet)
+5. **Card Payments** - Credit/Debit card payment tutorial
+6. **Mobile Wallet** - Mobile wallet payment tutorial
+7. **InstaPay Transfer** - Bank transfer alternative
+8. **Transactions** - Viewing transaction history
+9. **Meal Planning** - Introduction to meal planning
+10. **Order Meals** - How to order meals
+11. **Family Members** - Managing family profiles
+12. **Profile & Settings** - Customizing the app
+13. **Support** - Getting help
 
 ### **3. Interactive Elements**
 - **Highlighted Elements**: Orange glow around current feature
 - **Tooltips**: Contextual information and instructions
 - **Progress Bar**: Shows completion status
 - **Navigation**: Previous/Next buttons for step control
+- **Payment Method Selection**: Interactive payment method tutorials
+- **Security Indicators**: Visual cues for secure payment processing
 
 ## 🛠 **Components**
 
@@ -107,6 +112,11 @@ Add these classes to elements you want to highlight:
 // Add money button
 <Button className="add-money-btn">...</Button>
 
+// Payment methods
+<div className="payment-method-selector">...</div>
+<div className="paymob-card-payment">...</div>
+<div className="paymob-wallet-payment">...</div>
+
 // Transactions section
 <div className="transactions-section">...</div>
 
@@ -160,6 +170,61 @@ const {
 } = useTutorial();
 ```
 
+## 💳 **Paymob Payment Tutorial Integration**
+
+### **Payment Method Tutorials**
+The tutorial system now includes comprehensive Paymob payment method tutorials:
+
+#### **Card Payment Tutorial**
+```tsx
+{
+  id: 'paymob-card-payment',
+  title: 'Card Payments with Paymob 💳',
+  description: 'Learn how to pay securely with your credit/debit card:\n\n• Select "Card Payment" from payment options\n• Enter your card details securely\n• Complete billing information\n• Confirm payment and receive instant confirmation',
+  target: '[data-tutorial="paymob-card-payment"]',
+  position: 'center',
+  order: 12,
+  completed: false,
+  page: 'recharge',
+  route: '/recharge',
+  highlightElement: true,
+  spotlightRadius: 120,
+  animation: 'pulse',
+  interactive: false,
+  paymentMethod: 'paymob_card',
+  requiresBilling: true,
+  securityLevel: 'high'
+}
+```
+
+#### **Mobile Wallet Payment Tutorial**
+```tsx
+{
+  id: 'paymob-wallet-payment',
+  title: 'Mobile Wallet Payments 📱',
+  description: 'Pay using Vodafone Cash, Orange Money, and other wallets:\n\n• Choose "Mobile Wallet" payment method\n• Select your preferred wallet provider\n• Enter wallet phone number\n• Complete payment through wallet app',
+  target: '[data-tutorial="paymob-wallet-payment"]',
+  position: 'center',
+  order: 13,
+  completed: false,
+  page: 'recharge',
+  route: '/recharge',
+  highlightElement: true,
+  spotlightRadius: 120,
+  animation: 'pulse',
+  interactive: false,
+  paymentMethod: 'paymob_wallet',
+  requiresBilling: true,
+  securityLevel: 'high'
+}
+```
+
+### **Payment Tutorial Features**
+- **Security Indicators**: Visual cues for secure payment processing
+- **Billing Requirements**: Clear indication when billing information is needed
+- **Payment Method Validation**: Step validation for payment method selection
+- **Analytics Tracking**: Comprehensive tracking of payment tutorial interactions
+
 ## 📋 **Adding New Tutorial Steps**
 
 ### **1. Define the Step**
@@ -172,6 +237,10 @@ const {
   position: 'bottom',
   order: 11, // After existing steps
   completed: false,
+  // Payment-specific properties (optional)
+  paymentMethod: 'paymob_card', // or 'paymob_wallet', 'instapay', 'none'
+  requiresBilling: false, // true if billing information is required
+  securityLevel: 'medium' // 'low', 'medium', 'high'
 }
 ```
 

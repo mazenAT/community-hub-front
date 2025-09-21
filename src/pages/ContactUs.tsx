@@ -85,6 +85,31 @@ const ContactUs = () => {
           </p>
         </div>
 
+        {/* Paymob Payment Help Section */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6" data-tutorial="paymob-payment-help">
+          <h2 className="text-xl font-bold text-brand-black mb-4">Paymob Payment Issues</h2>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+              <h3 className="font-semibold text-blue-900 mb-2">Card Payment Problems</h3>
+              <p className="text-sm text-blue-700">
+                Having trouble with credit/debit card payments? Check your card details, billing information, and ensure your card supports online transactions.
+              </p>
+            </div>
+            <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+              <h3 className="font-semibold text-green-900 mb-2">Mobile Wallet Issues</h3>
+              <p className="text-sm text-green-700">
+                Problems with Vodafone Cash, Orange Money, or other mobile wallets? Verify your wallet balance and phone number.
+              </p>
+            </div>
+            <div className="p-4 bg-orange-50 rounded-xl border border-orange-200">
+              <h3 className="font-semibold text-orange-900 mb-2">InstaPay Transfer Help</h3>
+              <p className="text-sm text-orange-700">
+                Need help with bank transfers? Make sure to use the correct reference code and upload a clear receipt photo.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Contact Form */}
         <div className="bg-white rounded-2xl shadow-lg p-6" data-tutorial="contact-form">
           <h2 className="text-xl font-bold text-brand-black mb-6">Send us a Message</h2>
