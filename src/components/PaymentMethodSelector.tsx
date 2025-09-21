@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { PaymentMethod } from '@/types/payment';
-import { CreditCard, Smartphone } from 'lucide-react';
+import { CreditCard, Smartphone, Building2 } from 'lucide-react';
 import React from 'react';
 
 interface PaymentMethodSelectorProps {
@@ -10,16 +10,23 @@ interface PaymentMethodSelectorProps {
 const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({ onSelect }) => {
   const paymentMethods: PaymentMethod[] = [
     {
+      id: 'instapay',
+      name: 'InstaPay',
+      description: 'Bank transfer via InstaPay',
+      icon: 'bank',
+      type: 'instapay'
+    },
+    {
       id: 'paymob_card',
       name: 'Credit/Debit Card',
-      description: 'Pay securely with your card via Paymob',
+      description: 'Visa, Mastercard, American Express',
       icon: 'credit-card',
       type: 'card'
     },
     {
       id: 'paymob_wallet',
       name: 'Mobile Wallet',
-      description: 'Pay with Vodafone Cash, Orange Money, etc.',
+      description: 'Vodafone Cash, Orange Money, Etisalat Cash',
       icon: 'wallet',
       type: 'wallet'
     }
@@ -27,6 +34,8 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({ onSelect 
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
+      case 'bank':
+        return <Building2 className="w-6 h-6" />;
       case 'credit-card':
         return <CreditCard className="w-6 h-6" />;
       case 'wallet':

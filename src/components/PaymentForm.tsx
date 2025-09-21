@@ -19,7 +19,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onSubmit }) => {
     street: '',
     building: '',
     city: '',
-    country: 'Egypt',
+    country: 'EG',
     postal_code: '',
     state: ''
   });
