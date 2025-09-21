@@ -555,7 +555,7 @@ const Wallet = () => {
             <h2 className="text-2xl sm:text-3xl font-bold">{loading ? <LoadingSpinner size={24} /> : formatCurrency(balance)}</h2>
             <div className="flex flex-col sm:flex-row gap-2 mt-3">
               <Button
-                onClick={() => navigate("/recharge")}
+                onClick={() => navigate("/wallet/recharge")}
                 className="bg-white/20 hover:bg-white/30 backdrop-blur text-white border border-white/30 rounded-xl text-sm sm:text-base w-full sm:w-auto px-4 py-2"
                 disabled={loading}
                 data-tutorial="wallet-recharge"
@@ -862,7 +862,7 @@ const Wallet = () => {
               <p className="text-gray-500 text-sm mb-2">No transactions found</p>
               <p className="text-gray-400 text-xs">Complete a recharge or make a purchase to see your transaction history</p>
               <Button
-                onClick={() => navigate("/recharge")}
+                onClick={() => navigate("/wallet/recharge")}
                 variant="outline"
                 size="sm"
                 className="mt-3"
