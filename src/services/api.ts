@@ -273,7 +273,7 @@ export const walletApi = {
   getTransactions: () => api.get('/transactions'),
   requestRefund: (data: { amount: number; reason?: string; transaction_id?: number }) => 
     api.post('/wallet/request-refund', data),
-  topUp: (data: { amount: number; payment_method: string }) => 
+  topUp: (data: { amount: number; payment_method: string; payment_details: any }) => 
     api.post('/wallet/topup', data),
   getBalance: () => api.get('/wallet'),
   // Paymob integration

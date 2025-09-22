@@ -1,14 +1,31 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Wallet, Copy, Check, Building2 } from "lucide-react";
+import { Loader2, Wallet, Copy, Check, Building2, CreditCard, Smartphone, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { profileApi, instaPayApi } from "../services/api";
+import { profileApi, instaPayApi, walletApi } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import BottomNavigation from "@/components/BottomNavigation";
 import InstaPayModal from "@/components/InstaPayModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+
+// Simplified interfaces with only required fields
+interface PaymobCardDetails {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number: string;
+  city: string;
+  country: string;
+}
+
+interface PaymobWalletDetails {
+  phone_number: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+}
 
 const Recharge = () => {
   const navigate = useNavigate();
@@ -29,6 +46,27 @@ const Recharge = () => {
     amount: 0
   });
 
+  // Paymob popup states
+  const [showCardModal, setShowCardModal] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  
+  // Simplified state with only required fields
+  const [paymobCardDetails, setPaymobCardDetails] = useState<PaymobCardDetails>({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone_number: '',
+    city: '',
+    country: 'Egypt'
+  });
+  
+  const [paymobWalletDetails, setPaymobWalletDetails] = useState<PaymobWalletDetails>({
+    phone_number: '',
+    first_name: '',
+    last_name: '',
+    email: ''
+  });
+
   const paymentMethods = [
     {
       id: 'instapay',
@@ -41,14 +79,14 @@ const Recharge = () => {
       id: 'paymob_card',
       name: 'Card Payment',
       description: 'Credit/Debit card via Paymob',
-      icon: Wallet,
+      icon: CreditCard,
       color: 'from-brand-orange to-brand-yellow'
     },
     {
       id: 'paymob_wallet',
       name: 'Mobile Wallet',
       description: 'Vodafone Cash, Orange Money, etc.',
-      icon: Wallet,
+      icon: Smartphone,
       color: 'from-brand-yellow to-brand-red'
     }
   ];
@@ -58,6 +96,17 @@ const Recharge = () => {
     queryFn: profileApi.getProfile,
   });
   const profile = profileData?.data;
+
+  const handlePaymentMethodSelect = (methodId: string) => {
+    setSelectedPaymentMethod(methodId);
+    if (methodId === 'instapay') {
+      handleRechargeClick();
+    } else if (methodId === 'paymob_card') {
+      setShowCardModal(true);
+    } else if (methodId === 'paymob_wallet') {
+      setShowWalletModal(true);
+    }
+  };
 
   const handleRechargeClick = async () => {
     try {
@@ -114,7 +163,6 @@ const Recharge = () => {
           parent_name: profile?.name || 'Parent Name'
         });
         
-        // Show modal instead of transfer details
         setInstaPayDetails({
           referenceCode: reference_code,
           bankDetails: bank_account,
@@ -134,37 +182,106 @@ const Recharge = () => {
     }
   };
 
-  const handlePaymobPayment = async (amount: number, paymentMethod: string) => {
+  const handlePaymobCardPayment = async () => {
     try {
-      const response = await fetch('/api/wallet/recharge', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          amount: amount,
-          payment_method: paymentMethod,
-          payment_details: {}
-        })
+      setIsSubmitting(true);
+      setError('');
+
+      // Validate only required fields
+      const requiredFields = ['first_name', 'last_name', 'email', 'phone_number', 'city'];
+      const missingFields = requiredFields.filter(field => !paymobCardDetails[field as keyof PaymobCardDetails]);
+      
+      if (missingFields.length > 0) {
+        toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        return;
+      }
+
+      const finalAmount = parseFloat(amount) || 0;
+      const paymentDetails = {
+        ...paymobCardDetails,
+        merchant_order_id: `recharge_${Date.now()}_${profile.id}`,
+        currency: 'EGP'
+      };
+
+      const response = await walletApi.recharge({
+        amount: finalAmount,
+        payment_method: 'paymob_card',
+        payment_details: {
+          order_id: paymentDetails.merchant_order_id,
+          item_name: 'Wallet Recharge',
+          description: 'Digital wallet top-up',
+          billing_data: paymentDetails
+        }
       });
 
-      const data = await response.json();
-      
-      if (response.ok) {
-        if (data.payment_url) {
-          // Redirect to Paymob payment page
-          window.open(data.payment_url, '_blank');
+      if (response.data.success) {
+        if (response.data.data.payment_url) {
+          window.open(response.data.data.payment_url, '_blank');
+          toast.success('Payment initiated! Please complete payment in the new window.');
+          setShowCardModal(false);
         }
       } else {
-        throw new Error(data.message || 'Payment failed');
+        toast.error(response.data.message || 'Failed to initiate payment');
       }
     } catch (error) {
-      console.error('Paymob payment error:', error);
-      toast.error("Payment processing failed. Please try again.");
+      console.error('Paymob card payment error:', error);
+      toast.error('Failed to initiate payment. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePaymobWalletPayment = async () => {
+    try {
+      setIsSubmitting(true);
+      setError('');
+
+      // Validate only required fields
+      const requiredFields = ['phone_number', 'first_name', 'last_name', 'email'];
+      const missingFields = requiredFields.filter(field => !paymobWalletDetails[field as keyof PaymobWalletDetails]);
+      
+      if (missingFields.length > 0) {
+        toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        return;
+      }
+
+      const finalAmount = parseFloat(amount) || 0;
+      const paymentDetails = {
+        ...paymobWalletDetails,
+        merchant_order_id: `recharge_${Date.now()}_${profile.id}`,
+        currency: 'EGP'
+      };
+
+      const response = await walletApi.recharge({
+        amount: finalAmount,
+        payment_method: 'paymob_wallet',
+        payment_details: {
+          order_id: paymentDetails.merchant_order_id,
+          item_name: 'Wallet Recharge',
+          description: 'Digital wallet top-up',
+          billing_data: paymentDetails
+        }
+      });
+
+      if (response.data.success) {
+        if (response.data.data.payment_url) {
+          window.open(response.data.data.payment_url, '_blank');
+          toast.success('Payment initiated! Please complete payment in the new window.');
+          setShowWalletModal(false);
+        }
+      } else {
+        toast.error(response.data.message || 'Failed to initiate payment');
+      }
+    } catch (error) {
+      console.error('Paymob wallet payment error:', error);
+      toast.error('Failed to initiate payment. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePaymobPayment = async (amount: number, paymentMethod: string) => {
+    // This method is kept for backward compatibility but won't be used
   };
 
   const copyToClipboard = async (text: string, type: 'account' | 'parent') => {
@@ -269,7 +386,7 @@ const Recharge = () => {
                       return (
                         <button
                           key={method.id}
-                          onClick={() => setSelectedPaymentMethod(method.id)}
+                          onClick={() => handlePaymentMethodSelect(method.id)}
                           className={`w-full p-4 rounded-xl border-2 transition-all duration-200 ${
                             selectedPaymentMethod === method.id
                               ? 'border-brand-red bg-brand-red/5 shadow-md'
@@ -487,6 +604,183 @@ const Recharge = () => {
           </>
         )}
         </div>
+
+      {/* Simplified Card Payment Modal - Only Required Fields */}
+      <Dialog open={showCardModal} onOpenChange={setShowCardModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5" />
+              Card Payment Details
+            </DialogTitle>
+            <DialogDescription>
+              Please fill in your billing information for card payment
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700">First Name *</label>
+                <Input
+                  value={paymobCardDetails.first_name}
+                  onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, first_name: e.target.value }))}
+                  placeholder="Enter first name"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Last Name *</label>
+                <Input
+                  value={paymobCardDetails.last_name}
+                  onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, last_name: e.target.value }))}
+                  placeholder="Enter last name"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Email *</label>
+              <Input
+                type="email"
+                value={paymobCardDetails.email}
+                onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="Enter email address"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Phone Number *</label>
+              <Input
+                value={paymobCardDetails.phone_number}
+                onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, phone_number: e.target.value }))}
+                placeholder="Enter phone number"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700">City *</label>
+                <Input
+                  value={paymobCardDetails.city}
+                  onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, city: e.target.value }))}
+                  placeholder="Enter city"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Country</label>
+                <Input
+                  value={paymobCardDetails.country}
+                  onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, country: e.target.value }))}
+                  placeholder="Enter country"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowCardModal(false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handlePaymobCardPayment}
+              disabled={isSubmitting}
+              className="flex-1 bg-gradient-to-r from-brand-red to-brand-orange"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Process Payment'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Simplified Mobile Wallet Modal - Only Required Fields */}
+      <Dialog open={showWalletModal} onOpenChange={setShowWalletModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Smartphone className="w-5 h-5" />
+              Mobile Wallet Details
+            </DialogTitle>
+            <DialogDescription>
+              Please fill in your details for mobile wallet payment
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Phone Number *</label>
+              <Input
+                value={paymobWalletDetails.phone_number}
+                onChange={(e) => setPaymobWalletDetails(prev => ({ ...prev, phone_number: e.target.value }))}
+                placeholder="Enter phone number"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700">First Name *</label>
+                <Input
+                  value={paymobWalletDetails.first_name}
+                  onChange={(e) => setPaymobWalletDetails(prev => ({ ...prev, first_name: e.target.value }))}
+                  placeholder="Enter first name"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Last Name *</label>
+                <Input
+                  value={paymobWalletDetails.last_name}
+                  onChange={(e) => setPaymobWalletDetails(prev => ({ ...prev, last_name: e.target.value }))}
+                  placeholder="Enter last name"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Email *</label>
+              <Input
+                type="email"
+                value={paymobWalletDetails.email}
+                onChange={(e) => setPaymobWalletDetails(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="Enter email address"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowWalletModal(false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handlePaymobWalletPayment}
+              disabled={isSubmitting}
+              className="flex-1 bg-gradient-to-r from-brand-red to-brand-orange"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Process Payment'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <InstaPayModal
         open={showInstaPayModal}
