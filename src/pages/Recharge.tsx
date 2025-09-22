@@ -1,23 +1,30 @@
-import React, { useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, Wallet, Copy, Check, Building2, CreditCard, Smartphone, X } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { profileApi, instaPayApi, walletApi } from "../services/api";
-import { useNavigate } from "react-router-dom";
 import BottomNavigation from "@/components/BottomNavigation";
 import InstaPayModal from "@/components/InstaPayModal";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useQuery } from "@tanstack/react-query";
+import { Building2, Check, Copy, CreditCard, Loader2, Smartphone } from "lucide-react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { instaPayApi, profileApi, walletApi } from "../services/api";
 
-// Simplified interfaces with only required fields
+// Updated interface with card data fields
 interface PaymobCardDetails {
+  // Billing information
   first_name: string;
   last_name: string;
   email: string;
   phone_number: string;
   city: string;
   country: string;
+  // Card information
+  card_number: string;
+  expiry_month: string;
+  expiry_year: string;
+  cvv: string;
+  card_holder_name: string;
 }
 
 interface PaymobWalletDetails {
@@ -50,14 +57,20 @@ const Recharge = () => {
   const [showCardModal, setShowCardModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
   
-  // Simplified state with only required fields
+  // Updated state with card data fields
   const [paymobCardDetails, setPaymobCardDetails] = useState<PaymobCardDetails>({
     first_name: '',
     last_name: '',
     email: '',
     phone_number: '',
     city: '',
-    country: 'Egypt'
+    country: 'Egypt',
+    // Card data
+    card_number: '',
+    expiry_month: '',
+    expiry_year: '',
+    cvv: '',
+    card_holder_name: ''
   });
   
   const [paymobWalletDetails, setPaymobWalletDetails] = useState<PaymobWalletDetails>({
@@ -187,18 +200,35 @@ const Recharge = () => {
       setIsSubmitting(true);
       setError('');
 
-      // Validate only required fields
-      const requiredFields = ['first_name', 'last_name', 'email', 'phone_number', 'city'];
-      const missingFields = requiredFields.filter(field => !paymobCardDetails[field as keyof PaymobCardDetails]);
+      // Validate card data
+      const cardRequiredFields = ['card_number', 'expiry_month', 'expiry_year', 'cvv', 'card_holder_name'];
+      const billingRequiredFields = ['first_name', 'last_name', 'email', 'phone_number', 'city'];
+      
+      const allRequiredFields = [...cardRequiredFields, ...billingRequiredFields];
+      const missingFields = allRequiredFields.filter(field => !paymobCardDetails[field as keyof PaymobCardDetails]);
       
       if (missingFields.length > 0) {
         toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
         return;
       }
 
+      // Validate card number format
+      const cardNumber = paymobCardDetails.card_number.replace(/\s/g, '');
+      if (cardNumber.length < 13 || cardNumber.length > 19) {
+        toast.error('Please enter a valid card number');
+        return;
+      }
+
+      // Validate CVV
+      if (paymobCardDetails.cvv.length < 3) {
+        toast.error('Please enter a valid CVV');
+        return;
+      }
+
       const finalAmount = parseFloat(amount) || 0;
       const paymentDetails = {
         ...paymobCardDetails,
+        card_number: cardNumber, // Remove spaces for processing
         merchant_order_id: `recharge_${Date.now()}_${profile.id}`,
         currency: 'EGP'
       };
@@ -605,74 +635,164 @@ const Recharge = () => {
         )}
         </div>
 
-      {/* Simplified Card Payment Modal - Only Required Fields */}
+      {/* Card Payment Modal with Card Input Fields */}
       <Dialog open={showCardModal} onOpenChange={setShowCardModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CreditCard className="w-5 h-5" />
               Card Payment Details
             </DialogTitle>
             <DialogDescription>
-              Please fill in your billing information for card payment
+              Please fill in your card and billing information
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700">First Name *</label>
-                <Input
-                  value={paymobCardDetails.first_name}
-                  onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, first_name: e.target.value }))}
-                  placeholder="Enter first name"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700">Last Name *</label>
-                <Input
-                  value={paymobCardDetails.last_name}
-                  onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, last_name: e.target.value }))}
-                  placeholder="Enter last name"
-                />
+            {/* Card Information Section */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Card Information</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Card Number *</label>
+                  <Input
+                    value={paymobCardDetails.card_number}
+                    onChange={(e) => {
+                      // Format card number with spaces
+                      const value = e.target.value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
+                      setPaymobCardDetails(prev => ({ ...prev, card_number: value }));
+                    }}
+                    placeholder="1234 5678 9012 3456"
+                    maxLength={19}
+                    className="card-input"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Month *</label>
+                    <select
+                      value={paymobCardDetails.expiry_month}
+                      onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, expiry_month: e.target.value }))}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">MM</option>
+                      {Array.from({ length: 12 }, (_, i) => {
+                        const month = String(i + 1).padStart(2, '0');
+                        return (
+                          <option key={month} value={month}>
+                            {month}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Year *</label>
+                    <select
+                      value={paymobCardDetails.expiry_year}
+                      onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, expiry_year: e.target.value }))}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">YY</option>
+                      {Array.from({ length: 10 }, (_, i) => {
+                        const year = String(new Date().getFullYear() + i).slice(-2);
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">CVV *</label>
+                    <Input
+                      value={paymobCardDetails.cvv}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                        setPaymobCardDetails(prev => ({ ...prev, cvv: value }));
+                      }}
+                      placeholder="123"
+                      maxLength={4}
+                      type="password"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Cardholder Name *</label>
+                  <Input
+                    value={paymobCardDetails.card_holder_name}
+                    onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, card_holder_name: e.target.value }))}
+                    placeholder="Enter cardholder name"
+                  />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-700">Email *</label>
-              <Input
-                type="email"
-                value={paymobCardDetails.email}
-                onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="Enter email address"
-              />
-            </div>
+            {/* Billing Information Section */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Billing Information</h3>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">First Name *</label>
+                    <Input
+                      value={paymobCardDetails.first_name}
+                      onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, first_name: e.target.value }))}
+                      placeholder="Enter first name"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Last Name *</label>
+                    <Input
+                      value={paymobCardDetails.last_name}
+                      onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, last_name: e.target.value }))}
+                      placeholder="Enter last name"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-700">Phone Number *</label>
-              <Input
-                value={paymobCardDetails.phone_number}
-                onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, phone_number: e.target.value }))}
-                placeholder="Enter phone number"
-              />
-            </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Email *</label>
+                  <Input
+                    type="email"
+                    value={paymobCardDetails.email}
+                    onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="Enter email address"
+                  />
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700">City *</label>
-                <Input
-                  value={paymobCardDetails.city}
-                  onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, city: e.target.value }))}
-                  placeholder="Enter city"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700">Country</label>
-                <Input
-                  value={paymobCardDetails.country}
-                  onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, country: e.target.value }))}
-                  placeholder="Enter country"
-                />
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Phone Number *</label>
+                  <Input
+                    value={paymobCardDetails.phone_number}
+                    onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, phone_number: e.target.value }))}
+                    placeholder="Enter phone number"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">City *</label>
+                    <Input
+                      value={paymobCardDetails.city}
+                      onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, city: e.target.value }))}
+                      placeholder="Enter city"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Country</label>
+                    <Input
+                      value={paymobCardDetails.country}
+                      onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, country: e.target.value }))}
+                      placeholder="Enter country"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
