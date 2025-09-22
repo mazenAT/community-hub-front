@@ -230,7 +230,7 @@ const Recharge = () => {
       <div className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow px-4 py-4 border-b-2 border-brand-red">
         <div className="flex items-center justify-between">
           <button 
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/wallet")}
             className="text-white hover:text-white/80 transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
