@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { profileApi, instaPayApi } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import BottomNavigation from "@/components/BottomNavigation";
+import InstaPayModal from "@/components/InstaPayModal";
 
 const Recharge = () => {
   const navigate = useNavigate();
@@ -19,6 +20,38 @@ const Recharge = () => {
   const [instaPayData, setInstaPayData] = useState<any>(null);
   const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
   const [copiedParentName, setCopiedParentName] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+  const [showPaymentMethods, setShowPaymentMethods] = useState(false);
+  const [showInstaPayModal, setShowInstaPayModal] = useState(false);
+  const [instaPayDetails, setInstaPayDetails] = useState({
+    referenceCode: '',
+    bankDetails: null,
+    amount: 0
+  });
+
+  const paymentMethods = [
+    {
+      id: 'instapay',
+      name: 'InstaPay',
+      description: 'Bank transfer via InstaPay',
+      icon: Building2,
+      color: 'from-brand-red to-brand-orange'
+    },
+    {
+      id: 'paymob_card',
+      name: 'Card Payment',
+      description: 'Credit/Debit card via Paymob',
+      icon: Wallet,
+      color: 'from-brand-orange to-brand-yellow'
+    },
+    {
+      id: 'paymob_wallet',
+      name: 'Mobile Wallet',
+      description: 'Vodafone Cash, Orange Money, etc.',
+      icon: Wallet,
+      color: 'from-brand-yellow to-brand-red'
+    }
+  ];
 
   const { data: profileData } = useQuery({
     queryKey: ["profile"],
@@ -40,12 +73,26 @@ const Recharge = () => {
         return;
       }
 
+      if (!showPaymentMethods) {
+        setShowPaymentMethods(true);
+        return;
+      }
 
+      if (!selectedPaymentMethod) {
+        toast.error("Please select a payment method.");
+        return;
+      }
 
+      setIsSubmitting(true);
+
+      if (selectedPaymentMethod === 'instapay') {
         await handleInstaPayTopup(finalAmount);
+      } else {
+        await handlePaymobPayment(finalAmount, selectedPaymentMethod);
+      }
     } catch (error) {
       console.error('Recharge initialization error:', error);
-        toast.error("Failed to start recharge process. Please try again.");
+      toast.error("Failed to start recharge process. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -66,7 +113,14 @@ const Recharge = () => {
           amount: amount,
           parent_name: profile?.name || 'Parent Name'
         });
-        setShowTransferDetails(true);
+        
+        // Show modal instead of transfer details
+        setInstaPayDetails({
+          referenceCode: reference_code,
+          bankDetails: bank_account,
+          amount: amount
+        });
+        setShowInstaPayModal(true);
         
         toast.success('Transfer details generated! Please complete your transfer.');
       } else {
@@ -75,6 +129,39 @@ const Recharge = () => {
     } catch (error) {
       console.error('InstaPay topup error:', error);
       toast.error('Failed to create top-up request. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePaymobPayment = async (amount: number, paymentMethod: string) => {
+    try {
+      const response = await fetch('/api/wallet/recharge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          amount: amount,
+          payment_method: paymentMethod,
+          payment_details: {}
+        })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        if (data.payment_url) {
+          // Redirect to Paymob payment page
+          window.open(data.payment_url, '_blank');
+        }
+      } else {
+        throw new Error(data.message || 'Payment failed');
+      }
+    } catch (error) {
+      console.error('Paymob payment error:', error);
+      toast.error("Payment processing failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -159,44 +246,57 @@ const Recharge = () => {
       <div className="px-4 py-4">
         {!showTransferDetails ? (
           <>
-            {/* Amount Input */}
-            <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="recharge-amount">
-          <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
-            <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
-                Enter Amount
-          </h3>
-              <div className="relative">
-              <Input 
-                type="number" 
-                  placeholder="Enter amount"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="pr-12 text-lg"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">EGP</span>
-            </div>
-        </div>
-
-
-
-        {/* Payment Method */}
-            <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="recharge-payment-method">
-          <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
-            <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
-            Payment Method
-          </h3>
-              <div className="p-4 border-2 border-blue-200 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                    <Wallet className="w-5 h-5 text-white" />
-          </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-blue-900">InstaPay</div>
-                    <div className="text-sm text-blue-700">Bank transfer via InstaPay</div>
+            {!showPaymentMethods ? (
+              <div className="space-y-4">
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                  <h2 className="text-xl font-bold text-brand-black mb-4">Enter Amount</h2>
+                  <Input
+                    type="number"
+                    placeholder="Enter amount in EGP"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="text-lg"
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                  <h2 className="text-xl font-bold text-brand-black mb-4">Select Payment Method</h2>
+                  <div className="space-y-3">
+                    {paymentMethods.map((method) => {
+                      const IconComponent = method.icon;
+                      return (
+                        <button
+                          key={method.id}
+                          onClick={() => setSelectedPaymentMethod(method.id)}
+                          className={`w-full p-4 rounded-xl border-2 transition-all duration-200 ${
+                            selectedPaymentMethod === method.id
+                              ? 'border-brand-red bg-brand-red/5 shadow-md'
+                              : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${method.color} flex items-center justify-center`}>
+                              <IconComponent className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="flex-1 text-left">
+                              <h3 className="text-lg font-semibold text-brand-black">{method.name}</h3>
+                              <p className="text-gray-600">{method.description}</p>
+                            </div>
+                            {selectedPaymentMethod === method.id && (
+                              <div className="w-6 h-6 rounded-full bg-brand-red flex items-center justify-center">
+                                <Check className="w-4 h-4 text-white" />
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-        </div>
+            )}
 
             {error && (
               <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -207,16 +307,16 @@ const Recharge = () => {
             {/* Recharge Button */}
             <Button
               onClick={handleRechargeClick}
-              disabled={isSubmitting || !amount || parseFloat(amount) <= 0}
-              className="w-full h-12 bg-gradient-to-r from-brand-red via-brand-orange to-brand-yellow hover:opacity-90 text-white rounded-xl font-medium text-base shadow-lg disabled:opacity-50"
+              disabled={isSubmitting || !amount}
+              className="w-full bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white font-semibold py-3 rounded-xl shadow-lg"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                   Processing...
                 </>
               ) : (
-                `Recharge ${amount || 0} EGP`
+                showPaymentMethods ? 'Process Payment' : 'Continue'
               )}
             </Button>
           </>
@@ -387,6 +487,14 @@ const Recharge = () => {
           </>
         )}
         </div>
+
+      <InstaPayModal
+        open={showInstaPayModal}
+        onOpenChange={setShowInstaPayModal}
+        referenceCode={instaPayDetails.referenceCode}
+        bankDetails={instaPayDetails.bankDetails}
+        amount={instaPayDetails.amount}
+      />
 
       <BottomNavigation />
     </div>
