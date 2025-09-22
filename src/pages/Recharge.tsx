@@ -10,21 +10,28 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { instaPayApi, profileApi, walletApi } from "../services/api";
 
-// Updated interface with card data fields
+// Complete interface with all required fields
 interface PaymobCardDetails {
-  // Billing information
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone_number: string;
-  city: string;
-  country: string;
   // Card information
   card_number: string;
   expiry_month: string;
   expiry_year: string;
   cvv: string;
   card_holder_name: string;
+  // Billing information
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number: string;
+  apartment: string;
+  floor: string;
+  street: string;
+  building: string;
+  city: string;
+  country: string;
+  postal_code: string;
+  state: string;
+  save_card: boolean;
 }
 
 interface PaymobWalletDetails {
@@ -32,6 +39,16 @@ interface PaymobWalletDetails {
   first_name: string;
   last_name: string;
   email: string;
+  save_wallet: boolean;
+}
+
+interface SavedPaymentMethod {
+  id: string;
+  type: 'card' | 'wallet';
+  name: string;
+  maskedNumber?: string;
+  lastUsed: string;
+  data: PaymobCardDetails | PaymobWalletDetails;
 }
 
 const Recharge = () => {
@@ -57,28 +74,41 @@ const Recharge = () => {
   // Paymob popup states
   const [showCardModal, setShowCardModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showSavedMethodsModal, setShowSavedMethodsModal] = useState(false);
   
-  // Updated state with card data fields
+  // Saved payment methods state
+  const [savedPaymentMethods, setSavedPaymentMethods] = useState<SavedPaymentMethod[]>([]);
+  
+  // Complete state with all required fields
   const [paymobCardDetails, setPaymobCardDetails] = useState<PaymobCardDetails>({
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone_number: '',
-    city: '',
-    country: 'Egypt',
-    // Card data
+    // Card information
     card_number: '',
     expiry_month: '',
     expiry_year: '',
     cvv: '',
-    card_holder_name: ''
+    card_holder_name: '',
+    // Billing information
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone_number: '',
+    apartment: '',
+    floor: '',
+    street: '',
+    building: '',
+    city: '',
+    country: 'Egypt',
+    postal_code: '',
+    state: '',
+    save_card: false
   });
   
   const [paymobWalletDetails, setPaymobWalletDetails] = useState<PaymobWalletDetails>({
     phone_number: '',
     first_name: '',
     last_name: '',
-    email: ''
+    email: '',
+    save_wallet: false
   });
 
   const paymentMethods = [
@@ -111,14 +141,92 @@ const Recharge = () => {
   });
   const profile = profileData?.data;
 
+  // Load saved payment methods on component mount
+  React.useEffect(() => {
+    loadSavedPaymentMethods();
+  }, []);
+
+  // Load saved payment methods from localStorage
+  const loadSavedPaymentMethods = () => {
+    try {
+      const saved = localStorage.getItem('savedPaymentMethods');
+      if (saved) {
+        const methods = JSON.parse(saved);
+        setSavedPaymentMethods(methods);
+      }
+    } catch (error) {
+      console.error('Error loading saved payment methods:', error);
+    }
+  };
+
+  // Save payment method to localStorage
+  const savePaymentMethod = (type: 'card' | 'wallet', data: PaymobCardDetails | PaymobWalletDetails) => {
+    try {
+      const newMethod: SavedPaymentMethod = {
+        id: `${type}_${Date.now()}`,
+        type,
+        name: type === 'card' 
+          ? `**** **** **** ${(data as PaymobCardDetails).card_number.slice(-4)}`
+          : `Wallet ${(data as PaymobWalletDetails).phone_number}`,
+        maskedNumber: type === 'card' ? `**** **** **** ${(data as PaymobCardDetails).card_number.slice(-4)}` : undefined,
+        lastUsed: new Date().toISOString(),
+        data
+      };
+
+      const updatedMethods = [...savedPaymentMethods, newMethod];
+      setSavedPaymentMethods(updatedMethods);
+      localStorage.setItem('savedPaymentMethods', JSON.stringify(updatedMethods));
+      toast.success('Payment method saved successfully!');
+    } catch (error) {
+      console.error('Error saving payment method:', error);
+      toast.error('Failed to save payment method');
+    }
+  };
+
+  // Load a specific saved method into the form
+  const loadSavedMethod = (methodId: string) => {
+    const method = savedPaymentMethods.find(m => m.id === methodId);
+    if (!method) return;
+
+    // Update last used timestamp
+    const updatedMethods = savedPaymentMethods.map((m: SavedPaymentMethod) => 
+      m.id === methodId 
+        ? { ...m, lastUsed: new Date().toISOString() }
+        : m
+    );
+    setSavedPaymentMethods(updatedMethods);
+    localStorage.setItem('savedPaymentMethods', JSON.stringify(updatedMethods));
+
+    if (method.type === 'card') {
+      setPaymobCardDetails(method.data as PaymobCardDetails);
+      setShowCardModal(true);
+    } else {
+      setPaymobWalletDetails(method.data as PaymobWalletDetails);
+      setShowWalletModal(true);
+    }
+    setShowSavedMethodsModal(false);
+  };
+
   const handlePaymentMethodSelect = (methodId: string) => {
     setSelectedPaymentMethod(methodId);
     if (methodId === 'instapay') {
       handleRechargeClick();
     } else if (methodId === 'paymob_card') {
-      setShowCardModal(true);
+      // Check if there are saved card methods
+      const cardMethods = savedPaymentMethods.filter((m: SavedPaymentMethod) => m.type === 'card');
+      if (cardMethods.length > 0) {
+        setShowSavedMethodsModal(true);
+      } else {
+        setShowCardModal(true);
+      }
     } else if (methodId === 'paymob_wallet') {
-      setShowWalletModal(true);
+      // Check if there are saved wallet methods
+      const walletMethods = savedPaymentMethods.filter((m: SavedPaymentMethod) => m.type === 'wallet');
+      if (walletMethods.length > 0) {
+        setShowSavedMethodsModal(true);
+      } else {
+        setShowWalletModal(true);
+      }
     }
   };
 
@@ -222,8 +330,15 @@ const Recharge = () => {
       }
 
       // Validate CVV
-      if (paymobCardDetails.cvv.length < 3) {
-        toast.error('Please enter a valid CVV');
+      if (paymobCardDetails.cvv.length < 3 || paymobCardDetails.cvv.length > 4) {
+        toast.error('Please enter a valid CVV (3-4 digits)');
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(paymobCardDetails.email)) {
+        toast.error('Please enter a valid email address');
         return;
       }
 
@@ -247,6 +362,11 @@ const Recharge = () => {
       });
 
       if (response.data.success) {
+        // Save payment method if user opted to save
+        if (paymobCardDetails.save_card) {
+          savePaymentMethod('card', paymobCardDetails);
+        }
+
         if (response.data.data.payment_url) {
           window.open(response.data.data.payment_url, '_blank');
           toast.success('Payment initiated! Please complete payment in the new window.');
@@ -277,6 +397,13 @@ const Recharge = () => {
         return;
       }
 
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(paymobWalletDetails.email)) {
+        toast.error('Please enter a valid email address');
+        return;
+      }
+
       const finalAmount = parseFloat(amount) || 0;
       const paymentDetails = {
         ...paymobWalletDetails,
@@ -296,6 +423,11 @@ const Recharge = () => {
       });
 
       if (response.data.success) {
+        // Save payment method if user opted to save
+        if (paymobWalletDetails.save_wallet) {
+          savePaymentMethod('wallet', paymobWalletDetails);
+        }
+
         if (response.data.data.payment_url) {
           window.open(response.data.data.payment_url, '_blank');
           toast.success('Payment initiated! Please complete payment in the new window.');
@@ -312,7 +444,7 @@ const Recharge = () => {
     }
   };
 
-  const handlePaymobPayment = async (amount: number, paymentMethod: string) => {
+  const handlePaymobPayment = async (_amount: number, _paymentMethod: string) => {
     // This method is kept for backward compatibility but won't be used
   };
 
@@ -637,7 +769,7 @@ const Recharge = () => {
         )}
         </div>
 
-      {/* Card Payment Modal with Card Input Fields */}
+      {/* Complete Card Payment Modal with All Fields */}
       <Dialog open={showCardModal} onOpenChange={setShowCardModal}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -779,6 +911,43 @@ const Recharge = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
+                    <label className="text-sm font-medium text-gray-700">Apartment</label>
+                    <Input
+                      value={paymobCardDetails.apartment}
+                      onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, apartment: e.target.value }))}
+                      placeholder="Apartment number"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Floor</label>
+                    <Input
+                      value={paymobCardDetails.floor}
+                      onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, floor: e.target.value }))}
+                      placeholder="Floor number"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Street *</label>
+                  <Input
+                    value={paymobCardDetails.street}
+                    onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, street: e.target.value }))}
+                    placeholder="Enter street address"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Building</label>
+                  <Input
+                    value={paymobCardDetails.building}
+                    onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, building: e.target.value }))}
+                    placeholder="Building name/number"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
                     <label className="text-sm font-medium text-gray-700">City *</label>
                     <Input
                       value={paymobCardDetails.city}
@@ -787,13 +956,45 @@ const Recharge = () => {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Country</label>
+                    <label className="text-sm font-medium text-gray-700">State</label>
+                    <Input
+                      value={paymobCardDetails.state}
+                      onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, state: e.target.value }))}
+                      placeholder="Enter state"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Country *</label>
                     <Input
                       value={paymobCardDetails.country}
                       onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, country: e.target.value }))}
                       placeholder="Enter country"
                     />
                   </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Postal Code</label>
+                    <Input
+                      value={paymobCardDetails.postal_code}
+                      onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, postal_code: e.target.value }))}
+                      placeholder="Enter postal code"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="save_card"
+                    checked={paymobCardDetails.save_card}
+                    onChange={(e) => setPaymobCardDetails(prev => ({ ...prev, save_card: e.target.checked }))}
+                    className="w-4 h-4 text-brand-red border-gray-300 rounded focus:ring-brand-red"
+                  />
+                  <label htmlFor="save_card" className="text-sm text-gray-700">
+                    Save this card for future payments
+                  </label>
                 </div>
               </div>
             </div>
@@ -825,7 +1026,7 @@ const Recharge = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Simplified Mobile Wallet Modal - Only Required Fields */}
+      {/* Complete Mobile Wallet Modal with Save Option */}
       <Dialog open={showWalletModal} onOpenChange={setShowWalletModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -876,6 +1077,19 @@ const Recharge = () => {
                 placeholder="Enter email address"
               />
             </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="save_wallet"
+                checked={paymobWalletDetails.save_wallet}
+                onChange={(e) => setPaymobWalletDetails(prev => ({ ...prev, save_wallet: e.target.checked }))}
+                className="w-4 h-4 text-brand-red border-gray-300 rounded focus:ring-brand-red"
+              />
+              <label htmlFor="save_wallet" className="text-sm text-gray-700">
+                Save this wallet for future payments
+              </label>
+            </div>
           </div>
 
           <div className="flex gap-3 pt-4">
@@ -899,6 +1113,85 @@ const Recharge = () => {
               ) : (
                 'Process Payment'
               )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Saved Payment Methods Modal */}
+      <Dialog open={showSavedMethodsModal} onOpenChange={setShowSavedMethodsModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5" />
+              Saved Payment Methods
+            </DialogTitle>
+            <DialogDescription>
+              Choose a saved payment method or add a new one
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {savedPaymentMethods
+              .filter((method: SavedPaymentMethod) => 
+                selectedPaymentMethod === 'paymob_card' ? method.type === 'card' : method.type === 'wallet'
+              )
+              .map((method: SavedPaymentMethod) => (
+                <div
+                  key={method.id}
+                  onClick={() => loadSavedMethod(method.id)}
+                  className="p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-brand-red to-brand-orange rounded-full flex items-center justify-center">
+                        {method.type === 'card' ? (
+                          <CreditCard className="w-5 h-5 text-white" />
+                        ) : (
+                          <Smartphone className="w-5 h-5 text-white" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">{method.name}</div>
+                        <div className="text-sm text-gray-500">
+                          Last used: {new Date(method.lastUsed).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-brand-red">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            
+            <div className="pt-4 border-t border-gray-200">
+              <Button
+                onClick={() => {
+                  setShowSavedMethodsModal(false);
+                  if (selectedPaymentMethod === 'paymob_card') {
+                    setShowCardModal(true);
+                  } else {
+                    setShowWalletModal(true);
+                  }
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                Add New {selectedPaymentMethod === 'paymob_card' ? 'Card' : 'Wallet'}
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowSavedMethodsModal(false)}
+              className="flex-1"
+            >
+              Cancel
             </Button>
           </div>
         </DialogContent>
