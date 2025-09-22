@@ -68,6 +68,7 @@ const AppContent = () => {
           <Route path="/order/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
           <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
           <Route path="/recharge" element={<ProtectedRoute><Recharge /></ProtectedRoute>} />
+          <Route path="/wallet/recharge" element={<Navigate to="/wallet" replace />} />
           <Route path="/payment/callback" element={<PaymentCallback />} />
           <Route path="/contact" element={<ProtectedRoute><ContactUs /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
