@@ -242,7 +242,7 @@ const RechargeHistory = () => {
                   </Button>
                 ) : (
                   <Button
-                    onClick={() => navigate("/wallet/recharge")}
+                    onClick={() => navigate("/recharge")}
                     className="bg-brand-red hover:bg-brand-red/90 text-white rounded-xl"
                   >
                     Recharge Now
@@ -303,7 +303,7 @@ const RechargeHistory = () => {
           <CardContent className="p-4">
             <div className="grid grid-cols-2 gap-3">
               <Button
-                onClick={() => navigate("/wallet/recharge")}
+                onClick={() => navigate("/recharge")}
                 className="h-12 bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-orange hover:to-brand-red text-white rounded-xl font-medium"
               >
                 Recharge Wallet
