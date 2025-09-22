@@ -50,7 +50,8 @@ const Recharge = () => {
   const [instaPayDetails, setInstaPayDetails] = useState({
     referenceCode: '',
     bankDetails: null,
-    amount: 0
+    amount: 0,
+    userName: ''
   });
 
   // Paymob popup states
@@ -179,7 +180,8 @@ const Recharge = () => {
         setInstaPayDetails({
           referenceCode: reference_code,
           bankDetails: bank_account,
-          amount: amount
+          amount: amount,
+          userName: profile?.name || 'N/A'
         });
         setShowInstaPayModal(true);
         
@@ -908,6 +910,7 @@ const Recharge = () => {
         referenceCode={instaPayDetails.referenceCode}
         bankDetails={instaPayDetails.bankDetails}
         amount={instaPayDetails.amount}
+        userName={instaPayDetails.userName}
       />
 
       <BottomNavigation />
