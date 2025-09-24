@@ -1,21 +1,22 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/BottomNavigation";
-import { walletApi, profileApi, mealRefundApi, api, instaPayApi } from "@/services/api";
-import { useAuth } from "@/contexts/AuthContext";
-import { showToast } from "@/services/native";
-import { formatCurrency } from "@/utils/format";
-import { LogOut } from "lucide-react";
+import NotificationBell from "@/components/NotificationBell";
+import TutorialTrigger from "@/components/TutorialTrigger";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import NotificationBell from "@/components/NotificationBell";
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import TutorialTrigger from "@/components/TutorialTrigger";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { api, instaPayApi, mealRefundApi, profileApi, walletApi } from "@/services/api";
 import { frontendTransactionTracker } from "@/services/frontendTransactionTracker";
+import { showToast } from "@/services/native";
+import { handleAuthError } from "@/utils/authErrorHandler";
+import { formatCurrency } from "@/utils/format";
+import { LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import LoadingSpinner from '../components/common/LoadingSpinner';
 
 import CampaignSlider from '@/components/CampaignSlider';
 
@@ -212,9 +213,9 @@ const Wallet = () => {
 
     } catch (err: any) {
       console.error('Failed to load wallet data:', err);
-      // Only show error for critical failures (like profile loading)
-      if (err.response?.status === 401) {
-        setError('Authentication failed. Please login again.');
+      // Handle authentication errors by automatically logging out
+      if (handleAuthError(err, logout)) {
+        return; // Exit early, no need to set error state
       } else if (err.response?.status === 404) {
         setError('Wallet not found. Please contact support.');
       } else {
