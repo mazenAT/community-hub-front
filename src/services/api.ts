@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { secureStorage } from './native';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api',
@@ -40,10 +39,13 @@ api.interceptors.response.use(
     }
     
     if (error.response?.status === 401) {
-      // Don't redirect immediately, let components handle it
-      if (error.response?.data?.message === 'Unauthenticated') {
-        localStorage.removeItem('token');
-      }
+      // Clear token immediately
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      // For mobile app, we should let components handle the logout
+      // since they have access to the AuthContext
+      console.warn('Authentication failed - token cleared');
     }
     
     // Handle CORS preflight failures
@@ -289,4 +291,4 @@ export const walletApi = {
   }) => api.post('/wallet/recharge', data),
 };
 
-export { api }; 
+export { api };
