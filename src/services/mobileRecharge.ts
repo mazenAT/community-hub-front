@@ -2,7 +2,7 @@ import { api } from './api';
 
 export interface RechargeRequest {
   amount: number;
-  payment_method: 'card';
+  payment_method: 'card' | 'instapay' | 'paymob_card' | 'paymob_wallet';
   payment_details: {
     card_token?: string;
     cvv?: string;
@@ -11,6 +11,7 @@ export interface RechargeRequest {
     expiry_year?: string;
     card_holder_name?: string;
     mobile_number?: string;
+    save_card?: boolean;
     [key: string]: any;
   };
 }
@@ -19,11 +20,12 @@ export interface RechargeResponse {
   id: number;
   amount: number;
   payment_method: string;
-  status: 'pending' | 'completed' | 'failed';
+  status: 'pending' | 'completed' | 'failed' | 'succeeded';
   created_at: string;
   transaction_id?: string;
   payment_intent_id?: string;
   redirect_url?: string;
+  message?: string;
 }
 
 export interface RechargeHistoryItem {
@@ -232,6 +234,24 @@ export const mobileRechargeApi = {
     receipt_url: string;
   }> => {
     const response = await api.get(`/wallet/recharge/${rechargeId}/receipt`);
+    return response.data;
+  },
+
+  // Process saved card payment
+  processSavedCardPayment: async (data: {
+    amount: number;
+    card_token: string;
+    cvv: string;
+  }): Promise<RechargeResponse> => {
+    const response = await api.post('/wallet/topup', {
+      amount: data.amount,
+      payment_method: 'card',
+      payment_details: {
+        card_token: data.card_token,
+        cvv: data.cvv,
+        save_card: false
+      }
+    });
     return response.data;
   }
 };
