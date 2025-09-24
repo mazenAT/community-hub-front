@@ -537,6 +537,7 @@ const Recharge = () => {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     className="text-lg"
+                    data-tutorial="recharge-amount"
                   />
                 </div>
               </div>
@@ -544,7 +545,7 @@ const Recharge = () => {
               <div className="space-y-4">
                 <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                   <h2 className="text-xl font-bold text-brand-black mb-4">Select Payment Method</h2>
-                  <div className="space-y-3">
+                  <div className="space-y-3" data-tutorial="recharge-payment-methods">
                     {paymentMethods.map((method) => {
                       const IconComponent = method.icon;
                       return (
@@ -590,6 +591,7 @@ const Recharge = () => {
               onClick={handleRechargeClick}
               disabled={isSubmitting || !amount}
               className="w-full bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white font-semibold py-3 rounded-xl shadow-lg"
+              data-tutorial="recharge-continue-button"
             >
               {isSubmitting ? (
                 <>
@@ -604,7 +606,7 @@ const Recharge = () => {
         ) : (
           <>
             {/* Transfer Details */}
-          <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+          <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="instapay-transfer-details">
             <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
                 <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
                 <Building2 className="w-4 h-4 text-blue-600" />
@@ -719,7 +721,7 @@ const Recharge = () => {
               </div>
             </div>
 
-            <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30">
+            <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-brand-yellow/30" data-tutorial="instapay-receipt-upload">
               <h3 className="text-sm font-semibold text-brand-black mb-3 flex items-center gap-2">
                 <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
                 Upload Receipt

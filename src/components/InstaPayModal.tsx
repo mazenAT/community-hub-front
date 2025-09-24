@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, Building2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Building2, Check, Copy } from 'lucide-react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
 
 interface InstaPayModalProps {
@@ -36,7 +36,7 @@ const InstaPayModal: React.FC<InstaPayModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" data-tutorial="instapay-modal-overview">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="w-5 h-5 text-blue-600" />
