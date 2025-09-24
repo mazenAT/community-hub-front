@@ -1,10 +1,11 @@
 import BottomNavigation from "@/components/BottomNavigation";
 import InstaPayModal from "@/components/InstaPayModal";
+import SavedCardPayment from "@/components/SavedCardPayment";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, Check, Copy, CreditCard, Loader2, Smartphone } from "lucide-react";
+import { Building2, Check, Copy, CreditCard, Loader2, Smartphone, Wallet } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -70,6 +71,8 @@ const Recharge = () => {
     amount: 0,
     userName: ''
   });
+  const [showSavedCards, setShowSavedCards] = useState(false);
+  const [useSavedCard, setUseSavedCard] = useState(false);
 
   // Paymob popup states
   const [showCardModal, setShowCardModal] = useState(false);
@@ -113,6 +116,13 @@ const Recharge = () => {
 
   const paymentMethods = [
     {
+      id: 'saved_card',
+      name: 'Saved Card',
+      description: 'Use a previously saved card',
+      icon: CreditCard,
+      color: 'from-blue-500 to-purple-600'
+    },
+    {
       id: 'instapay',
       name: 'InstaPay',
       description: 'Bank transfer via InstaPay',
@@ -123,7 +133,7 @@ const Recharge = () => {
       id: 'paymob_card',
       name: 'Card Payment',
       description: 'Credit/Debit card via Paymob',
-      icon: CreditCard,
+      icon: Wallet,
       color: 'from-brand-orange to-brand-yellow'
     },
     {
@@ -209,7 +219,10 @@ const Recharge = () => {
 
   const handlePaymentMethodSelect = (methodId: string) => {
     setSelectedPaymentMethod(methodId);
-    if (methodId === 'instapay') {
+    if (methodId === 'saved_card') {
+      setUseSavedCard(true);
+      setShowSavedCards(true);
+    } else if (methodId === 'instapay') {
       handleRechargeClick();
     } else if (methodId === 'paymob_card') {
       // Check if there are saved card methods
@@ -256,7 +269,13 @@ const Recharge = () => {
 
       setIsSubmitting(true);
 
-      if (selectedPaymentMethod === 'instapay') {
+      // Handle different payment methods
+      if (selectedPaymentMethod === 'saved_card') {
+        setUseSavedCard(true);
+        setShowSavedCards(true);
+        setIsSubmitting(false);
+        return;
+      } else if (selectedPaymentMethod === 'instapay') {
         await handleInstaPayTopup(finalAmount);
       } else {
         await handlePaymobPayment(finalAmount, selectedPaymentMethod);
@@ -505,6 +524,27 @@ const Recharge = () => {
     }
   };
 
+  // Payment success/error handlers for saved cards
+  const handleSavedCardPaymentSuccess = (transactionId: string) => {
+    toast.success('Payment completed successfully!');
+    setUseSavedCard(false);
+    setShowSavedCards(false);
+    navigate('/wallet');
+  };
+
+  const handleSavedCardPaymentError = (error: string) => {
+    toast.error(error);
+    setUseSavedCard(false);
+    setShowSavedCards(false);
+  };
+
+  const handleAddNewCard = () => {
+    setUseSavedCard(false);
+    setShowSavedCards(false);
+    setSelectedPaymentMethod('paymob_card');
+    // Continue with normal card payment flow
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 pb-32">
       {/* Header */}
@@ -557,6 +597,7 @@ const Recharge = () => {
                               ? 'border-brand-red bg-brand-red/5 shadow-md'
                               : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
                           }`}
+                          data-tutorial={method.id === 'saved_card' ? 'recharge-saved-card-option' : undefined}
                         >
                           <div className="flex items-center space-x-4">
                             <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${method.color} flex items-center justify-center`}>
@@ -583,6 +624,18 @@ const Recharge = () => {
             {error && (
               <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            )}
+
+            {/* Saved Card Payment Flow */}
+            {useSavedCard && showSavedCards && (
+              <div className="space-y-4" data-tutorial="recharge-saved-card-flow">
+                <SavedCardPayment
+                  amount={parseFloat(amount) || 0}
+                  onPaymentSuccess={handleSavedCardPaymentSuccess}
+                  onPaymentError={handleSavedCardPaymentError}
+                  onAddNewCard={handleAddNewCard}
+                />
               </div>
             )}
 
