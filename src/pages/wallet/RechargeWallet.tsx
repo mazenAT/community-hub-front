@@ -14,7 +14,7 @@ const RechargeWallet: React.FC = () => {
     first_name: '',
     last_name: '',
     email: '',
-    phone: '',  // Changed from phone_number
+    phone_number: '',  // Changed from phone to phone_number
     apartment: '',
     floor: '',
     street: '',
@@ -137,7 +137,7 @@ const RechargeWallet: React.FC = () => {
             first_name: 'Wallet',
             last_name: 'User',
             email: 'wallet@example.com',
-            phone: '+201234567890',  // Changed from phone_number
+            phone_number: '+201234567890',  // Changed from phone_number_number
             apartment: '',
             floor: '',
             street: '',
@@ -179,7 +179,7 @@ const RechargeWallet: React.FC = () => {
             first_name: 'Wallet',
             last_name: 'User',
             email: 'wallet@example.com',
-            phone: '+201234567890',  // Changed from phone_number
+            phone_number: '+201234567890',  // Changed from phone_number
             apartment: '',
             floor: '',
             street: '',

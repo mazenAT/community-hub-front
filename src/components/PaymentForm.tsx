@@ -13,7 +13,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onSubmit }) => {
     first_name: '',
     last_name: '',
     email: '',
-    phone: '',
+    phone_number: '',  // Changed from phone to phone_number
     apartment: '',
     floor: '',
     street: '',
@@ -72,8 +72,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onSubmit }) => {
           <Input
             type="tel"
             placeholder="Phone Number"
-            value={billingData.phone}
-            onChange={(e) => handleInputChange('phone', e.target.value)}
+            value={billingData.phone_number}
+            onChange={(e) => handleInputChange('phone_number', e.target.value)}
             required
           />
           
