@@ -10,7 +10,20 @@ const RechargeWallet: React.FC = () => {
   const [customAmount, setCustomAmount] = useState('');
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
-  const [billingData, setBillingData] = useState<BillingData | null>(null);
+  const [billingData, setBillingData] = useState<BillingData>({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',  // Changed from phone_number
+    apartment: '',
+    floor: '',
+    street: '',
+    building: '',
+    city: '',
+    country: 'EG',
+    postal_code: '',
+    state: ''
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const paymentMethods: PaymentMethod[] = [
@@ -124,7 +137,7 @@ const RechargeWallet: React.FC = () => {
             first_name: 'Wallet',
             last_name: 'User',
             email: 'wallet@example.com',
-            phone_number: '+201234567890',
+            phone: '+201234567890',  // Changed from phone_number
             apartment: '',
             floor: '',
             street: '',
@@ -166,7 +179,7 @@ const RechargeWallet: React.FC = () => {
             first_name: 'Wallet',
             last_name: 'User',
             email: 'wallet@example.com',
-            phone_number: '+201234567890',
+            phone: '+201234567890',  // Changed from phone_number
             apartment: '',
             floor: '',
             street: '',
