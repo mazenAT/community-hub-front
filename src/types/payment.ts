@@ -37,7 +37,9 @@ export interface PaymentResponse {
   success: boolean;
   data?: {
     transaction: any;
-    payment_url: string;
+    payment_url: string;        // ← This stays the same ✅
+    payment_intent_id?: string; // ← Add this for new API
+    transaction_id?: string;    // ← Add this for new API
   };
   message?: string;
 }
