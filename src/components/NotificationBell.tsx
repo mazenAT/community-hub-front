@@ -1,12 +1,13 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Bell, CheckCircle, Loader2, ArrowRight } from "lucide-react";
-import { notificationApi } from "@/services/api";
-import { formatDistanceToNow, parseISO } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { profileApi } from "@/services/api";
-import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { notificationApi, profileApi } from "@/services/api";
+import { handleAuthError } from "@/utils/authErrorHandler";
+import { formatDistanceToNow, parseISO } from "date-fns";
+import { ArrowRight, Bell, CheckCircle, Loader2 } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 interface Notification {
@@ -29,6 +30,7 @@ const NotificationBell: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [retryCount, setRetryCount] = useState(0);
   const [retryDelay, setRetryDelay] = useState(1000); // Start with 1 second
   const [notificationsDisabled, setNotificationsDisabled] = useState(false);
@@ -89,8 +91,9 @@ const NotificationBell: React.FC = () => {
           setError("Network error - notifications temporarily unavailable. This may be a CORS issue.");
           setNotificationsDisabled(true);
         }
-      } else if (err.response?.status === 401) {
-        setError("Authentication required");
+      } else if (handleAuthError(err, logout)) {
+        // Auth error handled by utility function
+        return;
       } else {
         setError("Failed to load notifications");
       }

@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { secureStorage } from '@/services/native';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface TutorialStep {
   id: string;
@@ -50,6 +50,7 @@ interface TutorialContextType {
   // Page-specific tutorial
   startPageTutorial: (page: string) => void;
   getCurrentPageSteps: () => TutorialStep[];
+  getFilteredTutorialSteps: () => TutorialStep[];
 }
 
 const defaultTutorialSteps: TutorialStep[] = [
@@ -153,11 +154,11 @@ const defaultTutorialSteps: TutorialStep[] = [
     arrowDirection: 'down'
   },
 
-  // RECHARGE PAGE TUTORIAL
+  // RECHARGE PAGE TUTORIAL - UPDATED STEPS
   {
     id: 'recharge-amount',
     title: 'Enter Recharge Amount 💰',
-    description: 'Enter how much money to add to your wallet:\n\n• Enter any amount (minimum 10 EGP)\n• Amount will be validated with receipt\n• Secure payment processing',
+    description: 'Enter how much money you want to add to your wallet:\n\n• Minimum amount: 10 EGP\n• Enter any amount you prefer\n• Amount will be validated during payment\n• Secure processing guaranteed',
     target: '[data-tutorial="recharge-amount"]',
     position: 'bottom',
     order: 7,
@@ -174,80 +175,86 @@ const defaultTutorialSteps: TutorialStep[] = [
     arrowDirection: 'up'
   },
   {
-    id: 'recharge-payment-method',
-    title: 'Payment & Wallet Management 💳',
-    description: 'Secure payment processing with Paymob:\n\n• Credit/Debit Card payments\n• Mobile wallet payments (Vodafone Cash, Orange Money)\n• Safe and encrypted transactions\n• Instant balance updates',
-    target: '[data-tutorial="recharge-payment-method"]',
+    id: 'recharge-payment-methods',
+    title: 'Choose Payment Method 💳',
+    description: 'Select your preferred payment method:\n\n• InstaPay - Bank transfer with receipt upload\n• Card Payment - Credit/Debit cards via Paymob\n• Mobile Wallet - Vodafone Cash, Orange Money\n• All methods are secure and encrypted',
+    target: '[data-tutorial="recharge-payment-methods"]',
     position: 'right',
     order: 8,
     completed: false,
     page: 'recharge',
     route: '/recharge',
     highlightElement: true,
-    spotlightRadius: 100,
+    spotlightRadius: 150,
     animation: 'glow',
-    interactive: false
+    interactive: true,
+    actionRequired: 'click',
+    hint: 'Select your preferred payment method',
+    showArrow: true,
+    arrowDirection: 'left'
   },
   {
-    id: 'recharge-instapay-info',
-    title: 'InstaPay Information 🏦',
-    description: 'Enter your recharge details:\n\n• Enter amount to recharge\n• Provide parent name for validation\n• Upload receipt after transfer\n• Instant processing',
-    target: '[data-tutorial="recharge-parent-name"]',
-    position: 'left',
+    id: 'recharge-continue-button',
+    title: 'Continue to Payment ➡️',
+    description: 'Click this button to proceed with your selected payment method:\n\n• Validates your amount\n• Redirects to payment processing\n• Secure authentication required\n• Instant balance update upon completion',
+    target: '[data-tutorial="recharge-continue-button"]',
+    position: 'top',
     order: 9,
+    completed: false,
+    page: 'recharge',
+    route: '/recharge',
+    highlightElement: true,
+    spotlightRadius: 100,
+    animation: 'pulse',
+    interactive: true,
+    actionRequired: 'click',
+    hint: 'Click to continue with your payment',
+    showArrow: true,
+    arrowDirection: 'up'
+  },
+
+  // INSTAPAY SPECIFIC STEPS
+  {
+    id: 'instapay-transfer-details',
+    title: 'InstaPay Transfer Details 🏦',
+    description: 'Complete your bank transfer using these details:\n\n• Transfer the exact amount shown\n• Use the provided account number\n• Include parent name in transfer description\n• Keep your transfer receipt for upload',
+    target: '[data-tutorial="instapay-transfer-details"]',
+    position: 'left',
+    order: 10,
     completed: false,
     page: 'recharge',
     route: '/recharge',
     highlightElement: true,
     spotlightRadius: 120,
     animation: 'glow',
-    interactive: true,
-    actionRequired: 'input',
-    hint: 'Enter your parent name for validation',
-    showArrow: true,
-    arrowDirection: 'right'
-  },
-  {
-    id: 'recharge-total',
-    title: 'Payment Summary 📋',
-    description: 'Review your payment details:\n\n• Total amount to recharge\n• Current wallet balance\n• Payment confirmation',
-    target: '[data-tutorial="recharge-total"]',
-    position: 'top',
-    order: 10,
-    completed: false,
-    page: 'recharge',
-    route: '/recharge',
-    highlightElement: true,
-    spotlightRadius: 100,
-    animation: 'glow',
     interactive: false
   },
   {
-    id: 'recharge-pay-button',
-    title: 'Complete Payment 💳',
-    description: 'Ready to add money to your wallet:\n\n• Secure 3DS authentication\n• Instant balance update\n• Transaction confirmation',
-    target: '[data-tutorial="recharge-pay-button"]',
+    id: 'instapay-receipt-upload',
+    title: 'Upload Transfer Receipt 📸',
+    description: 'Complete your InstaPay recharge:\n\n• Take a clear photo of your transfer receipt\n• Ensure all details are visible\n• Upload the image through the app\n• Automatic verification and balance update',
+    target: '[data-tutorial="instapay-receipt-upload"]',
     position: 'top',
     order: 11,
     completed: false,
     page: 'recharge',
     route: '/recharge',
     highlightElement: true,
-    spotlightRadius: 80,
+    spotlightRadius: 100,
     animation: 'pulse',
     interactive: true,
     actionRequired: 'click',
-    hint: 'Click the Pay button to complete your recharge',
+    hint: 'Upload your transfer receipt to complete the process',
     showArrow: true,
-    arrowDirection: 'up'
+    arrowDirection: 'down'
   },
 
-  // PAYMOB PAYMENT TUTORIAL STEPS
+  // PAYMOB PAYMENT STEPS
   {
-    id: 'paymob-card-payment',
-    title: 'Card Payments with Paymob 💳',
-    description: 'Learn how to pay securely with your credit/debit card:\n\n• Select "Card Payment" from payment options\n• Enter your card details securely\n• Complete billing information\n• Confirm payment and receive instant confirmation',
-    target: '[data-tutorial="paymob-card-payment"]',
+    id: 'paymob-card-redirect',
+    title: 'Card Payment Processing 💳',
+    description: 'You\'ll be redirected to Paymob for secure card payment:\n\n• Enter your card details securely\n• Complete 3DS authentication\n• Instant balance update\n• Transaction confirmation',
+    target: '[data-tutorial="paymob-card-redirect"]',
     position: 'center',
     order: 12,
     completed: false,
@@ -259,10 +266,10 @@ const defaultTutorialSteps: TutorialStep[] = [
     interactive: false
   },
   {
-    id: 'paymob-wallet-payment',
-    title: 'Mobile Wallet Payments 📱',
-    description: 'Pay using Vodafone Cash, Orange Money, and other wallets:\n\n• Choose "Mobile Wallet" payment method\n• Select your preferred wallet provider\n• Enter wallet phone number\n• Complete payment through wallet app',
-    target: '[data-tutorial="paymob-wallet-payment"]',
+    id: 'paymob-wallet-redirect',
+    title: 'Mobile Wallet Payment 📱',
+    description: 'Complete payment through your mobile wallet:\n\n• Redirected to wallet provider\n• Enter wallet PIN/password\n• Confirm payment amount\n• Instant balance update',
+    target: '[data-tutorial="paymob-wallet-redirect"]',
     position: 'center',
     order: 13,
     completed: false,
@@ -274,75 +281,6 @@ const defaultTutorialSteps: TutorialStep[] = [
     interactive: false
   },
 
-  // INSTAPAY TUTORIAL STEPS
-  {
-    id: 'instapay-overview',
-    title: 'InstaPay Bank Transfer 💳',
-    description: 'Alternative payment method for adding money:\n\n• Direct bank transfer via InstaPay\n• Generate unique reference code\n• Upload receipt for verification\n• Automatic balance update',
-    target: '[data-tutorial="instapay-overview"]',
-    position: 'center',
-    order: 14,
-    completed: false,
-    page: 'recharge',
-    route: '/recharge',
-    highlightElement: true,
-    spotlightRadius: 100,
-    animation: 'pulse',
-    interactive: false
-  },
-  {
-    id: 'instapay-reference',
-    title: 'Generate Reference Code 🔑',
-    description: 'Get a unique reference code for your transfer:\n\n• Click "InstaPay Transfer" button\n• Copy the generated reference code\n• Use it in bank transfer description\n• Ensures proper credit to your account',
-    target: '[data-tutorial="instapay-reference"]',
-    position: 'top',
-    order: 15,
-    completed: false,
-    page: 'recharge',
-    route: '/recharge',
-    highlightElement: true,
-    spotlightRadius: 80,
-    animation: 'glow',
-    interactive: true,
-    actionRequired: 'click',
-    hint: 'Click to generate your unique reference code',
-    showArrow: true,
-    arrowDirection: 'up'
-  },
-  {
-    id: 'instapay-transfer',
-    title: 'Complete Bank Transfer 🏦',
-    description: 'Transfer money using your bank app:\n\n• Use the reference code in transfer description\n• Transfer to the provided account\n• Keep the transfer receipt\n• Upload receipt to complete process',
-    target: '[data-tutorial="instapay-transfer"]',
-    position: 'bottom',
-    order: 16,
-    completed: false,
-    page: 'recharge',
-    route: '/recharge',
-    highlightElement: true,
-    spotlightRadius: 120,
-    animation: 'pulse',
-    interactive: false
-  },
-  {
-    id: 'instapay-receipt',
-    title: 'Upload Transfer Receipt 📸',
-    description: 'Complete your InstaPay top-up:\n\n• Take photo of transfer receipt\n• Ensure reference code is visible\n• Upload image through the app\n• Automatic verification and balance update',
-    target: '[data-tutorial="instapay-receipt"]',
-    position: 'right',
-    order: 17,
-    completed: false,
-    page: 'recharge',
-    route: '/recharge',
-    highlightElement: true,
-    spotlightRadius: 100,
-    animation: 'glow',
-    interactive: true,
-    actionRequired: 'click',
-    hint: 'Upload your transfer receipt to complete the process',
-    showArrow: true,
-    arrowDirection: 'left'
-  },
 
   // MEAL PLANNER PAGE TUTORIAL
   {
@@ -351,7 +289,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     description: 'Welcome to your meal planning center! Here you can:\n\n• Browse weekly meal schedules\n• Pre-order meals for your family\n• View meal details and pricing\n• Manage meal selections',
     target: '[data-tutorial="planner-header"]',
     position: 'bottom',
-    order: 18,
+    order: 14,
     completed: false,
     page: 'planner',
     route: '/planner',
@@ -366,7 +304,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     description: 'Select which family member you\'re ordering for:\n\n• Different meal preferences\n• Separate order tracking\n• Individual meal management\n• Family meal coordination',
     target: '[data-tutorial="planner-family-selector"]',
     position: 'right',
-    order: 19,
+    order: 15,
     completed: false,
     page: 'planner',
     route: '/planner',
@@ -385,7 +323,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     description: 'Use these controls to organize your meal planning:\n\n• Week Selection - Choose different time periods\n• Meal Type Filters - Browse specific categories\n• Custom Date Ranges - Plan for specific dates\n• Family Member Selection - Order for different family members',
     target: '[data-tutorial="planner-filters"]',
     position: 'left',
-    order: 20,
+    order: 16,
     completed: false,
     page: 'planner',
     route: '/planner',
@@ -404,7 +342,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     description: 'Explore the available meals for each day:\n\n• Different meal categories\n• Pricing information\n• Meal details\n• Pre-order options',
     target: '[data-tutorial="meal-list"]',
     position: 'left',
-    order: 21,
+    order: 17,
     completed: false,
     page: 'planner',
     route: '/planner',
@@ -421,7 +359,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     description: 'Access the complete menu:\n\n• Download PDF menu\n• See all available options\n• Plan your family\'s meals\n• Review meal selections',
     target: '[data-tutorial="planner-order-button"]',
     position: 'bottom',
-    order: 22,
+    order: 18,
     completed: false,
     page: 'planner',
     route: '/planner',
@@ -442,7 +380,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     description: 'Track all your meal and add-on orders:\n\n• View order history\n• Check order status\n• Filter by family member\n• Monitor deliveries',
     target: '[data-tutorial="orders-header"]',
     position: 'bottom',
-    order: 23,
+    order: 19,
     completed: false,
     page: 'orders',
     route: '/orders',
@@ -457,7 +395,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     description: 'Organize your orders by family member:\n\n• View all orders together\n• Filter by specific family member\n• Track individual orders\n• Manage multiple accounts',
     target: '[data-tutorial="orders-filter"]',
     position: 'right',
-    order: 24,
+    order: 20,
     completed: false,
     page: 'orders',
     route: '/orders',
@@ -478,7 +416,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     description: 'Manage your personal information and preferences:\n\n• Update contact details\n• Change passwords\n• Manage family members\n• Set account preferences',
     target: '[data-tutorial="profile-header"]',
     position: 'bottom',
-    order: 25,
+    order: 21,
     completed: false,
     page: 'profile',
     route: '/profile',
@@ -493,7 +431,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     description: 'Add and manage your family members:\n\n• Add new family members\n• Set individual preferences\n• Manage account settings\n• Track orders per member',
     target: '[data-tutorial="profile-family-section"]',
     position: 'right',
-    order: 26,
+    order: 22,
     completed: false,
     page: 'profile',
     route: '/profile',
@@ -512,7 +450,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     description: 'Update your personal details:\n\n• Change your name\n• Update phone number\n• Modify account settings\n• Save preferences',
     target: '[data-tutorial="profile-edit"]',
     position: 'left',
-    order: 27,
+    order: 23,
     completed: false,
     page: 'profile',
     route: '/profile',
@@ -531,7 +469,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     description: 'Customize your app experience:\n\n• Update personal information\n• Change security settings\n• Manage notifications\n• View activity history',
     target: '[data-tutorial="profile-settings"]',
     position: 'left',
-    order: 28,
+    order: 24,
     completed: false,
     page: 'profile',
     route: '/profile',
@@ -552,7 +490,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     description: 'Need assistance? The Contact Us page is here to help:\n\n• Send us messages and questions\n• Get support for any issues\n• Report problems or suggestions\n• Quick response within 48 hours',
     target: '[data-tutorial="contact-header"]',
     position: 'bottom',
-    order: 29,
+    order: 25,
     completed: false,
     page: 'contact',
     route: '/contact',
@@ -567,7 +505,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     description: 'Fill out this form to get in touch:\n\n• Provide your contact information\n• Describe your question or issue\n• Submit and get a quick response\n• Track your support requests',
     target: '[data-tutorial="contact-form"]',
     position: 'top',
-    order: 30,
+    order: 26,
     completed: false,
     page: 'contact',
     route: '/contact',
@@ -588,7 +526,7 @@ const defaultTutorialSteps: TutorialStep[] = [
     description: 'Excellent! You now know how to use Cafeteria Smart System:\n\n• Navigate between features\n• Manage your wallet and recharge\n• Use Paymob payment methods (Card & Mobile Wallet)\n• Use InstaPay bank transfers\n• Plan and order meals\n• Track orders and manage profile\n• Get help and support\n\nStart exploring and enjoy the convenience!',
     target: 'body',
     position: 'center',
-    order: 31,
+    order: 27,
     completed: false,
     page: 'completion',
     route: '/wallet',
@@ -684,7 +622,35 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     return tutorialSteps.filter(step => step.page === currentPage);
   };
 
+  // Filter tutorial steps based on current context (e.g., payment method selected)
+  const getFilteredTutorialSteps = () => {
+    return tutorialSteps.filter(step => {
+      // Always include non-conditional steps
+      if (!step.id.includes('paymob-') && !step.id.includes('instapay-')) {
+        return true;
+      }
+      
+      // For conditional steps, we would need to check the current state
+      // This is a placeholder for future enhancement where we can check
+      // the selected payment method from the recharge page state
+      return true;
+    });
+  };
+
   const navigateToStep = (step: TutorialStep) => {
+    // Handle conditional tutorial steps based on payment method
+    if (step.id === 'paymob-card-redirect' || step.id === 'paymob-wallet-redirect') {
+      // These steps only show for Paymob payments
+      // Skip these steps if not in Paymob flow
+      return;
+    }
+    
+    if (step.id === 'instapay-transfer-details' || step.id === 'instapay-receipt-upload') {
+      // These steps only show for InstaPay payments
+      // Skip these steps if not in InstaPay flow
+      return;
+    }
+    
     // Check if we need to navigate to a different page
     if (step.route && location.pathname !== step.route) {
       // Navigate to the required page
@@ -729,6 +695,33 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (currentStepIndex < tutorialSteps.length - 1) {
       const nextIndex = currentStepIndex + 1;
       const nextStep = tutorialSteps[nextIndex];
+      
+      // Skip conditional steps that don't apply to current context
+      if (nextStep.id === 'paymob-card-redirect' || nextStep.id === 'paymob-wallet-redirect') {
+        // Skip Paymob steps if not in Paymob flow
+        if (nextIndex < tutorialSteps.length - 1) {
+          const skipIndex = nextIndex + 1;
+          const skipStep = tutorialSteps[skipIndex];
+          setCurrentStepIndex(skipIndex);
+          setCurrentStep(skipStep);
+          setCurrentPage(skipStep.page);
+          navigateToStep(skipStep);
+        }
+        return;
+      }
+      
+      if (nextStep.id === 'instapay-transfer-details' || nextStep.id === 'instapay-receipt-upload') {
+        // Skip InstaPay steps if not in InstaPay flow
+        if (nextIndex < tutorialSteps.length - 1) {
+          const skipIndex = nextIndex + 1;
+          const skipStep = tutorialSteps[skipIndex];
+          setCurrentStepIndex(skipIndex);
+          setCurrentStep(skipStep);
+          setCurrentPage(skipStep.page);
+          navigateToStep(skipStep);
+        }
+        return;
+      }
       
       setCurrentStepIndex(nextIndex);
       setCurrentStep(nextStep);
@@ -855,7 +848,8 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     validateStepCompletion,
     navigateToStep,
     startPageTutorial,
-    getCurrentPageSteps
+    getCurrentPageSteps,
+    getFilteredTutorialSteps
   };
 
   return (

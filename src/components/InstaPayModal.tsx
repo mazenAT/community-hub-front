@@ -1,8 +1,8 @@
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, Building2 } from 'lucide-react';
-import { useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Building2, Check, Copy } from 'lucide-react';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
 
 interface InstaPayModalProps {
   open: boolean;
@@ -10,6 +10,7 @@ interface InstaPayModalProps {
   referenceCode: string;
   bankDetails: any;
   amount: number;
+  userName?: string; // Add userName prop
 }
 
 const InstaPayModal: React.FC<InstaPayModalProps> = ({
@@ -17,97 +18,122 @@ const InstaPayModal: React.FC<InstaPayModalProps> = ({
   onOpenChange,
   referenceCode,
   bankDetails,
-  amount
+  amount,
+  userName
 }) => {
-  const [copiedRef, setCopiedRef] = useState(false);
-  const [copiedAccount, setCopiedAccount] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  const copyToClipboard = (text: string, type: 'ref' | 'account') => {
-    navigator.clipboard.writeText(text);
-    if (type === 'ref') {
-      setCopiedRef(true);
-      setTimeout(() => setCopiedRef(false), 2000);
-    } else {
-      setCopiedAccount(true);
-      setTimeout(() => setCopiedAccount(false), 2000);
+  const copyToClipboard = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      toast.success(`${field} copied to clipboard!`);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch (error) {
+      toast.error('Failed to copy to clipboard');
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md mx-4">
+      <DialogContent className="max-w-md" data-tutorial="instapay-modal-overview">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-brand-black text-center">
+          <DialogTitle className="flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-blue-600" />
             InstaPay Transfer Details
           </DialogTitle>
+          <DialogDescription>
+            Complete your bank transfer using the details below
+          </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4">
-          {/* Reference Code */}
-          <div className="bg-gradient-to-r from-brand-red to-brand-orange p-4 rounded-xl text-white">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold">Reference Code</h3>
+          {/* User Name instead of Reference Code */}
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-sm font-medium text-orange-800">User Name</label>
+                <div className="text-lg font-semibold text-orange-900 mt-1">
+                  {userName || 'N/A'}
+                </div>
+              </div>
               <Button
-                size="sm"
                 variant="outline"
-                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-                onClick={() => copyToClipboard(referenceCode, 'ref')}
+                size="sm"
+                onClick={() => copyToClipboard(userName || '', 'User Name')}
+                className="ml-2"
               >
-                {copiedRef ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copiedField === 'User Name' ? (
+                  <Check className="w-4 h-4" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
               </Button>
             </div>
-            <p className="text-2xl font-mono font-bold">{referenceCode}</p>
           </div>
-          
-          {/* Amount */}
-          <div className="bg-gray-50 p-4 rounded-xl">
-            <h3 className="text-lg font-semibold text-brand-black mb-2">Transfer Amount</h3>
-            <p className="text-2xl font-bold text-brand-red">{amount} EGP</p>
+
+          {/* Transfer Amount */}
+          <div className="text-center bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="text-2xl font-bold text-blue-600">{amount} EGP</div>
+            <div className="text-sm text-blue-700">Transfer Amount</div>
           </div>
-          
+
           {/* Bank Details */}
-          <div className="bg-gray-50 p-4 rounded-xl">
-            <h3 className="text-lg font-semibold text-brand-black mb-3">Bank Details</h3>
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">Bank Details</h3>
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Bank:</span>
-                <span className="font-medium">{bankDetails?.bank_name || 'N/A'}</span>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Bank:</span>
+                <span className="text-sm font-medium">{bankDetails?.bank_name || 'CIB'}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Account:</span>
-                <div className="flex items-center space-x-2">
-                  <span className="font-mono">{bankDetails?.account_number || 'N/A'}</span>
+                <span className="text-sm text-gray-600">Account:</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{bankDetails?.account_number || '100054480207'}</span>
                   <Button
-                    size="sm"
                     variant="outline"
-                    className="h-8 w-8 p-0"
-                    onClick={() => copyToClipboard(bankDetails?.account_number || '', 'account')}
+                    size="sm"
+                    onClick={() => copyToClipboard(bankDetails?.account_number || '100054480207', 'Account Number')}
                   >
-                    {copiedAccount ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                    {copiedField === 'Account Number' ? (
+                      <Check className="w-3 h-3" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
                   </Button>
                 </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Beneficiary:</span>
-                <span className="font-medium">{bankDetails?.beneficiary_name || 'N/A'}</span>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Beneficiary:</span>
+                <span className="text-sm font-medium">{bankDetails?.beneficiary || 'Lite Bite For Food Services'}</span>
               </div>
             </div>
           </div>
-          
-          {/* Warning */}
-          <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-xl">
-            <p className="text-yellow-800 text-sm">
-              ⚠️ Please include the reference code in your transfer description
-            </p>
+
+          {/* Important Instruction */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-start gap-2">
+              <div className="w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-white text-xs font-bold">!</span>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold text-yellow-800 mb-1">Important</h4>
+                <p className="text-sm text-yellow-700">
+                  Please include the <strong>user name</strong> in your transfer description when making the payment.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-        
-        <Button
-          onClick={() => onOpenChange(false)}
-          className="w-full bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-red/90 hover:to-brand-orange/90 text-white font-semibold py-3 rounded-xl"
-        >
-          Got It
-        </Button>
+
+        <div className="flex gap-3 pt-4">
+          <Button
+            onClick={() => onOpenChange(false)}
+            className="w-full bg-gradient-to-r from-brand-red to-brand-orange"
+          >
+            Got It
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
