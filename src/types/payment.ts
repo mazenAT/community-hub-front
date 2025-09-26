@@ -11,7 +11,7 @@ export interface BillingData {
   first_name: string;
   last_name: string;
   email: string;
-  phone_number: string;
+  phone: string;
   apartment: string;
   floor: string;
   street: string;
