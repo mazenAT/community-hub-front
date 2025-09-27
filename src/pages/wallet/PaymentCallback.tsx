@@ -3,6 +3,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, Loader2, XCircle } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import PaymentService from '@/services/paymentService';
+import WalletService from '@/services/walletService';
+import { toast } from 'sonner';
 
 const PaymentCallback: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -14,19 +17,47 @@ const PaymentCallback: React.FC = () => {
     const handleCallback = async () => {
       try {
         // Extract callback parameters from URL
-        const transactionId = searchParams.get('transaction_id');
+        const intentionId = searchParams.get('intention_id');
         const paymentStatus = searchParams.get('status');
+        const amount = searchParams.get('amount');
         const errorMessage = searchParams.get('error');
         
-        if (paymentStatus === 'success' && transactionId) {
-          setStatus('success');
-          setMessage('Payment completed successfully! Your wallet has been recharged.');
-          
-          // Refresh wallet balance by navigating to wallet page
-          setTimeout(() => {
-            navigate('/wallet');
-          }, 3000);
+        if (paymentStatus === 'successful' && intentionId) {
+          try {
+            // Call the success endpoint to update wallet balance
+            await WalletService.handleTopUpSuccess({
+              intention_id: intentionId,
+              status: paymentStatus,
+              amount: amount
+            });
+            
+            setStatus('success');
+            setMessage(`Payment completed successfully! Your wallet has been recharged with ${amount ? `${amount} EGP` : 'the amount'}.`);
+            
+            // Show success toast
+            toast.success('Payment completed successfully!');
+            
+            // Refresh wallet balance by navigating to wallet page
+            setTimeout(() => {
+              navigate('/wallet');
+            }, 3000);
+          } catch (error) {
+            console.error('Payment success processing error:', error);
+            setStatus('error');
+            setMessage('Payment was successful but there was an error updating your wallet. Please contact support.');
+          }
         } else if (paymentStatus === 'failed' || errorMessage) {
+          try {
+            // Call the failure endpoint
+            await WalletService.handleTopUpFailure({
+              intention_id: intentionId,
+              status: paymentStatus,
+              error: errorMessage
+            });
+          } catch (error) {
+            console.error('Payment failure processing error:', error);
+          }
+          
           setStatus('error');
           setMessage(errorMessage || 'Payment failed. Please try again.');
         } else {

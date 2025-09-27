@@ -9,6 +9,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { profileApi, walletApi } from "../services/api";
+import PaymentService from "../services/paymentService";
 
 // Complete interface with all required fields
 interface PaymobCardDetails {
@@ -294,49 +295,55 @@ const Recharge = () => {
         return;
       }
 
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(paymobCardDetails.email)) {
-        toast.error('Please enter a valid email address');
+      // Validate billing data using PaymentService
+      const validation = PaymentService.validateBillingData({
+        first_name: paymobCardDetails.first_name,
+        last_name: paymobCardDetails.last_name,
+        email: paymobCardDetails.email,
+        phone_number: paymobCardDetails.phone_number,
+        city: paymobCardDetails.city
+      });
+
+      if (!validation.isValid) {
+        toast.error(validation.errors.join(', '));
+        return;
+      }
+
+      if (!profile?.id) {
+        toast.error('User not authenticated');
         return;
       }
 
       const finalAmount = parseFloat(amount) || 0;
-      const paymentDetails = {
-        ...paymobCardDetails,
-        card_number: cardNumber, // Remove spaces for processing
-        merchant_order_id: `recharge_${Date.now()}_${profile.id}`,
-        currency: 'EGP'
-      };
+      const formattedPhone = PaymentService.formatPhoneNumber(paymobCardDetails.phone_number);
 
-      const response = await walletApi.recharge({
+      const response = await PaymentService.initiatePayment({
         amount: finalAmount,
         payment_method: 'paymob_card',
-        payment_details: {
-          order_id: paymentDetails.merchant_order_id,
-          item_name: 'Wallet Recharge',
-          description: 'Digital wallet top-up',
-          billing_data: paymentDetails
-        }
+        first_name: paymobCardDetails.first_name,
+        last_name: paymobCardDetails.last_name,
+        email: paymobCardDetails.email,
+        phone_number: formattedPhone,
+        city: paymobCardDetails.city,
+        country: paymobCardDetails.country,
+        userId: profile.id
       });
 
-      if (response.data.success) {
+      if (response.success && response.data?.checkout_url) {
         // Save payment method if user opted to save
         if (paymobCardDetails.save_card) {
           savePaymentMethod('card', paymobCardDetails);
         }
 
-        if (response.data.data.payment_url) {
-          window.open(response.data.data.payment_url, '_blank');
-          toast.success('Payment initiated! Please complete payment in the new window.');
-          setShowCardModal(false);
-        }
+        // Redirect to Paymob checkout page
+        window.location.href = response.data.checkout_url;
+        setShowCardModal(false);
       } else {
-        toast.error(response.data.message || 'Failed to initiate payment');
+        toast.error(response.message || 'Failed to initiate payment');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Paymob card payment error:', error);
-      toast.error('Failed to initiate payment. Please try again.');
+      toast.error(error.message || 'Failed to initiate payment. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -347,57 +354,55 @@ const Recharge = () => {
       setIsSubmitting(true);
       setError('');
 
-      // Validate only required fields
-      const requiredFields = ['phone_number', 'first_name', 'last_name', 'email'];
-      const missingFields = requiredFields.filter(field => !paymobWalletDetails[field as keyof PaymobWalletDetails]);
-      
-      if (missingFields.length > 0) {
-        toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      // Validate billing data using PaymentService
+      const validation = PaymentService.validateBillingData({
+        first_name: paymobWalletDetails.first_name,
+        last_name: paymobWalletDetails.last_name,
+        email: paymobWalletDetails.email,
+        phone_number: paymobWalletDetails.phone_number,
+        city: 'Cairo' // Default city for wallet payments
+      });
+
+      if (!validation.isValid) {
+        toast.error(validation.errors.join(', '));
         return;
       }
 
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(paymobWalletDetails.email)) {
-        toast.error('Please enter a valid email address');
+      if (!profile?.id) {
+        toast.error('User not authenticated');
         return;
       }
 
       const finalAmount = parseFloat(amount) || 0;
-      const paymentDetails = {
-        ...paymobWalletDetails,
-        merchant_order_id: `recharge_${Date.now()}_${profile.id}`,
-        currency: 'EGP'
-      };
+      const formattedPhone = PaymentService.formatPhoneNumber(paymobWalletDetails.phone_number);
 
-      const response = await walletApi.recharge({
+      const response = await PaymentService.initiatePayment({
         amount: finalAmount,
         payment_method: 'paymob_wallet',
-        payment_details: {
-          order_id: paymentDetails.merchant_order_id,
-          item_name: 'Wallet Recharge',
-          description: 'Digital wallet top-up',
-          billing_data: paymentDetails
-        }
+        first_name: paymobWalletDetails.first_name,
+        last_name: paymobWalletDetails.last_name,
+        email: paymobWalletDetails.email,
+        phone_number: formattedPhone,
+        city: 'Cairo',
+        country: 'EG',
+        userId: profile.id
       });
 
-      if (response.data.success) {
+      if (response.success && response.data?.checkout_url) {
         // Save payment method if user opted to save
         if (paymobWalletDetails.save_wallet) {
           savePaymentMethod('wallet', paymobWalletDetails);
         }
 
-        if (response.data.data.payment_url) {
-          window.open(response.data.data.payment_url, '_blank');
-          toast.success('Payment initiated! Please complete payment in the new window.');
-          setShowWalletModal(false);
-        }
+        // Redirect to Paymob checkout page
+        window.location.href = response.data.checkout_url;
+        setShowWalletModal(false);
       } else {
-        toast.error(response.data.message || 'Failed to initiate payment');
+        toast.error(response.message || 'Failed to initiate payment');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Paymob wallet payment error:', error);
-      toast.error('Failed to initiate payment. Please try again.');
+      toast.error(error.message || 'Failed to initiate payment. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

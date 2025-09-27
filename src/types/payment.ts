@@ -40,6 +40,38 @@ export interface PaymentResponse {
     payment_url: string;        // ← This stays the same ✅
     payment_intent_id?: string; // ← Add this for new API
     transaction_id?: string;    // ← Add this for new API
+    checkout_url?: string;      // ← New unified intention API
+    intention_id?: string;      // ← New unified intention API
+  };
+  message?: string;
+}
+
+// New unified intention API types
+export interface CheckoutInitiateRequest {
+  amount: number;
+  currency: string;
+  payment_method: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number: string;
+  city: string;
+  country: string;
+  merchant_order_id: string;
+  items: Array<{
+    name: string;
+    amount: number;
+    description: string;
+    quantity: number;
+  }>;
+}
+
+export interface CheckoutInitiateResponse {
+  success: boolean;
+  data?: {
+    checkout_url: string;
+    intention_id: string;
+    merchant_order_id: string;
   };
   message?: string;
 }
