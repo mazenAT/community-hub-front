@@ -537,7 +537,6 @@ const Recharge = () => {
                 showPaymentMethods ? 'Process Payment' : 'Continue'
               )}
             </Button>
-        )}
         </div>
 
       {/* Complete Card Payment Modal with All Fields */}
