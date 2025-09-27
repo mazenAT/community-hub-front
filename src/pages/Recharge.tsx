@@ -537,7 +537,6 @@ const Recharge = () => {
                 showPaymentMethods ? 'Process Payment' : 'Continue'
               )}
             </Button>
-          </>
         )}
         </div>
 
