@@ -317,29 +317,49 @@ const Recharge = () => {
       const finalAmount = parseFloat(amount) || 0;
       const formattedPhone = PaymentService.formatPhoneNumber(paymobCardDetails.phone_number);
 
-      const response = await PaymentService.initiatePayment({
+      const response = await walletApi.recharge({
         amount: finalAmount,
         payment_method: 'paymob_card',
-        first_name: paymobCardDetails.first_name,
-        last_name: paymobCardDetails.last_name,
-        email: paymobCardDetails.email,
-        phone_number: formattedPhone,
-        city: paymobCardDetails.city,
-        country: paymobCardDetails.country,
-        userId: profile.id
+        payment_details: {
+          order_id: `wallet_recharge_${Date.now()}`,
+          item_name: 'Wallet Recharge',
+          description: 'Digital wallet top-up',
+          merchant_order_id: `recharge_${Date.now()}_${profile.id}`,
+          currency: 'EGP',
+          billing_data: {
+            first_name: paymobCardDetails.first_name,
+            last_name: paymobCardDetails.last_name,
+            email: paymobCardDetails.email,
+            phone_number: formattedPhone,
+            apartment: paymobCardDetails.apartment || '',
+            floor: paymobCardDetails.floor || '',
+            street: paymobCardDetails.street || '',
+            building: paymobCardDetails.building || '',
+            city: paymobCardDetails.city,
+            state: paymobCardDetails.state || 'Cairo',
+            country: 'EG',
+            postal_code: paymobCardDetails.postal_code || '12345'
+          },
+          // Include card data for paymob_card payment method
+          card_number: paymobCardDetails.card_number.replace(/\s/g, ''), // Remove spaces from card number
+          expiry_month: paymobCardDetails.expiry_month,
+          expiry_year: paymobCardDetails.expiry_year,
+          cvv: paymobCardDetails.cvv,
+          card_holder_name: paymobCardDetails.card_holder_name
+        }
       });
 
-      if (response.success && response.data?.checkout_url) {
+      if (response.data.success && response.data.payment_url) {
         // Save payment method if user opted to save
         if (paymobCardDetails.save_card) {
           savePaymentMethod('card', paymobCardDetails);
         }
 
         // Redirect to Paymob checkout page
-        window.location.href = response.data.checkout_url;
+        window.location.href = response.data.payment_url;
         setShowCardModal(false);
       } else {
-        toast.error(response.message || 'Failed to initiate payment');
+        toast.error(response.data.message || 'Failed to initiate payment');
       }
     } catch (error: any) {
       console.error('Paymob card payment error:', error);
@@ -376,29 +396,43 @@ const Recharge = () => {
       const finalAmount = parseFloat(amount) || 0;
       const formattedPhone = PaymentService.formatPhoneNumber(paymobWalletDetails.phone_number);
 
-      const response = await PaymentService.initiatePayment({
+      const response = await walletApi.recharge({
         amount: finalAmount,
         payment_method: 'paymob_wallet',
-        first_name: paymobWalletDetails.first_name,
-        last_name: paymobWalletDetails.last_name,
-        email: paymobWalletDetails.email,
-        phone_number: formattedPhone,
-        city: 'Cairo',
-        country: 'EG',
-        userId: profile.id
+        payment_details: {
+          order_id: `wallet_recharge_${Date.now()}`,
+          item_name: 'Wallet Recharge',
+          description: 'Digital wallet top-up',
+          merchant_order_id: `recharge_${Date.now()}_${profile.id}`,
+          currency: 'EGP',
+          billing_data: {
+            first_name: paymobWalletDetails.first_name,
+            last_name: paymobWalletDetails.last_name,
+            email: paymobWalletDetails.email,
+            phone_number: formattedPhone,
+            apartment: '',
+            floor: '',
+            street: '',
+            building: '',
+            city: 'Cairo',
+            state: 'Cairo',
+            country: 'EG',
+            postal_code: '12345'
+          }
+        }
       });
 
-      if (response.success && response.data?.checkout_url) {
+      if (response.data.success && response.data.payment_url) {
         // Save payment method if user opted to save
         if (paymobWalletDetails.save_wallet) {
           savePaymentMethod('wallet', paymobWalletDetails);
         }
 
         // Redirect to Paymob checkout page
-        window.location.href = response.data.checkout_url;
+        window.location.href = response.data.payment_url;
         setShowWalletModal(false);
       } else {
-        toast.error(response.message || 'Failed to initiate payment');
+        toast.error(response.data.message || 'Failed to initiate payment');
       }
     } catch (error: any) {
       console.error('Paymob wallet payment error:', error);

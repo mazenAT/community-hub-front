@@ -1,6 +1,7 @@
 import PaymentService from './paymentService';
 import { PaymentData } from './paymentService';
 import PaymentErrorHandler from '@/utils/paymentErrorHandler';
+import { walletApi } from './api';
 
 export interface WalletTopUpRequest {
   amount: number;
@@ -26,7 +27,7 @@ export interface WalletTopUpRequest {
 
 export interface WalletTopUpResponse {
   success: boolean;
-  checkout_url?: string;
+  payment_url?: string;
   intention_id?: string;
   message?: string;
 }
@@ -82,14 +83,46 @@ export class WalletService {
         })
       };
 
-      // Initiate payment
-      const response = await PaymentService.initiatePayment(paymentData);
+      // Use wallet recharge API instead of checkout API
+      const response = await walletApi.recharge({
+        amount: request.amount,
+        payment_method: request.payment_method,
+        payment_details: {
+          order_id: `wallet_recharge_${Date.now()}`,
+          item_name: 'Wallet Recharge',
+          description: 'Digital wallet top-up',
+          merchant_order_id: `recharge_${Date.now()}_${request.user_id}`,
+          currency: 'EGP',
+          billing_data: {
+            first_name: request.billing_data.first_name,
+            last_name: request.billing_data.last_name,
+            email: request.billing_data.email,
+            phone_number: formattedPhone,
+            apartment: '',
+            floor: '',
+            street: '',
+            building: '',
+            city: request.billing_data.city,
+            state: 'Cairo',
+            country: 'EG',
+            postal_code: '12345'
+          },
+          // Include card data for paymob_card payment method
+          ...(request.payment_method === 'paymob_card' && request.card_data && {
+            card_number: request.card_data.card_number.replace(/\s/g, ''), // Remove spaces from card number
+            expiry_month: request.card_data.expiry_month,
+            expiry_year: request.card_data.expiry_year,
+            cvv: request.card_data.cvv,
+            card_holder_name: request.card_data.card_holder_name
+          })
+        }
+      });
 
       return {
-        success: response.success,
-        checkout_url: response.data?.checkout_url,
-        intention_id: response.data?.intention_id,
-        message: response.message
+        success: response.data.success,
+        payment_url: response.data.payment_url,
+        intention_id: response.data.intention_id,
+        message: response.data.message
       };
     } catch (error: any) {
       PaymentErrorHandler.logError(error, 'Wallet Top Up');
