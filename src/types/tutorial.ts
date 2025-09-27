@@ -19,7 +19,7 @@ export interface TutorialStep {
   showArrow?: boolean; // Whether to show directional arrow
   arrowDirection?: 'up' | 'down' | 'left' | 'right';
   // Payment-specific properties
-  paymentMethod?: 'paymob_card' | 'paymob_wallet' | 'instapay' | 'none';
+  paymentMethod?: 'paymob_card' | 'paymob_wallet' | 'none';
   requiresBilling?: boolean; // Whether this step requires billing information
   securityLevel?: 'low' | 'medium' | 'high'; // Security level for payment steps
 }

@@ -11,7 +11,6 @@ interface Transaction {
   status?: string;
   details?: any;
   payment_method?: string;
-  isInstaPayTransaction?: boolean;
   isFamilyMemberOrder?: boolean;
   familyMemberName?: string;
   refunded_at?: string | null;
@@ -28,8 +27,6 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions })
         return 'Credit/Debit Card (Paymob)';
       case 'paymob_wallet':
         return 'Mobile Wallet (Paymob)';
-      case 'instapay':
-        return 'InstaPay Transfer';
       default:
         return transaction.payment_method || 'Unknown';
     }
@@ -40,7 +37,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions })
       return 'Paymob Card Payment';
     } else if (transaction.details?.payment_method === 'paymob_wallet') {
       return 'Paymob Wallet Payment';
-    } else if (transaction.type === 'recharge' || transaction.type === 'instapay_recharge') {
+    } else if (transaction.type === 'recharge') {
       return 'Wallet Recharge';
     } else if (transaction.type === 'refund') {
       return 'Refund';
@@ -51,26 +48,6 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions })
   };
 
   const getStatusBadge = (transaction: Transaction) => {
-    if (transaction.isInstaPayTransaction && transaction.status) {
-      const statusColors = {
-        completed: 'bg-green-100 text-green-700',
-        pending: 'bg-yellow-100 text-yellow-700',
-        failed: 'bg-red-100 text-red-700'
-      };
-      
-      const statusIcons = {
-        completed: '✅',
-        pending: '⏳',
-        failed: '❌'
-      };
-
-      return (
-        <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[transaction.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-700'}`}>
-          {statusIcons[transaction.status as keyof typeof statusIcons] || '❓'} {transaction.status}
-        </span>
-      );
-    }
-
     if (transaction.refunded_at) {
       return (
         <span className="inline-block rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700">
@@ -106,27 +83,16 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions })
               {/* Status badges */}
               <div className="flex flex-wrap items-center gap-1 mt-2">
                 <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                  transaction.type === 'recharge' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? 'bg-green-100 text-green-700' : 
+                  transaction.type === 'recharge' || transaction.type === 'refund' ? 'bg-green-100 text-green-700' : 
                   transaction.type === 'purchase' ? 'bg-red-100 text-red-700' : 
                   'bg-gray-100 text-gray-700'
                 }`}>
-                  {transaction.type === 'recharge' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? '+' : '-'}{transaction.type}
+                  {transaction.type === 'recharge' || transaction.type === 'refund' ? '+' : '-'}{transaction.type}
                 </span>
                 
                 {getStatusBadge(transaction)}
               </div>
 
-              {/* Additional details for InstaPay transactions */}
-              {transaction.isInstaPayTransaction && transaction.details && (
-                <div className="mt-2 text-xs text-gray-600 space-y-1">
-                  {transaction.details.reference_code && (
-                    <div>Reference: {transaction.details.reference_code}</div>
-                  )}
-                  {transaction.details.parent_name && (
-                    <div>Parent: {transaction.details.parent_name}</div>
-                  )}
-                </div>
-              )}
             </div>
             
             <div className="text-right">

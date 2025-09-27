@@ -1,6 +1,6 @@
-import { walletApi, instaPayApi } from '@/services/api';
+import { walletApi } from '@/services/api';
 import { BillingData, PaymentMethod } from '@/types/payment';
-import { ArrowLeft, Loader2, CreditCard, Smartphone, Building2 } from 'lucide-react';
+import { ArrowLeft, Loader2, CreditCard, Smartphone } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -27,13 +27,6 @@ const RechargeWallet: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const paymentMethods: PaymentMethod[] = [
-    {
-      id: 'instapay',
-      name: 'InstaPay',
-      description: 'Bank transfer via InstaPay',
-      icon: 'bank',
-      type: 'instapay'
-    },
     {
       id: 'paymob_card',
       name: 'Credit/Debit Card',
@@ -84,9 +77,6 @@ const RechargeWallet: React.FC = () => {
 
     // Process payment based on selected method
     switch (selectedMethod.id) {
-      case 'instapay':
-        await processInstaPayPayment(amount);
-        break;
       case 'paymob_card':
         await processPaymobCardPayment(amount);
         break;
@@ -96,32 +86,6 @@ const RechargeWallet: React.FC = () => {
     }
   };
 
-  const processInstaPayPayment = async (amount: number) => {
-    try {
-      setIsSubmitting(true);
-      const response = await instaPayApi.createTopupRequest(amount);
-      
-      if (response.data.success) {
-        const { reference_code, bank_account, instructions } = response.data.data;
-        // Store InstaPay data and redirect to InstaPay flow
-        localStorage.setItem('instapay_data', JSON.stringify({
-          reference_code,
-          bank_account,
-          instructions,
-          amount,
-          parent_name: 'Wallet Recharge'
-        }));
-        navigate('/recharge');
-      } else {
-        toast.error(response.data.message || 'Failed to create InstaPay request');
-      }
-    } catch (error: any) {
-      console.error('InstaPay payment error:', error);
-      toast.error(error.response?.data?.message || 'InstaPay payment failed');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const processPaymobCardPayment = async (amount: number) => {
     try {
@@ -218,8 +182,6 @@ const RechargeWallet: React.FC = () => {
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
-      case 'bank':
-        return <Building2 className="w-6 h-6" />;
       case 'credit-card':
         return <CreditCard className="w-6 h-6" />;
       case 'wallet':

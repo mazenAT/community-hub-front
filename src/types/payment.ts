@@ -1,10 +1,10 @@
 // payment.ts
 export interface PaymentMethod {
-  id: 'instapay' | 'paymob_card' | 'paymob_wallet';
+  id: 'paymob_card' | 'paymob_wallet' | 'card';
   name: string;
   description: string;
   icon: string;
-  type: 'instapay' | 'card' | 'wallet';
+  type: 'card' | 'wallet';
 }
 
 export interface BillingData {

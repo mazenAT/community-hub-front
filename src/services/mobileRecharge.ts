@@ -2,7 +2,7 @@ import { api } from './api';
 
 export interface RechargeRequest {
   amount: number;
-  payment_method: 'card' | 'instapay' | 'paymob_card' | 'paymob_wallet';
+  payment_method: 'card' | 'paymob_card' | 'paymob_wallet';
   payment_details: {
     card_token?: string;
     cvv?: string;

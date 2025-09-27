@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { api, instaPayApi, mealRefundApi, profileApi, walletApi } from "@/services/api";
+import { api, mealRefundApi, profileApi, walletApi } from "@/services/api";
 import { frontendTransactionTracker } from "@/services/frontendTransactionTracker";
 import { showToast } from "@/services/native";
 import { handleAuthError } from "@/utils/authErrorHandler";
@@ -49,7 +49,6 @@ const Wallet = () => {
   const { logout } = useAuth();
   const [balance, setBalance] = useState<number>(0);
   const [transactions, setTransactions] = useState<any[]>([]); // Changed to any[] to match API response
-  const [instaPayTransactions, setInstaPayTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -142,10 +141,10 @@ const Wallet = () => {
                 type: 'recharge',
                 amount: t.amount,
                 created_at: t.created_at,
-                description: `InstaPay Recharge`,
-                note: `InstaPay Recharge`,
+                description: `Wallet Recharge`,
+                note: `Wallet Recharge`,
                 details: {
-                  payment_method: 'instapay',
+                  payment_method: 'paymob_card',
                   frontend_transaction: true,
                   card_details: t.card_details
                 },
@@ -171,45 +170,6 @@ const Wallet = () => {
         setTransactions([]);
       }
 
-      // Fetch InstaPay transactions
-      try {
-        const instaPayResponse = await instaPayApi.getTopupHistory();
-        let instaPayData = [];
-        if (Array.isArray(instaPayResponse.data)) {
-          instaPayData = instaPayResponse.data;
-        } else if (Array.isArray(instaPayResponse.data?.data)) {
-          instaPayData = instaPayResponse.data.data;
-        }
-        
-        // Transform InstaPay transactions to match wallet transaction format
-        const transformedInstaPayTransactions = instaPayData.map((transaction: any) => ({
-          id: `instapay_${transaction.id}`,
-          type: 'instapay_recharge',
-          amount: transaction.amount,
-          created_at: transaction.created_at,
-          description: `InstaPay Recharge`,
-          note: `InstaPay Recharge - ${transaction.status}`,
-          status: transaction.status,
-          reference_code: transaction.reference_code,
-          parent_name: transaction.parent_name,
-          details: {
-            payment_method: 'instapay',
-            status: transaction.status,
-            reference_code: transaction.reference_code,
-            parent_name: transaction.parent_name
-          },
-          refunded_at: null,
-          familyMemberName: null,
-          familyMemberId: null,
-          isFamilyMemberOrder: false,
-          isInstaPayTransaction: true
-        }));
-        
-        setInstaPayTransactions(transformedInstaPayTransactions);
-      } catch (instaPayErr) {
-        console.warn('Failed to fetch InstaPay transactions:', instaPayErr);
-        setInstaPayTransactions([]);
-      }
 
     } catch (err: any) {
       console.error('Failed to load wallet data:', err);
@@ -388,7 +348,7 @@ const Wallet = () => {
 
     setEditLoading(true);
     try {
-      await instaPayApi.uploadReceipt(editingTransaction.reference_code, newReceiptImage);
+      // Receipt upload functionality removed - InstaPay no longer supported
       toast({ title: "Success", description: "Receipt updated successfully. Processing will begin shortly." });
       setEditModalOpen(false);
       setEditingTransaction(null);
@@ -401,8 +361,8 @@ const Wallet = () => {
     }
   };
 
-  // Combine regular transactions with InstaPay transactions and sort by date
-  const allTransactions = [...transactions, ...instaPayTransactions].sort((a, b) => 
+  // Sort transactions by date
+  const allTransactions = [...transactions].sort((a, b) => 
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
   
@@ -426,14 +386,10 @@ const Wallet = () => {
     // Handle recharge transactions
             if (t.type === 'recharge') {
       if (!note) {
-        note = 'InstaPay Recharge';
+        note = 'Wallet Recharge';
       }
     }
 
-    // Handle InstaPay transactions
-    if (t.type === 'instapay_recharge') {
-      note = `InstaPay Recharge - ${t.status?.charAt(0).toUpperCase() + t.status?.slice(1) || 'Unknown'}`;
-    }
 
     return {
       reference_id: t.reference_id,
@@ -447,7 +403,6 @@ const Wallet = () => {
       status: t.status,
       reference_code: t.reference_code,
       parent_name: t.parent_name,
-      isInstaPayTransaction: t.isInstaPayTransaction || false,
       familyMemberName: t.details?.family_member_name || null,
       familyMemberId: t.details?.family_member_id || null,
       isFamilyMemberOrder: !!(t.details?.family_member_id),
@@ -604,10 +559,10 @@ const Wallet = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Edit InstaPay Transaction Modal */}
+        {/* Edit Transaction Modal */}
         <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
           <DialogContent>
-            <DialogTitle>Edit InstaPay Transaction</DialogTitle>
+            <DialogTitle>Edit Transaction</DialogTitle>
             <div className="space-y-4 mt-2">
               {editingTransaction && (
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -691,7 +646,7 @@ const Wallet = () => {
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-gray-800">Recent Transactions</h3>
             <div className="text-xs text-gray-500 text-right">
-              <p>InstaPay transactions appear instantly</p>
+              <p>Transactions appear instantly</p>
               <p>Pull down to refresh</p>
             </div>
           </div>
@@ -728,24 +683,12 @@ const Wallet = () => {
                         )}
                         <div className="flex flex-wrap items-center gap-1 mt-2">
                           <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                            transaction.type === 'recharge' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? 'bg-green-100 text-green-700' : 
+                            transaction.type === 'recharge' || transaction.type === 'refund' ? 'bg-green-100 text-green-700' : 
                             transaction.type === 'purchase' ? 'bg-red-100 text-red-700' : 
                             'bg-gray-100 text-gray-700'
                           }`}>
-                            {transaction.type === 'recharge' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? '+' : '-'}{transaction.type === 'instapay_recharge' ? 'InstaPay' : transaction.type}
+                            {transaction.type === 'recharge' || transaction.type === 'refund' ? '+' : '-'}{transaction.type}
                           </span>
-                          {transaction.isInstaPayTransaction && transaction.status && (
-                            <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                              transaction.status === 'completed' ? 'bg-green-100 text-green-700' :
-                              transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                              transaction.status === 'failed' ? 'bg-red-100 text-red-700' :
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {transaction.status === 'completed' ? '✅' : 
-                               transaction.status === 'pending' ? '⏳' : 
-                               transaction.status === 'failed' ? '❌' : '❓'} {transaction.status}
-                            </span>
-                          )}
                           {transaction.isFamilyMemberOrder && transaction.familyMemberName && (
                             <span className="inline-block rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700">
                               👤 {transaction.familyMemberName}
@@ -757,24 +700,14 @@ const Wallet = () => {
                             </span>
                           )}
                         </div>
-                        {transaction.isInstaPayTransaction && (
-                          <div className="mt-2 text-xs text-gray-600 space-y-1">
-                            {transaction.reference_code && (
-                              <div>Reference: {transaction.reference_code}</div>
-                            )}
-                            {transaction.parent_name && (
-                              <div>Parent: {transaction.parent_name}</div>
-                            )}
-                          </div>
-                        )}
                       </div>
                       <div className="text-right">
                         <div className={`text-base sm:text-lg font-bold ${
-                          transaction.type === 'recharge' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? 'text-green-600' : 
+                          transaction.type === 'recharge' || transaction.type === 'refund' ? 'text-green-600' : 
                           transaction.type === 'purchase' ? 'text-red-600' : 
                           'text-gray-900'
                         }`}>
-                          {transaction.type === 'recharge' || transaction.type === 'refund' || transaction.type === 'instapay_recharge' ? '+' : '-'}{formatCurrency(Math.abs(Number(transaction.amount)))}
+                          {transaction.type === 'recharge' || transaction.type === 'refund' ? '+' : '-'}{formatCurrency(Math.abs(Number(transaction.amount)))}
                         </div>
                         {isRefundable && !successfulRefunds.has(transaction.reference_id) && (
                           <button
@@ -806,46 +739,6 @@ const Wallet = () => {
                         {transaction.refunded_at && (
                           <div className="mt-1 text-xs text-green-600 font-medium">Refunded</div>
                         )}
-                        {transaction.isInstaPayTransaction && transaction.status === 'pending' && (
-                          <div className="mt-2">
-                            <button
-                              className="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors"
-                              onClick={() => handleEditTransaction(transaction)}
-                            >
-                              Edit Receipt
-                            </button>
-                          </div>
-                        )}
-                        {transaction.isInstaPayTransaction && transaction.status === 'completed' && (
-                          <div className="mt-2 text-xs text-green-600 font-medium flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Validated & Credited
-                          </div>
-                        )}
-                        {transaction.isInstaPayTransaction && transaction.status === 'failed' && (
-                          <div className="mt-2 text-xs text-red-600 font-medium flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            Validation Failed
-                          </div>
-                        )}
-                        {/* Delete button for InstaPay recharge transactions */}
-                        {transaction.isInstaPayTransaction || (transaction.type === 'recharge' && transaction.note?.includes('InstaPay')) ? (
-                          <div className="mt-2">
-                            <button
-                              className="text-xs text-red-600 hover:text-red-700 font-medium transition-colors flex items-center gap-1"
-                              onClick={() => handleDeleteTransaction(transaction.id)}
-                            >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                              Delete
-                            </button>
-                          </div>
-                        ) : null}
                       </div>
                     </div>
                   </div>
