@@ -14,6 +14,14 @@ export interface WalletTopUpRequest {
     country?: string;
   };
   user_id: number;
+  // Card-specific fields (required for paymob_card)
+  card_data?: {
+    card_number: string;
+    expiry_month: string;
+    expiry_year: string;
+    cvv: string;
+    card_holder_name: string;
+  };
 }
 
 export interface WalletTopUpResponse {
@@ -42,6 +50,14 @@ export class WalletService {
         throw new Error(validation.errors.join(', '));
       }
 
+      // Validate card data for paymob_card payments
+      if (request.payment_method === 'paymob_card' && request.card_data) {
+        const cardValidation = PaymentService.validateCardData(request.card_data);
+        if (!cardValidation.isValid) {
+          throw new Error(cardValidation.errors.join(', '));
+        }
+      }
+
       // Format phone number
       const formattedPhone = PaymentService.formatPhoneNumber(request.billing_data.phone_number);
 
@@ -55,7 +71,15 @@ export class WalletService {
         phone_number: formattedPhone,
         city: request.billing_data.city,
         country: request.billing_data.country || 'EG',
-        userId: request.user_id
+        userId: request.user_id,
+        // Include card data for paymob_card payment method
+        ...(request.payment_method === 'paymob_card' && request.card_data && {
+          card_number: request.card_data.card_number,
+          expiry_month: request.card_data.expiry_month,
+          expiry_year: request.card_data.expiry_year,
+          cvv: request.card_data.cvv,
+          card_holder_name: request.card_data.card_holder_name
+        })
       };
 
       // Initiate payment
