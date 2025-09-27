@@ -41,7 +41,7 @@ const RechargeWallet: React.FC = () => {
   const paymentMethods: PaymentMethod[] = [
     {
       id: 'paymob_card',
-      name: 'Credit/Debit Card',
+      name: 'Card Payment',
       description: 'Visa, Mastercard, American Express',
       icon: 'credit-card',
       type: 'card'
@@ -136,32 +136,37 @@ const RechargeWallet: React.FC = () => {
         return;
       }
 
-      const response = await WalletService.topUpWallet({
+      const response = await walletApi.recharge({
         amount,
         payment_method: 'paymob_card',
-        billing_data: {
-          first_name: billingData.first_name,
-          last_name: billingData.last_name,
-          email: billingData.email,
-          phone_number: billingData.phone_number,
-          city: billingData.city,
-          country: billingData.country
-        },
-        user_id: user.id,
-        card_data: {
-          card_number: cardData.card_number,
-          expiry_month: cardData.expiry_month,
-          expiry_year: cardData.expiry_year,
-          cvv: cardData.cvv,
-          card_holder_name: cardData.card_holder_name
+        payment_details: {
+          order_id: `wallet_recharge_${Date.now()}`,
+          item_name: 'Wallet Recharge',
+          description: 'Digital wallet top-up',
+          merchant_order_id: `recharge_${Date.now()}_${user.id}`,
+          currency: 'EGP',
+          billing_data: {
+            first_name: billingData.first_name,
+            last_name: billingData.last_name,
+            email: billingData.email,
+            phone_number: billingData.phone_number,
+            apartment: billingData.apartment || '',
+            floor: billingData.floor || '',
+            street: billingData.street || '',
+            building: billingData.building || '',
+            city: billingData.city,
+            state: billingData.state || 'Cairo',
+            country: 'EG',
+            postal_code: billingData.postal_code || '12345'
+          }
         }
       });
 
-      if (response.success && response.checkout_url) {
+      if (response.data.success && response.data.payment_url) {
         // Redirect to Paymob checkout page
-        window.location.href = response.checkout_url;
+        window.location.href = response.data.payment_url;
       } else {
-        toast.error(response.message || 'Failed to initiate card payment');
+        toast.error(response.data.message || 'Failed to initiate card payment');
       }
     } catch (error: any) {
       console.error('Paymob card payment error:', error);
@@ -187,25 +192,37 @@ const RechargeWallet: React.FC = () => {
         return;
       }
 
-      const response = await WalletService.topUpWallet({
+      const response = await walletApi.recharge({
         amount,
         payment_method: 'paymob_wallet',
-        billing_data: {
-          first_name: billingData.first_name,
-          last_name: billingData.last_name,
-          email: billingData.email,
-          phone_number: billingData.phone_number,
-          city: billingData.city,
-          country: billingData.country
-        },
-        user_id: user.id
+        payment_details: {
+          order_id: `wallet_recharge_${Date.now()}`,
+          item_name: 'Wallet Recharge',
+          description: 'Digital wallet top-up',
+          merchant_order_id: `recharge_${Date.now()}_${user.id}`,
+          currency: 'EGP',
+          billing_data: {
+            first_name: billingData.first_name,
+            last_name: billingData.last_name,
+            email: billingData.email,
+            phone_number: billingData.phone_number,
+            apartment: billingData.apartment || '',
+            floor: billingData.floor || '',
+            street: billingData.street || '',
+            building: billingData.building || '',
+            city: billingData.city,
+            state: billingData.state || 'Cairo',
+            country: 'EG',
+            postal_code: billingData.postal_code || '12345'
+          }
+        }
       });
 
-      if (response.success && response.checkout_url) {
+      if (response.data.success && response.data.payment_url) {
         // Redirect to Paymob checkout page
-        window.location.href = response.checkout_url;
+        window.location.href = response.data.payment_url;
       } else {
-        toast.error(response.message || 'Failed to initiate wallet payment');
+        toast.error(response.data.message || 'Failed to initiate wallet payment');
       }
     } catch (error: any) {
       console.error('Paymob wallet payment error:', error);

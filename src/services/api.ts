@@ -256,7 +256,6 @@ export const walletApi = {
   topUp: (data: { amount: number; payment_method: string; payment_details: any }) => 
     api.post('/wallet/topup', data),
   getBalance: () => api.get('/wallet'),
-  // Legacy Paymob integration (deprecated)
   recharge: (data: { 
     amount: number; 
     payment_method: string; 
@@ -264,7 +263,22 @@ export const walletApi = {
       order_id: string;
       item_name: string;
       description: string;
-      billing_data: any;
+      merchant_order_id: string;
+      currency: string;
+      billing_data: {
+        first_name: string;
+        last_name: string;
+        email: string;
+        phone_number: string;
+        apartment?: string;
+        floor?: string;
+        street?: string;
+        building?: string;
+        city: string;
+        state?: string;
+        country: string;
+        postal_code?: string;
+      };
     }
   }) => api.post('/wallet/recharge', data),
 };
