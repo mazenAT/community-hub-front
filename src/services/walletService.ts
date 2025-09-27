@@ -106,7 +106,15 @@ export class WalletService {
             state: 'Cairo',
             country: 'EG',
             postal_code: '12345'
-          }
+          },
+          // Include card data for paymob_card payment method
+          ...(request.payment_method === 'paymob_card' && request.card_data && {
+            card_number: request.card_data.card_number.replace(/\s/g, ''), // Remove spaces from card number
+            expiry_month: request.card_data.expiry_month,
+            expiry_year: request.card_data.expiry_year,
+            cvv: request.card_data.cvv,
+            card_holder_name: request.card_data.card_holder_name
+          })
         }
       });
 

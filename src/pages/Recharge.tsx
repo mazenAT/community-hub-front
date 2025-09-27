@@ -339,7 +339,13 @@ const Recharge = () => {
             state: paymobCardDetails.state || 'Cairo',
             country: 'EG',
             postal_code: paymobCardDetails.postal_code || '12345'
-          }
+          },
+          // Include card data for paymob_card payment method
+          card_number: paymobCardDetails.card_number.replace(/\s/g, ''), // Remove spaces from card number
+          expiry_month: paymobCardDetails.expiry_month,
+          expiry_year: paymobCardDetails.expiry_year,
+          cvv: paymobCardDetails.cvv,
+          card_holder_name: paymobCardDetails.card_holder_name
         }
       });
 
