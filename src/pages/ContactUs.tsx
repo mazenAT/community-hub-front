@@ -101,12 +101,6 @@ const ContactUs = () => {
                 Problems with Vodafone Cash, Orange Money, or other mobile wallets? Verify your wallet balance and phone number.
               </p>
             </div>
-            <div className="p-4 bg-orange-50 rounded-xl border border-orange-200">
-              <h3 className="font-semibold text-orange-900 mb-2">InstaPay Transfer Help</h3>
-              <p className="text-sm text-orange-700">
-                Need help with bank transfers? Make sure to use the correct reference code and upload a clear receipt photo.
-              </p>
-            </div>
           </div>
         </div>
 

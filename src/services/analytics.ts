@@ -29,7 +29,7 @@ export interface PaymentEvent extends AnalyticsEvent {
   eventType: 'payment';
   eventName: 'payment_initiated' | 'payment_completed' | 'payment_failed' | 'payment_method_selected';
   properties: {
-    paymentMethod: 'paymob_card' | 'paymob_wallet' | 'instapay';
+    paymentMethod: 'paymob_card' | 'paymob_wallet';
     amount?: number;
     currency?: string;
     transactionId?: string;
@@ -180,7 +180,7 @@ class AnalyticsService {
   }
 
   // Payment Analytics
-  trackPaymentInitiated(paymentMethod: 'paymob_card' | 'paymob_wallet' | 'instapay', amount: number, currency: string = 'EGP'): void {
+  trackPaymentInitiated(paymentMethod: 'paymob_card' | 'paymob_wallet', amount: number, currency: string = 'EGP'): void {
     const event: PaymentEvent = {
       eventType: 'payment',
       eventName: 'payment_initiated',
@@ -196,7 +196,7 @@ class AnalyticsService {
     this.trackEvent(event);
   }
 
-  trackPaymentCompleted(paymentMethod: 'paymob_card' | 'paymob_wallet' | 'instapay', amount: number, transactionId: string): void {
+  trackPaymentCompleted(paymentMethod: 'paymob_card' | 'paymob_wallet', amount: number, transactionId: string): void {
     const event: PaymentEvent = {
       eventType: 'payment',
       eventName: 'payment_completed',
@@ -212,7 +212,7 @@ class AnalyticsService {
     this.trackEvent(event);
   }
 
-  trackPaymentFailed(paymentMethod: 'paymob_card' | 'paymob_wallet' | 'instapay', amount: number, errorMessage: string): void {
+  trackPaymentFailed(paymentMethod: 'paymob_card' | 'paymob_wallet', amount: number, errorMessage: string): void {
     const event: PaymentEvent = {
       eventType: 'payment',
       eventName: 'payment_failed',
@@ -228,7 +228,7 @@ class AnalyticsService {
     this.trackEvent(event);
   }
 
-  trackPaymentMethodSelected(paymentMethod: 'paymob_card' | 'paymob_wallet' | 'instapay'): void {
+  trackPaymentMethodSelected(paymentMethod: 'paymob_card' | 'paymob_wallet'): void {
     const event: PaymentEvent = {
       eventType: 'payment',
       eventName: 'payment_method_selected',

@@ -12,7 +12,7 @@ The Smart Community app includes a comprehensive in-app tutorial system that gui
 - Only shows for first-time users
 
 ### **2. Tutorial Flow**
-The tutorial covers 12 key steps:
+The tutorial covers 11 key steps:
 
 1. **Welcome** - Introduction to the app
 2. **Wallet Overview** - Understanding the digital wallet
@@ -20,13 +20,12 @@ The tutorial covers 12 key steps:
 4. **Payment Methods** - Paymob payment options (Card & Mobile Wallet)
 5. **Card Payments** - Credit/Debit card payment tutorial
 6. **Mobile Wallet** - Mobile wallet payment tutorial
-7. **InstaPay Transfer** - Bank transfer alternative
-8. **Transactions** - Viewing transaction history
-9. **Meal Planning** - Introduction to meal planning
-10. **Order Meals** - How to order meals
-11. **Family Members** - Managing family profiles
-12. **Profile & Settings** - Customizing the app
-13. **Support** - Getting help
+7. **Transactions** - Viewing transaction history
+8. **Meal Planning** - Introduction to meal planning
+9. **Order Meals** - How to order meals
+10. **Family Members** - Managing family profiles
+11. **Profile & Settings** - Customizing the app
+12. **Support** - Getting help
 
 ### **3. Interactive Elements**
 - **Highlighted Elements**: Orange glow around current feature
@@ -238,7 +237,7 @@ The tutorial system now includes comprehensive Paymob payment method tutorials:
   order: 11, // After existing steps
   completed: false,
   // Payment-specific properties (optional)
-  paymentMethod: 'paymob_card', // or 'paymob_wallet', 'instapay', 'none'
+  paymentMethod: 'paymob_card', // or 'paymob_wallet', 'none'
   requiresBilling: false, // true if billing information is required
   securityLevel: 'medium' // 'low', 'medium', 'high'
 }

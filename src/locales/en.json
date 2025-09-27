@@ -27,29 +27,18 @@
       },
       "methods": {
         "card": "Credit/Debit Card",
-        "wallet": "Mobile Wallet",
-        "instapay": "InstaPay Bank Transfer"
+        "wallet": "Mobile Wallet"
       }
     },
     "recharge": {
       "amount": "Enter Recharge Amount 💰",
       "amountDescription": "Enter how much money to add to your wallet:\n\n• Enter any amount (minimum 10 EGP)\n• Amount will be validated with receipt\n• Secure payment processing",
       "method": "Payment Method 💳",
-      "methodDescription": "Choose your preferred payment method:\n\n• Paymob Card Payment\n• Mobile Wallet Payment\n• InstaPay Bank Transfer\n• Safe and encrypted transactions",
+      "methodDescription": "Choose your preferred payment method:\n\n• Paymob Card Payment\n• Mobile Wallet Payment\n• Safe and encrypted transactions",
       "billing": "Billing Information 📝",
       "billingDescription": "Enter your billing details:\n\n• Complete billing information\n• Required for payment processing\n• Secure data transmission\n• Instant processing",
       "pay": "Complete Payment 💳",
       "payDescription": "Ready to add money to your wallet:\n\n• Secure 3DS authentication\n• Instant balance update\n• Transaction confirmation"
-    },
-    "instapay": {
-      "overview": "InstaPay Bank Transfer 💳",
-      "overviewDescription": "Alternative payment method for adding money:\n\n• Direct bank transfer via InstaPay\n• Generate unique reference code\n• Upload receipt for verification\n• Automatic balance update",
-      "reference": "Generate Reference Code 🔑",
-      "referenceDescription": "Get a unique reference code for your transfer:\n\n• Click \"InstaPay Transfer\" button\n• Copy the generated reference code\n• Use it in bank transfer description\n• Ensures proper credit to your account",
-      "transfer": "Complete Bank Transfer 🏦",
-      "transferDescription": "Transfer money using your bank app:\n\n• Use the reference code in transfer description\n• Transfer to the provided account\n• Keep the transfer receipt\n• Upload receipt to complete process",
-      "receipt": "Upload Transfer Receipt 📸",
-      "receiptDescription": "Complete your InstaPay top-up:\n\n• Take photo of transfer receipt\n• Ensure reference code is visible\n• Upload image through the app\n• Automatic verification and balance update"
     },
     "planner": {
       "header": "Meal Planning Hub 🍽️",
@@ -106,25 +95,21 @@
   "payment": {
     "methods": {
       "paymob_card": "Credit/Debit Card",
-      "paymob_wallet": "Mobile Wallet",
-      "instapay": "InstaPay Bank Transfer"
+      "paymob_wallet": "Mobile Wallet"
     },
     "descriptions": {
       "paymob_card": "Pay securely with your card via Paymob",
-      "paymob_wallet": "Pay with Vodafone Cash, Orange Money, etc.",
-      "instapay": "Direct bank transfer via InstaPay"
+      "paymob_wallet": "Pay with Vodafone Cash, Orange Money, etc."
     },
     "errors": {
       "card_payment_failed": "Card payment failed. Please try again.",
       "wallet_payment_failed": "Mobile wallet payment failed. Please try again.",
-      "instapay_failed": "InstaPay transfer failed. Please try again.",
       "billing_required": "Billing information is required for payment processing.",
       "amount_invalid": "Please enter a valid amount (minimum 10 EGP)."
     },
     "success": {
       "card_payment_success": "Card payment completed successfully!",
       "wallet_payment_success": "Mobile wallet payment completed successfully!",
-      "instapay_success": "InstaPay transfer completed successfully!",
       "balance_updated": "Your wallet balance has been updated."
     }
   },
@@ -133,7 +118,6 @@
       "title": "Paymob Payment Issues",
       "card_problems": "Card Payment Problems",
       "wallet_problems": "Mobile Wallet Problems",
-      "instapay_problems": "InstaPay Transfer Problems",
       "billing_issues": "Billing Information Issues",
       "common_solutions": "Common Solutions",
       "contact_support": "Contact Support"
@@ -143,8 +127,6 @@
       "card_payment_answer": "Select 'Card Payment' from payment options, enter your card details securely, complete billing information, and confirm payment.",
       "wallet_payment_question": "How do I pay with mobile wallet?",
       "wallet_payment_answer": "Choose 'Mobile Wallet' payment method, select your preferred wallet provider (Vodafone Cash, Orange Money, etc.), enter wallet phone number, and complete payment through wallet app.",
-      "instapay_question": "How do I use InstaPay bank transfer?",
-      "instapay_answer": "Click 'InstaPay Transfer' button, copy the generated reference code, use it in bank transfer description, transfer to the provided account, and upload receipt to complete process.",
       "billing_question": "Why do I need to provide billing information?",
       "billing_answer": "Billing information is required by Paymob for payment processing and compliance with financial regulations. Your data is securely transmitted and protected.",
       "security_question": "Is my payment information secure?",
