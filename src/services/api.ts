@@ -256,7 +256,7 @@ export const walletApi = {
   topUp: (data: { amount: number; payment_method: string; payment_details: any }) => 
     api.post('/wallet/topup', data),
   getBalance: () => api.get('/wallet'),
-  // Paymob integration
+  // Legacy Paymob integration (deprecated)
   recharge: (data: { 
     amount: number; 
     payment_method: string; 
@@ -267,6 +267,37 @@ export const walletApi = {
       billing_data: any;
     }
   }) => api.post('/wallet/recharge', data),
+};
+
+// New Paymob Unified Intention API
+export const checkoutApi = {
+  // Initiate payment with new unified intention API
+  initiate: (data: {
+    amount: number;
+    currency: string;
+    payment_method: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone_number: string;
+    city: string;
+    country: string;
+    merchant_order_id: string;
+    items: Array<{
+      name: string;
+      amount: number;
+      description: string;
+      quantity: number;
+    }>;
+  }) => api.post('/checkout/initiate', data),
+  
+  // Handle payment success callback
+  success: (params: { intention_id?: string; status?: string; amount?: string }) => 
+    api.get('/checkout/success', { params }),
+    
+  // Handle payment failure callback
+  failure: (params: { intention_id?: string; status?: string; error?: string }) => 
+    api.get('/checkout/failure', { params }),
 };
 
 export { api };
