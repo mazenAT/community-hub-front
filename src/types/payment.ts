@@ -58,6 +58,12 @@ export interface CheckoutInitiateRequest {
   city: string;
   country: string;
   merchant_order_id: string;
+  // Card-specific fields (required for paymob_card)
+  card_number?: string;
+  expiry_month?: string;
+  expiry_year?: string;
+  cvv?: string;
+  card_holder_name?: string;
   items: Array<{
     name: string;
     amount: number;

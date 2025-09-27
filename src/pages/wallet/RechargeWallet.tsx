@@ -29,6 +29,13 @@ const RechargeWallet: React.FC = () => {
     postal_code: '',
     state: ''
   });
+  const [cardData, setCardData] = useState({
+    card_number: '',
+    expiry_month: '',
+    expiry_year: '',
+    cvv: '',
+    card_holder_name: ''
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const paymentMethods: PaymentMethod[] = [
@@ -67,6 +74,15 @@ const RechargeWallet: React.FC = () => {
     if (!showBillingForm) {
       setShowBillingForm(true);
       return;
+    }
+    
+    // For paymob_card, check if card data is filled
+    if (selectedMethod.id === 'paymob_card') {
+      const cardValidation = PaymentService.validateCardData(cardData);
+      if (!cardValidation.isValid) {
+        toast.error(cardValidation.errors.join(', '));
+        return;
+      }
     }
     
     // Process payment
@@ -113,6 +129,13 @@ const RechargeWallet: React.FC = () => {
         return;
       }
 
+      // Validate card data
+      const cardValidation = PaymentService.validateCardData(cardData);
+      if (!cardValidation.isValid) {
+        toast.error(cardValidation.errors.join(', '));
+        return;
+      }
+
       const response = await WalletService.topUpWallet({
         amount,
         payment_method: 'paymob_card',
@@ -124,7 +147,14 @@ const RechargeWallet: React.FC = () => {
           city: billingData.city,
           country: billingData.country
         },
-        user_id: user.id
+        user_id: user.id,
+        card_data: {
+          card_number: cardData.card_number,
+          expiry_month: cardData.expiry_month,
+          expiry_year: cardData.expiry_year,
+          cvv: cardData.cvv,
+          card_holder_name: cardData.card_holder_name
+        }
       });
 
       if (response.success && response.checkout_url) {
@@ -357,6 +387,106 @@ const RechargeWallet: React.FC = () => {
                     onChange={(e) => setBillingData(prev => ({ ...prev, city: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter city"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Card Information Section - Only show for paymob_card */}
+          {showBillingForm && selectedMethod?.id === 'paymob_card' && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+              <h3 className="text-lg font-semibold text-center mb-6">Card Information</h3>
+              <p className="text-sm text-gray-600 text-center mb-6">
+                Please enter your card details for payment processing
+              </p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Card Number *</label>
+                  <input
+                    type="text"
+                    value={cardData.card_number}
+                    onChange={(e) => {
+                      // Format card number with spaces every 4 digits
+                      const value = e.target.value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
+                      setCardData(prev => ({ ...prev, card_number: value }));
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="1234 5678 9012 3456"
+                    maxLength={19}
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Enter 16-digit card number</p>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Month *</label>
+                    <select
+                      value={cardData.expiry_month}
+                      onChange={(e) => setCardData(prev => ({ ...prev, expiry_month: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="">MM</option>
+                      {Array.from({ length: 12 }, (_, i) => {
+                        const month = String(i + 1).padStart(2, '0');
+                        return (
+                          <option key={month} value={month}>
+                            {month}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Year *</label>
+                    <select
+                      value={cardData.expiry_year}
+                      onChange={(e) => setCardData(prev => ({ ...prev, expiry_year: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="">YYYY</option>
+                      {Array.from({ length: 20 }, (_, i) => {
+                        const year = new Date().getFullYear() + i;
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">CVV *</label>
+                    <input
+                      type="text"
+                      value={cardData.cvv}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                        setCardData(prev => ({ ...prev, cvv: value }));
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="123"
+                      maxLength={4}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Card Holder Name *</label>
+                  <input
+                    type="text"
+                    value={cardData.card_holder_name}
+                    onChange={(e) => setCardData(prev => ({ ...prev, card_holder_name: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Name as it appears on card"
                     required
                   />
                 </div>
