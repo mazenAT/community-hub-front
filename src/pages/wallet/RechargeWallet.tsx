@@ -168,8 +168,8 @@ const RechargeWallet: React.FC = () => {
         }
       });
 
+      console.log(response);
       if (response.data.success) {
-        console.log(response.data.data.payment_url);
         
         // Redirect to Paymob checkout page
         window.location.href = response.data.data.payment_url;
