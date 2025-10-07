@@ -146,9 +146,9 @@ const RechargeWallet: React.FC = () => {
           merchant_order_id: `recharge_${Date.now()}_${user.id}`,
           currency: 'EGP',
           // Include card details for paymob_card validation
-          card_number: cardData.card_number.replace(/\s/g, ''), // Remove spaces
+          card_number: cardData.card_number.replace(/\s/g, ''),
           expiry_month: cardData.expiry_month,
-          expiry_year: cardData.expiry_year.slice(-2), // Convert to 2-digit year
+          expiry_year: cardData.expiry_year.slice(-2),
           cvv: cardData.cvv,
           card_holder_name: cardData.card_holder_name,
           billing_data: {
