@@ -38,16 +38,6 @@ const RechargeWallet: React.FC = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
-  // Redirect in a separate effect to avoid any interference from the request lifecycle
-  useEffect(() => {
-    if (redirectUrl) {
-      try {
-        window.location.replace(redirectUrl);
-      } catch {
-        window.location.href = redirectUrl;
-      }
-    }
-  }, [redirectUrl]);
 
   const paymentMethods: PaymentMethod[] = [
     {
@@ -285,6 +275,17 @@ const RechargeWallet: React.FC = () => {
     return parseFloat(customAmount) || 0;
   };
 
+  // Redirect in a separate effect to avoid any interference from the request lifecycle
+  useEffect(() => {
+    if (redirectUrl) {
+      try {
+        window.location.replace(redirectUrl);
+      } catch {
+        window.location.href = redirectUrl;
+      }
+    }
+  }, [redirectUrl]);
+  
   return (
     <div className="min-h-screen bg-gray-50 pb-32">
       {/* Header */}
