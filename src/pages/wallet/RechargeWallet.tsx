@@ -37,6 +37,9 @@ const RechargeWallet: React.FC = () => {
     card_holder_name: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPaymentLink, setShowPaymentLink] = useState(false);
+  const [pendingPaymentUrl, setPendingPaymentUrl] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const paymentMethods: PaymentMethod[] = [
     {
@@ -173,11 +176,10 @@ const RechargeWallet: React.FC = () => {
         response?.data?.payment_url ||
         response?.data?.data?.transaction?.details?.payment_url;
 
-      console.log('Recharge response (card):', response?.data);
-      console.log('Resolved payment_url (card):', paymentUrl);
-
       if (paymentUrl) {
-        window.location.replace(paymentUrl);
+        setPendingPaymentUrl(paymentUrl);
+        setSuccessMessage(response?.data?.message || 'Wallet recharge initiated successfully. Please complete payment using the provided URL.');
+        setShowPaymentLink(true);
         return;
       }
 
@@ -237,11 +239,10 @@ const RechargeWallet: React.FC = () => {
         response?.data?.payment_url ||
         response?.data?.data?.transaction?.details?.payment_url;
 
-      console.log('Recharge response (wallet):', response?.data);
-      console.log('Resolved payment_url (wallet):', paymentUrl);
-
       if (paymentUrl) {
-        window.location.replace(paymentUrl);
+        setPendingPaymentUrl(paymentUrl);
+        setSuccessMessage(response?.data?.message || 'Wallet recharge initiated successfully. Please complete payment using the provided URL.');
+        setShowPaymentLink(true);
         return;
       }
 
@@ -559,6 +560,40 @@ const RechargeWallet: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Payment Link Modal */}
+      {showPaymentLink && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 mx-4">
+            <h3 className="text-lg font-semibold mb-2">Continue Payment</h3>
+            {successMessage && (
+              <p className="text-sm text-gray-700 mb-4">{successMessage}</p>
+            )}
+            <div className="bg-gray-100 rounded p-3 break-all text-sm text-gray-800 mb-4">
+              {pendingPaymentUrl}
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300"
+                onClick={() => setShowPaymentLink(false)}
+              >
+                Close
+              </button>
+              <a
+                href={pendingPaymentUrl || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                onClick={() => setShowPaymentLink(false)}
+              >
+                Open Payment
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
