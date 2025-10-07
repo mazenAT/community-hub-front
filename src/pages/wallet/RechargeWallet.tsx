@@ -168,14 +168,20 @@ const RechargeWallet: React.FC = () => {
         }
       });
 
-      console.log(response);
-      if (response.data.success) {
-        
-        // Redirect to Paymob checkout page
-        window.location.href = response.data.data.payment_url;
-      } else {
-        toast.error(response.data.message || 'Failed to initiate card payment');
+      const paymentUrl =
+        response?.data?.data?.payment_url ||
+        response?.data?.payment_url ||
+        response?.data?.data?.transaction?.details?.payment_url;
+
+      console.log('Recharge response (card):', response?.data);
+      console.log('Resolved payment_url (card):', paymentUrl);
+
+      if (paymentUrl) {
+        window.location.replace(paymentUrl);
+        return;
       }
+
+      toast.error(response?.data?.message || 'Failed to initiate card payment');
     } catch (error: any) {
       console.error('Paymob card payment error:', error);
       toast.error(error.message || 'Paymob card payment failed');
@@ -226,12 +232,20 @@ const RechargeWallet: React.FC = () => {
         }
       });
 
-      if (response.data.success && response.data.data?.payment_url) {
-        // Redirect to Paymob checkout page
-        window.location.href = response.data.data.payment_url;
-      } else {
-        toast.error(response.data.message || 'Failed to initiate wallet payment');
+      const paymentUrl =
+        response?.data?.data?.payment_url ||
+        response?.data?.payment_url ||
+        response?.data?.data?.transaction?.details?.payment_url;
+
+      console.log('Recharge response (wallet):', response?.data);
+      console.log('Resolved payment_url (wallet):', paymentUrl);
+
+      if (paymentUrl) {
+        window.location.replace(paymentUrl);
+        return;
       }
+
+      toast.error(response?.data?.message || 'Failed to initiate wallet payment');
     } catch (error: any) {
       console.error('Paymob wallet payment error:', error);
       toast.error(error.message || 'Paymob wallet payment failed');
