@@ -265,6 +265,12 @@ export const walletApi = {
       description: string;
       merchant_order_id: string;
       currency: string;
+      // Card fields for paymob_card validation
+      card_number?: string;
+      expiry_month?: string;
+      expiry_year?: string;
+      cvv?: string;
+      card_holder_name?: string;
       billing_data: {
         first_name: string;
         last_name: string;
