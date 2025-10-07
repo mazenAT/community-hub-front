@@ -349,14 +349,14 @@ const Recharge = () => {
         }
       });
 
-      if (response.data.success && response.data.payment_url) {
+      if (response.data.success && response.data.data?.payment_url) {
         // Save payment method if user opted to save
         if (paymobCardDetails.save_card) {
           savePaymentMethod('card', paymobCardDetails);
         }
 
         // Redirect to Paymob checkout page
-        window.location.href = response.data.payment_url;
+        window.location.href = response.data.data?.payment_url;
         setShowCardModal(false);
       } else {
         toast.error(response.data.message || 'Failed to initiate payment');
