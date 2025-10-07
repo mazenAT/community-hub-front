@@ -177,9 +177,12 @@ const RechargeWallet: React.FC = () => {
         response?.data?.data?.transaction?.details?.payment_url;
 
       if (paymentUrl) {
+        console.log('Opening payment URL (card):', paymentUrl);
         setPendingPaymentUrl(paymentUrl);
         setSuccessMessage(response?.data?.message || 'Wallet recharge initiated successfully. Please complete payment using the provided URL.');
         setShowPaymentLink(true);
+        // Fallback: open in new tab in case modal rendering is blocked by stacking context
+        try { window.open(paymentUrl, '_blank', 'noopener,noreferrer'); } catch {}
         return;
       }
 
@@ -240,9 +243,12 @@ const RechargeWallet: React.FC = () => {
         response?.data?.data?.transaction?.details?.payment_url;
 
       if (paymentUrl) {
+        console.log('Opening payment URL (wallet):', paymentUrl);
         setPendingPaymentUrl(paymentUrl);
         setSuccessMessage(response?.data?.message || 'Wallet recharge initiated successfully. Please complete payment using the provided URL.');
         setShowPaymentLink(true);
+        // Fallback: open in new tab in case modal rendering is blocked by stacking context
+        try { window.open(paymentUrl, '_blank', 'noopener,noreferrer'); } catch {}
         return;
       }
 
