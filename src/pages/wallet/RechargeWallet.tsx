@@ -165,12 +165,6 @@ const RechargeWallet: React.FC = () => {
             country: 'EG',
             postal_code: billingData.postal_code || '12345'
           },
-          // Include card data for paymob_card payment method
-          card_number: cardData.card_number.replace(/\s/g, ''), // Remove spaces from card number
-          expiry_month: cardData.expiry_month,
-          expiry_year: cardData.expiry_year,
-          cvv: cardData.cvv,
-          card_holder_name: cardData.card_holder_name
         }
       });
 
