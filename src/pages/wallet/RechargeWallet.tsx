@@ -535,6 +535,7 @@ const RechargeWallet: React.FC = () => {
 
           {/* Continue Button */}
           <button
+            type="button"
             onClick={handleContinue}
             disabled={!customAmount || parseFloat(customAmount) <= 0 || isSubmitting}
             className={`w-full h-12 text-lg font-semibold rounded-lg transition-colors ${
