@@ -168,9 +168,9 @@ const RechargeWallet: React.FC = () => {
         }
       });
 
-      if (response.data.success && response.data.payment_url) {
+      if (response.data.success && response.data.data?.payment_url) {
         // Redirect to Paymob checkout page
-        window.location.href = response.data.payment_url;
+        window.location.href = response.data.data.payment_url;
       } else {
         toast.error(response.data.message || 'Failed to initiate card payment');
       }
@@ -224,9 +224,9 @@ const RechargeWallet: React.FC = () => {
         }
       });
 
-      if (response.data.success && response.data.payment_url) {
+      if (response.data.success && response.data.data?.payment_url) {
         // Redirect to Paymob checkout page
-        window.location.href = response.data.payment_url;
+        window.location.href = response.data.data.payment_url;
       } else {
         toast.error(response.data.message || 'Failed to initiate wallet payment');
       }
