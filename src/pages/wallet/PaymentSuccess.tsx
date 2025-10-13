@@ -18,24 +18,38 @@ const PaymentSuccess: React.FC = () => {
     const handlePaymentResult = async () => {
       try {
         // Extract callback parameters from URL
-        const intentionId = searchParams.get('intention_id');
-        const paymentStatus = searchParams.get('status');
-        const paymentAmount = searchParams.get('amount');
+        // Paymob sends: id, success, amount_cents, merchant_order_id
+        const transactionId = searchParams.get('id');
+        const isSuccess = searchParams.get('success') === 'true';
+        const amountCents = searchParams.get('amount_cents');
+        const merchantOrderId = searchParams.get('merchant_order_id');
         const errorMessage = searchParams.get('error');
         
-        setAmount(paymentAmount || '');
+        // Convert amount from cents to EGP
+        const amountEGP = amountCents ? (parseInt(amountCents) / 100).toString() : '';
+        setAmount(amountEGP);
 
-        if (paymentStatus === 'successful' && intentionId) {
+        console.log('Paymob callback params:', {
+          transactionId,
+          isSuccess,
+          amountCents,
+          amountEGP,
+          merchantOrderId
+        });
+
+        if (isSuccess && merchantOrderId) {
           try {
-            // Call the success endpoint to update wallet balance
+            // Call the success endpoint to update wallet balance with proper parameters
             await WalletService.handleTopUpSuccess({
-              intention_id: intentionId,
-              status: paymentStatus,
-              amount: paymentAmount
+              intention_id: transactionId,
+              status: 'successful',
+              amount: amountEGP,
+              merchant_order_id: merchantOrderId,
+              amount_cents: amountCents
             });
             
             setStatus('success');
-            setMessage(`Payment completed successfully! Your wallet has been recharged with ${paymentAmount ? `${paymentAmount} EGP` : 'the amount'}.`);
+            setMessage(`Payment completed successfully! Your wallet has been recharged with ${amountEGP ? `${amountEGP} EGP` : 'the amount'}.`);
             
             // Show success toast
             toast.success('Payment completed successfully!');
@@ -50,12 +64,12 @@ const PaymentSuccess: React.FC = () => {
             setStatus('error');
             setMessage('Payment was successful but there was an error updating your wallet. Please contact support.');
           }
-        } else if (paymentStatus === 'failed' || errorMessage) {
+        } else if (errorMessage || isSuccess === false) {
           try {
             // Call the failure endpoint
             await WalletService.handleTopUpFailure({
-              intention_id: intentionId,
-              status: paymentStatus,
+              intention_id: transactionId,
+              status: 'failed',
               error: errorMessage
             });
           } catch (error) {
