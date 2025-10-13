@@ -27,6 +27,7 @@ import MyOrders from "./pages/orders/MyOrders";
 import ContactUs from "./pages/ContactUs";
 import Notifications from "./pages/Notifications";
 import PaymentCallback from "./pages/wallet/PaymentCallback";
+import PaymentSuccess from "./pages/wallet/PaymentSuccess";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +71,7 @@ const AppContent = () => {
           <Route path="/recharge" element={<ProtectedRoute><Recharge /></ProtectedRoute>} />
           <Route path="/wallet/recharge" element={<Navigate to="/wallet" replace />} />
           <Route path="/payment/callback" element={<PaymentCallback />} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/contact" element={<ProtectedRoute><ContactUs /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
