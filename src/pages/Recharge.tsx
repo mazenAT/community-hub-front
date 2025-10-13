@@ -153,6 +153,27 @@ const Recharge = () => {
   // Save payment method to localStorage
   const savePaymentMethod = (type: 'card' | 'wallet', data: PaymobCardDetails | PaymobWalletDetails) => {
     try {
+      // Check for duplicate based on card number or phone number
+      const isDuplicate = savedPaymentMethods.some((method: SavedPaymentMethod) => {
+        if (type === 'card' && method.type === 'card') {
+          const existingCard = method.data as PaymobCardDetails;
+          const newCard = data as PaymobCardDetails;
+          // Check if last 4 digits match (cards are the same)
+          return existingCard.card_number.slice(-4) === newCard.card_number.slice(-4);
+        } else if (type === 'wallet' && method.type === 'wallet') {
+          const existingWallet = method.data as PaymobWalletDetails;
+          const newWallet = data as PaymobWalletDetails;
+          // Check if phone numbers match
+          return existingWallet.phone_number === newWallet.phone_number;
+        }
+        return false;
+      });
+
+      if (isDuplicate) {
+        toast.info('This payment method is already saved');
+        return;
+      }
+
       const newMethod: SavedPaymentMethod = {
         id: `${type}_${Date.now()}`,
         type,
