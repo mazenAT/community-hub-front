@@ -271,6 +271,9 @@ export const walletApi = {
       expiry_year?: string;
       cvv?: string;
       card_holder_name?: string;
+      // Wallet fields for paymob_wallet validation
+      wallet_number?: string;
+      wallet_type?: string;
       billing_data: {
         first_name: string;
         last_name: string;
@@ -285,12 +288,6 @@ export const walletApi = {
         country: string;
         postal_code?: string;
       };
-      // Card data fields for paymob_card payment method
-      card_number?: string;
-      expiry_month?: string;
-      expiry_year?: string;
-      cvv?: string;
-      card_holder_name?: string;
     }
   }) => api.post('/wallet/recharge', data),
 };

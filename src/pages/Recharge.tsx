@@ -37,6 +37,7 @@ interface PaymobCardDetails {
 
 interface PaymobWalletDetails {
   phone_number: string;
+  wallet_type: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -96,6 +97,7 @@ const Recharge = () => {
   
   const [paymobWalletDetails, setPaymobWalletDetails] = useState<PaymobWalletDetails>({
     phone_number: '',
+    wallet_type: 'vodafone_cash', // Default to Vodafone Cash
     first_name: '',
     last_name: '',
     email: '',
@@ -426,6 +428,8 @@ const Recharge = () => {
           description: 'Digital wallet top-up',
           merchant_order_id: `recharge_${Date.now()}_${profile.id}`,
           currency: 'EGP',
+          wallet_number: formattedPhone,
+          wallet_type: paymobWalletDetails.wallet_type,
           billing_data: {
             first_name: paymobWalletDetails.first_name,
             last_name: paymobWalletDetails.last_name,
@@ -870,6 +874,19 @@ const Recharge = () => {
           </DialogHeader>
           
           <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Wallet Type *</label>
+              <select
+                value={paymobWalletDetails.wallet_type}
+                onChange={(e) => setPaymobWalletDetails(prev => ({ ...prev, wallet_type: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-red"
+              >
+                <option value="vodafone_cash">Vodafone Cash</option>
+                <option value="orange_money">Orange Money</option>
+                <option value="etisalat_cash">Etisalat Cash</option>
+              </select>
+            </div>
+
             <div>
               <label className="text-sm font-medium text-gray-700">Phone Number *</label>
               <Input
