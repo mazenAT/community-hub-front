@@ -28,18 +28,14 @@ The Paymob integration provides two payment methods:
    - Handles payment success/failure callbacks
    - Redirects users back to wallet after payment completion
 
-5. **RechargeWallet** (`src/pages/wallet/RechargeWallet.tsx`)
-   - Main recharge flow component
-   - Orchestrates the multi-step payment process
-
-6. **TransactionHistory** (`src/components/TransactionHistory.tsx`)
+5. **TransactionHistory** (`src/components/TransactionHistory.tsx`)
    - Displays transaction history with Paymob payment method support
    - Shows payment method details and status
 
 ### Updated Components
 
 1. **Wallet** (`src/pages/Wallet.tsx`)
-   - Updated recharge button to use new RechargeWallet component
+   - Updated recharge button to use Recharge component
    - Integrated TransactionHistory component
 
 2. **RechargeHistory** (`src/pages/wallet/RechargeHistory.tsx`)
@@ -47,7 +43,7 @@ The Paymob integration provides two payment methods:
    - Updated navigation to use new recharge flow
 
 3. **App** (`src/App.tsx`)
-   - Added routes for RechargeWallet and PaymentCallback
+   - Added route for PaymentCallback
    - Updated routing structure
 
 ## API Integration
@@ -101,8 +97,9 @@ VITE_PAYMOB_WALLET_INTEGRATION_ID=5301229
 
 New routes added:
 
-- `/wallet/recharge` - New recharge flow with Paymob integration
+- `/recharge` - Recharge flow with Paymob integration (uses Recharge.tsx component)
 - `/payment/callback` - Payment callback handler
+- `/payment/success` - Payment success page with auto-redirect to wallet
 
 ## Features
 
@@ -137,10 +134,10 @@ New routes added:
 To test the Paymob integration:
 
 1. Start the development server
-2. Navigate to `/wallet/recharge`
+2. Navigate to `/recharge` or click "Recharge" from the wallet page
 3. Follow the payment flow
 4. Test both card and mobile wallet options
-5. Verify callback handling
+5. Verify callback handling and auto-redirect to wallet
 
 ## Backend Requirements
 
