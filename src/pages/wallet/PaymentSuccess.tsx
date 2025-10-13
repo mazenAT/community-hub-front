@@ -40,12 +40,13 @@ const PaymentSuccess: React.FC = () => {
         if (isSuccess && merchantOrderId) {
           try {
             // Call the success endpoint to update wallet balance with proper parameters
+            // Send amount_cents so backend can handle the conversion properly
             await WalletService.handleTopUpSuccess({
               intention_id: transactionId,
               status: 'successful',
-              amount: amountEGP,
+              amount: amountCents,  // Send in cents, backend will convert
               merchant_order_id: merchantOrderId,
-              amount_cents: amountCents
+              currency: 'EGP'
             });
             
             setStatus('success');
