@@ -40,6 +40,11 @@ const PaymentSuccess: React.FC = () => {
             // Show success toast
             toast.success('Payment completed successfully!');
             
+            // Redirect to wallet page after 2 seconds
+            setTimeout(() => {
+              navigate('/wallet');
+            }, 2000);
+            
           } catch (error) {
             console.error('Payment success processing error:', error);
             setStatus('error');
@@ -112,13 +117,14 @@ const PaymentSuccess: React.FC = () => {
                     </p>
                   </div>
                 )}
+                <p className="text-sm text-gray-500 italic">Redirecting to wallet in 2 seconds...</p>
               </div>
               <div className="space-y-3">
                 <Button
                   onClick={handleGoToWallet}
                   className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-lg font-semibold"
                 >
-                  Go to Wallet
+                  Go to Wallet Now
                 </Button>
                 <Button
                   onClick={handleTryAgain}
