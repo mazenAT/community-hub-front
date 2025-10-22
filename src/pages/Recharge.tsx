@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
-import { Check, Copy, CreditCard, Loader2, Smartphone, Wallet } from "lucide-react";
+import { Check, CreditCard, Loader2, Wallet } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -35,22 +35,13 @@ interface PaymobCardDetails {
   save_card: boolean;
 }
 
-interface PaymobWalletDetails {
-  phone_number: string;
-  wallet_type: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  save_wallet: boolean;
-}
-
 interface SavedPaymentMethod {
   id: string;
-  type: 'card' | 'wallet';
+  type: 'card';
   name: string;
   maskedNumber?: string;
   lastUsed: string;
-  data: PaymobCardDetails | PaymobWalletDetails;
+  data: PaymobCardDetails;
 }
 
 const Recharge = () => {
@@ -65,7 +56,6 @@ const Recharge = () => {
 
   // Paymob popup states
   const [showCardModal, setShowCardModal] = useState(false);
-  const [showWalletModal, setShowWalletModal] = useState(false);
   const [showSavedMethodsModal, setShowSavedMethodsModal] = useState(false);
   
   // Saved payment methods state
@@ -95,14 +85,6 @@ const Recharge = () => {
     save_card: false
   });
   
-  const [paymobWalletDetails, setPaymobWalletDetails] = useState<PaymobWalletDetails>({
-    phone_number: '',
-    wallet_type: 'vodafone_cash', // Default to Vodafone Cash
-    first_name: '',
-    last_name: '',
-    email: '',
-    save_wallet: false
-  });
 
   const paymentMethods = [
     {
@@ -119,13 +101,6 @@ const Recharge = () => {
       icon: Wallet,
       color: 'from-brand-orange to-brand-yellow'
     },
-    {
-      id: 'paymob_wallet',
-      name: 'Mobile Wallet',
-      description: 'Vodafone Cash, Orange Money, etc.',
-      icon: Smartphone,
-      color: 'from-brand-yellow to-brand-red'
-    }
   ];
 
   const { data: profileData } = useQuery({
@@ -153,20 +128,15 @@ const Recharge = () => {
   };
 
   // Save payment method to localStorage
-  const savePaymentMethod = (type: 'card' | 'wallet', data: PaymobCardDetails | PaymobWalletDetails) => {
+  const savePaymentMethod = (type: 'card', data: PaymobCardDetails) => {
     try {
-      // Check for duplicate based on card number or phone number
+      // Check for duplicate based on card number
       const isDuplicate = savedPaymentMethods.some((method: SavedPaymentMethod) => {
         if (type === 'card' && method.type === 'card') {
           const existingCard = method.data as PaymobCardDetails;
           const newCard = data as PaymobCardDetails;
           // Check if last 4 digits match (cards are the same)
           return existingCard.card_number.slice(-4) === newCard.card_number.slice(-4);
-        } else if (type === 'wallet' && method.type === 'wallet') {
-          const existingWallet = method.data as PaymobWalletDetails;
-          const newWallet = data as PaymobWalletDetails;
-          // Check if phone numbers match
-          return existingWallet.phone_number === newWallet.phone_number;
         }
         return false;
       });
@@ -179,10 +149,8 @@ const Recharge = () => {
       const newMethod: SavedPaymentMethod = {
         id: `${type}_${Date.now()}`,
         type,
-        name: type === 'card' 
-          ? `**** **** **** ${(data as PaymobCardDetails).card_number.slice(-4)}`
-          : `Wallet ${(data as PaymobWalletDetails).phone_number}`,
-        maskedNumber: type === 'card' ? `**** **** **** ${(data as PaymobCardDetails).card_number.slice(-4)}` : undefined,
+        name: `**** **** **** ${(data as PaymobCardDetails).card_number.slice(-4)}`,
+        maskedNumber: `**** **** **** ${(data as PaymobCardDetails).card_number.slice(-4)}`,
         lastUsed: new Date().toISOString(),
         data
       };
@@ -214,9 +182,6 @@ const Recharge = () => {
     if (method.type === 'card') {
       setPaymobCardDetails(method.data as PaymobCardDetails);
       setShowCardModal(true);
-    } else {
-      setPaymobWalletDetails(method.data as PaymobWalletDetails);
-      setShowWalletModal(true);
     }
     setShowSavedMethodsModal(false);
   };
@@ -233,14 +198,6 @@ const Recharge = () => {
         setShowSavedMethodsModal(true);
       } else {
         setShowCardModal(true);
-      }
-    } else if (methodId === 'paymob_wallet') {
-      // Check if there are saved wallet methods
-      const walletMethods = savedPaymentMethods.filter((m: SavedPaymentMethod) => m.type === 'wallet');
-      if (walletMethods.length > 0) {
-        setShowSavedMethodsModal(true);
-      } else {
-        setShowWalletModal(true);
       }
     }
   };
@@ -392,80 +349,6 @@ const Recharge = () => {
     }
   };
 
-  const handlePaymobWalletPayment = async () => {
-    try {
-      setIsSubmitting(true);
-      setError('');
-
-      // Validate billing data using PaymentService
-      const validation = PaymentService.validateBillingData({
-        first_name: paymobWalletDetails.first_name,
-        last_name: paymobWalletDetails.last_name,
-        email: paymobWalletDetails.email,
-        phone_number: paymobWalletDetails.phone_number,
-        city: 'Cairo' // Default city for wallet payments
-      });
-
-      if (!validation.isValid) {
-        toast.error(validation.errors.join(', '));
-        return;
-      }
-
-      if (!profile?.id) {
-        toast.error('User not authenticated');
-        return;
-      }
-
-      const finalAmount = parseFloat(amount) || 0;
-      const formattedPhone = PaymentService.formatPhoneNumber(paymobWalletDetails.phone_number);
-
-      const response = await walletApi.recharge({
-        amount: finalAmount,
-        payment_method: 'paymob_wallet',
-        payment_details: {
-          order_id: `wallet_recharge_${Date.now()}`,
-          item_name: 'Wallet Recharge',
-          description: 'Digital wallet top-up',
-          merchant_order_id: `recharge_${Date.now()}_${profile.id}`,
-          currency: 'EGP',
-          wallet_number: formattedPhone,
-          wallet_type: paymobWalletDetails.wallet_type,
-          billing_data: {
-            first_name: paymobWalletDetails.first_name,
-            last_name: paymobWalletDetails.last_name,
-            email: paymobWalletDetails.email,
-            phone_number: formattedPhone,
-            apartment: '',
-            floor: '',
-            street: '',
-            building: '',
-            city: 'Cairo',
-            state: 'Cairo',
-            country: 'EG',
-            postal_code: '12345'
-          }
-        }
-      });
-
-      if (response.data.success && response.data.payment_url) {
-        // Save payment method if user opted to save
-        if (paymobWalletDetails.save_wallet) {
-          savePaymentMethod('wallet', paymobWalletDetails);
-        }
-
-        // Redirect to Paymob checkout page
-        window.location.href = response.data.payment_url;
-        setShowWalletModal(false);
-      } else {
-        toast.error(response.data.message || 'Failed to initiate payment');
-      }
-    } catch (error: any) {
-      console.error('Paymob wallet payment error:', error);
-      toast.error(error.message || 'Failed to initiate payment. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handlePaymobPayment = async (_amount: number, _paymentMethod: string) => {
     // This method is kept for backward compatibility but won't be used
@@ -473,7 +356,7 @@ const Recharge = () => {
 
 
   // Payment success/error handlers for saved cards
-  const handleSavedCardPaymentSuccess = (transactionId: string) => {
+  const handleSavedCardPaymentSuccess = () => {
     toast.success('Payment completed successfully!');
     setUseSavedCard(false);
     setShowSavedCards(false);
@@ -860,110 +743,6 @@ const Recharge = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Complete Mobile Wallet Modal with Save Option */}
-      <Dialog open={showWalletModal} onOpenChange={setShowWalletModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Smartphone className="w-5 h-5" />
-              Mobile Wallet Details
-            </DialogTitle>
-            <DialogDescription>
-              Please fill in your details for mobile wallet payment
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700">Wallet Type *</label>
-              <select
-                value={paymobWalletDetails.wallet_type}
-                onChange={(e) => setPaymobWalletDetails(prev => ({ ...prev, wallet_type: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-red"
-              >
-                <option value="vodafone_cash">Vodafone Cash</option>
-                <option value="orange_money">Orange Money</option>
-                <option value="etisalat_cash">Etisalat Cash</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700">Phone Number *</label>
-              <Input
-                value={paymobWalletDetails.phone_number}
-                onChange={(e) => setPaymobWalletDetails(prev => ({ ...prev, phone_number: e.target.value }))}
-                placeholder="Enter phone number"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700">First Name *</label>
-                <Input
-                  value={paymobWalletDetails.first_name}
-                  onChange={(e) => setPaymobWalletDetails(prev => ({ ...prev, first_name: e.target.value }))}
-                  placeholder="Enter first name"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700">Last Name *</label>
-                <Input
-                  value={paymobWalletDetails.last_name}
-                  onChange={(e) => setPaymobWalletDetails(prev => ({ ...prev, last_name: e.target.value }))}
-                  placeholder="Enter last name"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700">Email *</label>
-              <Input
-                type="email"
-                value={paymobWalletDetails.email}
-                onChange={(e) => setPaymobWalletDetails(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="Enter email address"
-              />
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="save_wallet"
-                checked={paymobWalletDetails.save_wallet}
-                onChange={(e) => setPaymobWalletDetails(prev => ({ ...prev, save_wallet: e.target.checked }))}
-                className="w-4 h-4 text-brand-red border-gray-300 rounded focus:ring-brand-red"
-              />
-              <label htmlFor="save_wallet" className="text-sm text-gray-700">
-                Save this wallet for future payments
-              </label>
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowWalletModal(false)}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handlePaymobWalletPayment}
-              disabled={isSubmitting}
-              className="flex-1 bg-gradient-to-r from-brand-red to-brand-orange"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                'Process Payment'
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Saved Payment Methods Modal */}
       <Dialog open={showSavedMethodsModal} onOpenChange={setShowSavedMethodsModal}>
@@ -980,9 +759,7 @@ const Recharge = () => {
           
           <div className="space-y-4">
             {savedPaymentMethods
-              .filter((method: SavedPaymentMethod) => 
-                selectedPaymentMethod === 'paymob_card' ? method.type === 'card' : method.type === 'wallet'
-              )
+              .filter((method: SavedPaymentMethod) => method.type === 'card')
               .map((method: SavedPaymentMethod) => (
                 <div
                   key={method.id}
@@ -995,7 +772,7 @@ const Recharge = () => {
                         {method.type === 'card' ? (
                           <CreditCard className="w-5 h-5 text-white" />
                         ) : (
-                          <Smartphone className="w-5 h-5 text-white" />
+                          <CreditCard className="w-5 h-5 text-white" />
                         )}
                       </div>
                       <div>
@@ -1018,16 +795,12 @@ const Recharge = () => {
               <Button
                 onClick={() => {
                   setShowSavedMethodsModal(false);
-                  if (selectedPaymentMethod === 'paymob_card') {
-                    setShowCardModal(true);
-                  } else {
-                    setShowWalletModal(true);
-                  }
+                  setShowCardModal(true);
                 }}
                 variant="outline"
                 className="w-full"
               >
-                Add New {selectedPaymentMethod === 'paymob_card' ? 'Card' : 'Wallet'}
+                Add New Card
               </Button>
             </div>
           </div>
