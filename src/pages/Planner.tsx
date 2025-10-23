@@ -873,6 +873,9 @@ const Planner = () => {
               <div className="text-sm text-red-500">
                 <p className="font-medium mb-1">Pre-Order Deadline</p>
                 <p>Orders are closed by 11:59 the day before.</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  💡 Refunds available until 6:00 AM on the meal date
+                </p>
               </div>
             </div>
           </div>
@@ -1228,6 +1231,10 @@ const Planner = () => {
                               {isOrderingWindowOpen(date) && (
                                 <div className="text-green-200 text-xs mt-1">
                                   Order until {format(subDays(date, 1), 'MMM dd')} 11:59 AM
+                                  <br />
+                                  <span className="text-xs text-gray-500">
+                                    Refund until {format(date, 'MMM dd')} 6:00 AM
+                                  </span>
                                 </div>
                               )}
                             </div>

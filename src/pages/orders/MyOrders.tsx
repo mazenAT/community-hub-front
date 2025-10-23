@@ -5,7 +5,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
 import { useToast } from '@/components/ui/use-toast';
 import { AlertCircle } from 'lucide-react';
-import { studentPreOrdersApi, mealApi, dailyItemOrderApi, familyMembersApi } from '@/services/api';
+import { studentPreOrdersApi, mealApi, dailyItemOrderApi, familyMembersApi, mealRefundApi } from '@/services/api';
 import { formatOrderDate } from '@/utils/format';
 import BottomNavigation from '@/components/BottomNavigation';
 
@@ -79,6 +79,8 @@ const MyOrders: React.FC = () => {
   const [meals, setMeals] = useState<Record<number, MealDetails>>({});
   const [familyMembers, setFamilyMembers] = useState<Array<{id: number, name: string, grade: string, class: string}>>([]);
   const [selectedFamilyMember, setSelectedFamilyMember] = useState<string>('all');
+  const [refundLoading, setRefundLoading] = useState<number | null>(null);
+  const [successfulRefunds, setSuccessfulRefunds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetchOrders();
@@ -159,6 +161,82 @@ const MyOrders: React.FC = () => {
       default:
         return <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs font-semibold">{status}</span>;
     }
+  };
+
+  const handleRefundOrder = async (orderId: number) => {
+    setRefundLoading(orderId);
+    
+    try {
+      const response = await mealRefundApi.refundMealOrder(orderId, "User requested refund");
+      
+      if (response.data) {
+        const data = response.data.data || response.data;
+        
+        // Show success message
+        let refundAmount = '';
+        if (data.refund_amount) {
+          refundAmount = ` (${data.refund_amount.toFixed(2)} EGP)`;
+        }
+        
+        const successMessage = `Order #${orderId} has been successfully cancelled and refunded${refundAmount} to your wallet.`;
+        
+        toast({
+          title: "🎉 Refund Successful!", 
+          description: successMessage,
+          duration: 5000,
+        });
+        
+        // Add to successful refunds set
+        setSuccessfulRefunds(prev => new Set([...prev, orderId]));
+        
+        // Refresh orders
+        fetchOrders();
+      }
+    } catch (e: any) {
+      const errorMessage = e.response?.data?.message || 'Refund failed. Please try again.';
+      toast({
+        title: "❌ Refund Failed", 
+        description: errorMessage,
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setRefundLoading(null);
+    }
+  };
+
+  const canRefundOrder = (order: PreOrder) => {
+    // Check if order is refundable based on status and time
+    if (order.status === 'cancelled' || order.status === 'refunded') {
+      return false;
+    }
+    
+    // Check if it's past the refund cutoff time (6 AM on meal date)
+    const firstItem = order.items[0];
+    if (firstItem && firstItem.meal_date) {
+      const mealDate = new Date(firstItem.meal_date);
+      const now = new Date();
+      
+      // Check if it's the same day and before 6 AM
+      const isSameDay = now.toDateString() === mealDate.toDateString();
+      const isBefore6AM = now.getHours() < 6;
+      
+      return isSameDay && isBefore6AM;
+    }
+    
+    return true; // Default to refundable if no meal date
+  };
+
+  const getRefundCutoffTime = (order: PreOrder) => {
+    const firstItem = order.items[0];
+    if (firstItem && firstItem.meal_date) {
+      const mealDate = new Date(firstItem.meal_date);
+      return mealDate.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      }) + ' 6:00 AM';
+    }
+    return null;
   };
 
   if (loading) {
@@ -251,7 +329,7 @@ const MyOrders: React.FC = () => {
                         })}
                       </ul>
                     </div>
-                    <div className="mt-2 sm:mt-0 text-right space-y-1">
+                    <div className="mt-2 sm:mt-0 text-right space-y-2">
                       <p className="font-semibold text-blue-600">
                         {typeof order.total_amount === 'number'
                           ? order.total_amount.toFixed(2)
@@ -260,6 +338,41 @@ const MyOrders: React.FC = () => {
                             : 'N/A'} EGP
                       </p>
                       {getStatusBadge(order.status)}
+                      
+                      {/* Refund Information */}
+                      {canRefundOrder(order) && !successfulRefunds.has(order.id) && (
+                        <div className="mt-2">
+                          <p className="text-xs text-gray-500 mb-1">
+                            Refund until {getRefundCutoffTime(order)}
+                          </p>
+                          <button
+                            onClick={() => handleRefundOrder(order.id)}
+                            disabled={refundLoading === order.id}
+                            className="bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                          >
+                            {refundLoading === order.id ? 'Processing...' : 'Refund Order'}
+                          </button>
+                        </div>
+                      )}
+                      
+                      {successfulRefunds.has(order.id) && (
+                        <div className="mt-2">
+                          <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-semibold">
+                            ✅ Refunded
+                          </span>
+                        </div>
+                      )}
+                      
+                      {!canRefundOrder(order) && order.status !== 'cancelled' && order.status !== 'refunded' && (
+                        <div className="mt-2">
+                          <p className="text-xs text-gray-500">
+                            Refund cutoff: {getRefundCutoffTime(order)}
+                          </p>
+                          <span className="text-xs text-red-500 font-medium">
+                            Refund no longer available
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
