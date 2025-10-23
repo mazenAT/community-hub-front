@@ -1,6 +1,6 @@
 {
-  "name": "lite-bite-cafeteria-system",
-  "version": "0.1.0",
+  "name": "smart-community-app",
+  "version": "1.0.0",
   "private": true,
   "engines": {
     "node": ">=20.0.0",
@@ -63,6 +63,10 @@
     "start": "vite",
     "build": "vite build",
     "build:mobile": "vite build && npx @capacitor/cli sync",
+    "build:production": "./build-production.sh",
+    "build:android": "npm run build && npx cap sync android && cd android && ./gradlew assembleRelease",
+    "build:android:aab": "npm run build && npx cap sync android && cd android && ./gradlew bundleRelease",
+    "build:ios": "npm run build && npx cap sync ios",
     "vercel-build": "vite build",
     "serve": "vite preview",
     "test": "vitest",
@@ -71,7 +75,9 @@
     "mobile:android": "npx @capacitor/cli open android",
     "mobile:ios": "npx @capacitor/cli open ios",
     "mobile:sync": "npx @capacitor/cli sync",
-    "mobile:build": "npm run build && npx @capacitor/cli sync"
+    "mobile:build": "npm run build && npx @capacitor/cli sync",
+    "keystore:generate": "./generate-keystore.sh",
+    "deploy:prepare": "npm run build:production"
   },
   "eslintConfig": {
     "extends": [
@@ -92,8 +98,8 @@
     ]
   },
   "capacitor": {
-    "appId": "com.litebitecafeteria.app",
-    "appName": "Lite Bite Cafeteria System",
+    "appId": "com.smartcommunity.app",
+    "appName": "Smart Community",
     "webDir": "build",
     "bundledWebRuntime": false,
     "plugins": {

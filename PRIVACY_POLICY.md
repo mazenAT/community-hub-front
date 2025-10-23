@@ -1,11 +1,12 @@
 # Privacy Policy for Smart Community App
 
-**Effective Date:** [Insert Date]
+**Effective Date:** January 1, 2025
 
 ## 📱 **App Information**
 - **App Name:** Smart Community
-- **Developer:** [Your Company Name]
-- **Contact:** [Your Email]
+- **Developer:** Smart Community Solutions
+- **Contact:** privacy@smartcommunity.com
+- **Website:** https://smartcommunity.com
 
 ## 🔒 **Data Collection & Usage**
 
