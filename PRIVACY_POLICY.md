@@ -7,6 +7,7 @@
 - **Developer:** Smart Community Solutions
 - **Contact:** privacy@smartcommunity.com
 - **Website:** https://smartcommunity.com
+- **App Store ID:** com.smartcommunity.app
 
 ## 🔒 **Data Collection & Usage**
 
@@ -48,7 +49,7 @@
 ## 📍 **Data Location**
 
 ### **Storage:**
-- **Primary:** [Your Country/Region]
+- **Primary:** United States
 - **Backup:** Secure cloud storage with encryption
 - **Compliance:** GDPR, CCPA, and local privacy laws
 
@@ -62,9 +63,9 @@
 - **Portability:** Export your data
 
 ### **Contact Us:**
-- **Email:** [Your Email]
-- **Phone:** [Your Phone]
-- **Address:** [Your Address]
+- **Email:** support@smartcommunity.com
+- **Phone:** +1 (555) 123-4567
+- **Address:** Smart Community Solutions, 123 Tech Street, City, State 12345
 
 ## 🍪 **Cookies & Tracking**
 
@@ -105,16 +106,16 @@
 ## 📞 **Contact Information**
 
 ### **Privacy Officer:**
-- **Name:** [Your Name]
-- **Email:** [Your Email]
-- **Phone:** [Your Phone]
+- **Name:** Privacy Officer
+- **Email:** privacy@smartcommunity.com
+- **Phone:** +1 (555) 123-4567
 
 ### **Data Protection Authority:**
-- **Country:** [Your Country]
-- **Authority:** [Local Authority Name]
-- **Website:** [Authority Website]
+- **Country:** United States
+- **Authority:** Federal Trade Commission (FTC)
+- **Website:** https://www.ftc.gov
 
 ---
 
-**Last Updated:** [Insert Date]
+**Last Updated:** January 1, 2025
 **Version:** 1.0 

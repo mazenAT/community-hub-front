@@ -531,12 +531,11 @@ const Wallet = () => {
             <div className="flex flex-col sm:flex-row gap-2 mt-3">
               <Button
                 onClick={() => navigate("/recharge")}
-                className="bg-white/20 hover:bg-white/30 backdrop-blur text-white border border-white/30 rounded-xl text-sm sm:text-base w-full sm:w-auto px-4 py-2 opacity-50 cursor-not-allowed"
-                disabled={true}
+                className="bg-white/20 hover:bg-white/30 backdrop-blur text-white border border-white/30 rounded-xl text-sm sm:text-base w-full sm:w-auto px-4 py-2"
+                disabled={loading}
                 data-tutorial="wallet-recharge"
-                title="Recharge is temporarily disabled due to maintenance"
               >
-                + Recharge (Disabled)
+                + Recharge
               </Button>
               <Button
                 onClick={() => setRefundModalOpen(true)}

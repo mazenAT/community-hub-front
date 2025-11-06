@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import { setupPushNotifications } from './native';
+// import { setupPushNotifications } from './native'; // Disabled - not implemented yet
 import { mobileUtils } from './native';
 
 export const initializeMobileApp = async () => {
@@ -8,8 +8,8 @@ export const initializeMobileApp = async () => {
   }
 
   try {
-    // Initialize push notifications
-    await setupPushNotifications();
+    // Push notifications disabled - not implemented yet
+    // await setupPushNotifications();
     
     // Get device info for logging
     const deviceInfo = mobileUtils.getDeviceInfo();

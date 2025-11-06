@@ -1,0 +1,8 @@
+# Android Release Signing Configuration
+# DO NOT COMMIT THIS FILE TO VERSION CONTROL
+# Copy to gradle.properties and update with your actual values
+
+KEYSTORE_PATH=smart-community-release.keystore
+KEYSTORE_PASSWORD=smartcommunity123
+KEY_ALIAS=smart-community
+KEY_PASSWORD=smartcommunity123

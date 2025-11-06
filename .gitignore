@@ -42,3 +42,7 @@ lerna-debug.log*
 
 # Misc
 *.local
+
+# Android signing configuration
+gradle.properties
+*.keystore
