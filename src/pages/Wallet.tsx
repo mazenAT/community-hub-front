@@ -13,7 +13,7 @@ import { frontendTransactionTracker } from "@/services/frontendTransactionTracke
 import { showToast } from "@/services/native";
 import { handleAuthError } from "@/utils/authErrorHandler";
 import { formatCurrency } from "@/utils/format";
-import { LogOut, AlertCircle } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -501,25 +501,6 @@ const Wallet = () => {
       )}
 
       <div className="px-4 py-2 space-y-4">
-        {/* Maintenance Warning Banner */}
-        <Card className="bg-gradient-to-r from-red-500 to-orange-500 border-2 border-red-600 shadow-xl rounded-2xl p-5 animate-pulse">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 mt-1">
-              <AlertCircle className="w-8 h-8 text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-white mb-2">⚠️ Maintenance Notice</h3>
-              <p className="text-white text-base font-semibold mb-2">
-                The app is temporarily stopped due to maintenance issues.
-              </p>
-              <p className="text-white/90 text-sm">
-                This maintenance is expected to take up to <span className="font-bold">2 days</span>. 
-                We apologize for any inconvenience and appreciate your patience.
-              </p>
-            </div>
-          </div>
-        </Card>
-
         {/* Balance Card */}
         <Card 
           className="wallet-balance bg-gradient-to-br from-brand-red to-brand-orange text-white p-4 sm:p-5 rounded-2xl border-0 w-full shadow-lg"
