@@ -180,6 +180,36 @@ export const frontendTransactionTracker = {
       totalAmount,
       averageAmount
     };
+  },
+
+  // Remove transactions that have been synced to the backend
+  // This prevents duplicates when backend transactions are available
+  removeSyncedTransactions: (backendTransactions: any[]): void => {
+    const frontendTransactions = frontendTransactionTracker.getAllTransactions();
+    
+    // Helper function to check if a frontend transaction matches a backend transaction
+    const isTransactionSynced = (frontendTxn: FrontendTransaction): boolean => {
+      const frontendAmount = Number(frontendTxn.amount);
+      const frontendDate = new Date(frontendTxn.created_at);
+      
+      return backendTransactions.some(backendTxn => {
+        const backendAmount = Number(backendTxn.amount);
+        const backendDate = new Date(backendTxn.created_at);
+        
+        // Match if same amount and created within 5 minutes of each other
+        const timeDiff = Math.abs(frontendDate.getTime() - backendDate.getTime());
+        const isSameAmount = Math.abs(frontendAmount - backendAmount) < 0.01;
+        const isWithinTimeWindow = timeDiff < 5 * 60 * 1000; // 5 minutes
+        
+        return isSameAmount && isWithinTimeWindow && backendTxn.type === 'recharge';
+      });
+    };
+    
+    // Filter out synced transactions
+    const unsyncedTransactions = frontendTransactions.filter(t => !isTransactionSynced(t));
+    
+    // Update localStorage
+    localStorage.setItem('frontend_transactions', JSON.stringify(unsyncedTransactions));
   }
 };
 

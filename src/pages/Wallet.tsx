@@ -129,13 +129,33 @@ const Wallet = () => {
         }
         
         // Merge with frontend transactions to ensure recharge transactions are visible
+        // Only show frontend transactions that don't have a corresponding backend transaction
         try {
           const frontendTransactions = frontendTransactionTracker.getAllTransactions();
           const currentUserId = profile?.id;
           
           if (currentUserId && frontendTransactions.length > 0) {
+            // Helper function to check if a frontend transaction matches a backend transaction
+            const isTransactionDuplicate = (frontendTxn: any, backendTxns: any[]): boolean => {
+              const frontendAmount = Number(frontendTxn.amount);
+              const frontendDate = new Date(frontendTxn.created_at);
+              
+              return backendTxns.some(backendTxn => {
+                const backendAmount = Number(backendTxn.amount);
+                const backendDate = new Date(backendTxn.created_at);
+                
+                // Match if same amount and created within 5 minutes of each other
+                const timeDiff = Math.abs(frontendDate.getTime() - backendDate.getTime());
+                const isSameAmount = Math.abs(frontendAmount - backendAmount) < 0.01; // Allow small floating point differences
+                const isWithinTimeWindow = timeDiff < 5 * 60 * 1000; // 5 minutes in milliseconds
+                
+                return isSameAmount && isWithinTimeWindow && backendTxn.type === 'recharge';
+              });
+            };
+            
             const userFrontendTransactions = frontendTransactions
               .filter(t => t.user_id === currentUserId && t.status === 'completed')
+              .filter(t => !isTransactionDuplicate(t, transactionsData)) // Only include non-duplicate transactions
               .map(t => ({
                 id: `frontend_${t.id}`,
                 type: 'recharge',
@@ -158,6 +178,9 @@ const Wallet = () => {
             const allTransactions = [...transactionsData, ...userFrontendTransactions];
             allTransactions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
             transactionsData = allTransactions;
+            
+            // Clean up synced frontend transactions from localStorage to prevent duplicates
+            frontendTransactionTracker.removeSyncedTransactions(transactionsData);
           }
         } catch (frontendErr) {
           console.warn('Failed to merge frontend transactions:', frontendErr);
