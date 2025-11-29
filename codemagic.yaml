@@ -1,0 +1,130 @@
+workflows:
+  ios-capacitor-release:
+    name: iOS Capacitor Release
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+    integrations:
+      app_store_connect: Codemagic
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.smartcommunity.app
+      vars:
+        XCODE_WORKSPACE: "App.xcworkspace"
+        XCODE_SCHEME: "App"
+        APP_STORE_APP_ID: 1234567890  # Replace with your App Store App ID after creating the app
+      node: 18
+      xcode: latest
+      cocoapods: default
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'ios-v*'
+          include: true
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm ci
+      
+      - name: Build web app
+        script: |
+          npm run build
+      
+      - name: Sync Capacitor iOS
+        script: |
+          npx cap sync ios
+      
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios/App
+          pod install
+      
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles
+      
+      - name: Increment build number
+        script: |
+          cd ios/App
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" || echo "0")
+          agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
+      
+      - name: Build ipa for distribution
+        script: |
+          cd ios/App
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - ios/App/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      email:
+        recipients:
+          - bitelite260@gmail.com
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - Internal Testers
+
+  ios-capacitor-debug:
+    name: iOS Debug Build
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+    environment:
+      vars:
+        XCODE_WORKSPACE: "App.xcworkspace"
+        XCODE_SCHEME: "App"
+      node: 18
+      xcode: latest
+      cocoapods: default
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'develop'
+          include: true
+        - pattern: 'feature/*'
+          include: true
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm ci
+      
+      - name: Build web app
+        script: |
+          npm run build
+      
+      - name: Sync Capacitor iOS
+        script: |
+          npx cap sync ios
+      
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios/App
+          pod install
+      
+      - name: Build iOS (Debug - No signing)
+        script: |
+          cd ios/App
+          xcodebuild \
+            -workspace "$XCODE_WORKSPACE" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            build
+    artifacts:
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      email:
+        recipients:
+          - bitelite260@gmail.com
+        notify:
+          success: false
+          failure: true
+
