@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { Check, CreditCard, Loader2, Wallet } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { profileApi, walletApi } from "../services/api";
@@ -48,6 +48,7 @@ const Recharge = () => {
   const navigate = useNavigate();
   const [amount, setAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isProcessingRef = useRef(false); // Prevent duplicate requests
   const [error, setError] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
@@ -203,6 +204,11 @@ const Recharge = () => {
   };
 
   const handleRechargeClick = async () => {
+    // Prevent duplicate requests
+    if (isProcessingRef.current || isSubmitting) {
+      return;
+    }
+
     try {
       if (!profile || !profile.id) {
         toast.error("Profile data not loaded. Please refresh the page and try again.");
@@ -226,6 +232,8 @@ const Recharge = () => {
         return;
       }
 
+      // Set processing flag immediately to prevent duplicate requests
+      isProcessingRef.current = true;
       setIsSubmitting(true);
 
       // Handle different payment methods
@@ -233,20 +241,32 @@ const Recharge = () => {
         setUseSavedCard(true);
         setShowSavedCards(true);
         setIsSubmitting(false);
+        isProcessingRef.current = false;
         return;
       } else {
         await handlePaymobPayment(finalAmount, selectedPaymentMethod);
+        // Reset flag after handlePaymobPayment completes (even if it does nothing)
+        // The actual payment request happens in handlePaymobCardPayment which has its own protection
+        isProcessingRef.current = false;
+        setIsSubmitting(false);
       }
     } catch (error) {
       console.error('Recharge initialization error:', error);
       toast.error("Failed to start recharge process. Please try again.");
       setIsSubmitting(false);
+      isProcessingRef.current = false;
     }
   };
 
 
   const handlePaymobCardPayment = async () => {
+    // Prevent duplicate requests
+    if (isProcessingRef.current || isSubmitting) {
+      return;
+    }
+
     try {
+      isProcessingRef.current = true;
       setIsSubmitting(true);
       setError('');
 
@@ -259,6 +279,8 @@ const Recharge = () => {
       
       if (missingFields.length > 0) {
         toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        isProcessingRef.current = false;
+        setIsSubmitting(false);
         return;
       }
 
@@ -266,12 +288,16 @@ const Recharge = () => {
       const cardNumber = paymobCardDetails.card_number.replace(/\s/g, '');
       if (cardNumber.length < 13 || cardNumber.length > 19) {
         toast.error('Please enter a valid card number');
+        isProcessingRef.current = false;
+        setIsSubmitting(false);
         return;
       }
 
       // Validate CVV
       if (paymobCardDetails.cvv.length < 3 || paymobCardDetails.cvv.length > 4) {
         toast.error('Please enter a valid CVV (3-4 digits)');
+        isProcessingRef.current = false;
+        setIsSubmitting(false);
         return;
       }
 
@@ -286,11 +312,15 @@ const Recharge = () => {
 
       if (!validation.isValid) {
         toast.error(validation.errors.join(', '));
+        isProcessingRef.current = false;
+        setIsSubmitting(false);
         return;
       }
 
       if (!profile?.id) {
         toast.error('User not authenticated');
+        isProcessingRef.current = false;
+        setIsSubmitting(false);
         return;
       }
 
@@ -335,16 +365,21 @@ const Recharge = () => {
           savePaymentMethod('card', paymobCardDetails);
         }
 
-        // Redirect to Paymob checkout page
+        // Keep button in loading state and redirect to Paymob checkout page
+        // Don't reset isSubmitting or isProcessingRef - let redirect happen while button shows loading
         window.location.href = response.data.data?.payment_url;
         setShowCardModal(false);
+        // Exit early - don't reset flags since we're redirecting
+        return;
       } else {
         toast.error(response.data.message || 'Failed to initiate payment');
+        isProcessingRef.current = false;
+        setIsSubmitting(false);
       }
     } catch (error: any) {
       console.error('Paymob card payment error:', error);
       toast.error(error.message || 'Failed to initiate payment. Please try again.');
-    } finally {
+      isProcessingRef.current = false;
       setIsSubmitting(false);
     }
   };

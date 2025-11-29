@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { mobileRechargeApi, SavedCard } from '@/services/mobileRecharge';
 import { Plus, Star, Trash2 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
 import CVVInput from './CVVInput';
 
@@ -25,6 +25,7 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
   const [showCVVInput, setShowCVVInput] = useState(false);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const isProcessingRef = useRef(false); // Prevent duplicate requests
 
   useEffect(() => {
     fetchSavedCards();
@@ -56,7 +57,13 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
   const handleCVVSubmit = async (cvv: string) => {
     if (!selectedCard) return;
 
+    // Prevent duplicate requests
+    if (isProcessingRef.current || processing) {
+      return;
+    }
+
     try {
+      isProcessingRef.current = true;
       setProcessing(true);
       
       const response = await mobileRechargeApi.recharge({
@@ -80,9 +87,11 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
       const errorMessage = error.response?.data?.message || 'Payment failed. Please try again.';
       onPaymentError(errorMessage);
       toast.error(errorMessage);
+      isProcessingRef.current = false;
     } finally {
       setProcessing(false);
       setShowCVVInput(false);
+      isProcessingRef.current = false;
     }
   };
 

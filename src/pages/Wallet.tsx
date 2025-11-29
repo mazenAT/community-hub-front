@@ -104,18 +104,8 @@ const Wallet = () => {
 
       // Fetch transactions - handle empty state gracefully
       try {
-        const transactionsResponse = await walletApi.getTransactions();
+        // Use enhanced endpoint first (has family info), fallback to regular if it fails
         let transactionsData = [];
-        if (Array.isArray(transactionsResponse.data)) {
-          transactionsData = transactionsResponse.data;
-        } else if (Array.isArray(transactionsResponse.data?.data)) {
-          transactionsData = transactionsResponse.data.data;
-        } else {
-          // Handle unexpected response format - set empty array instead of error
-          transactionsData = [];
-        }
-        
-        // Also try to get enhanced transactions with family info if available
         try {
           const enhancedResponse = await api.get('/transactions/with-family-info');
           if (Array.isArray(enhancedResponse.data)) {
@@ -126,7 +116,25 @@ const Wallet = () => {
         } catch (enhancedErr) {
           // Fallback to regular transactions if enhanced endpoint fails
           console.warn('Enhanced transactions endpoint failed, using regular transactions:', enhancedErr);
+          const transactionsResponse = await walletApi.getTransactions();
+          if (Array.isArray(transactionsResponse.data)) {
+            transactionsData = transactionsResponse.data;
+          } else if (Array.isArray(transactionsResponse.data?.data)) {
+            transactionsData = transactionsResponse.data.data;
+          }
         }
+        
+        // Deduplicate backend transactions by ID (in case API returns duplicates)
+        const seenIds = new Set<string | number>();
+        transactionsData = transactionsData.filter((txn: any) => {
+          const txnId = txn.id;
+          if (seenIds.has(txnId)) {
+            console.warn('Duplicate transaction detected and removed:', txnId);
+            return false;
+          }
+          seenIds.add(txnId);
+          return true;
+        });
         
         // Merge with frontend transactions to ensure recharge transactions are visible
         // Only show frontend transactions that don't have a corresponding backend transaction
@@ -141,6 +149,9 @@ const Wallet = () => {
               const frontendDate = new Date(frontendTxn.created_at);
               
               return backendTxns.some(backendTxn => {
+                // Skip if backend transaction is not a recharge
+                if (backendTxn.type !== 'recharge') return false;
+                
                 const backendAmount = Number(backendTxn.amount);
                 const backendDate = new Date(backendTxn.created_at);
                 
@@ -149,11 +160,22 @@ const Wallet = () => {
                 const isSameAmount = Math.abs(frontendAmount - backendAmount) < 0.01; // Allow small floating point differences
                 const isWithinTimeWindow = timeDiff < 5 * 60 * 1000; // 5 minutes in milliseconds
                 
-                return isSameAmount && isWithinTimeWindow && backendTxn.type === 'recharge';
+                return isSameAmount && isWithinTimeWindow;
               });
             };
             
-            const userFrontendTransactions = frontendTransactions
+            // Also deduplicate frontend transactions themselves (in case there are duplicates in localStorage)
+            const seenFrontendIds = new Set<string>();
+            const uniqueFrontendTransactions = frontendTransactions.filter(t => {
+              if (seenFrontendIds.has(t.id)) {
+                console.warn('Duplicate frontend transaction detected and removed:', t.id);
+                return false;
+              }
+              seenFrontendIds.add(t.id);
+              return true;
+            });
+            
+            const userFrontendTransactions = uniqueFrontendTransactions
               .filter(t => t.user_id === currentUserId && t.status === 'completed')
               .filter(t => !isTransactionDuplicate(t, transactionsData)) // Only include non-duplicate transactions
               .map(t => ({
