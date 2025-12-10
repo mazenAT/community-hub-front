@@ -27,11 +27,11 @@ const config: CapacitorConfig = {
       appLinks: {
         android: {
           scheme: 'smartcommunity',
-          host: 'smartcommunity.com'
+          host: 'community-hub-backend-production.up.railway.app'
         },
         ios: {
           scheme: 'smartcommunity',
-          host: 'smartcommunity.com'
+          host: 'community-hub-backend-production.up.railway.app'
         }
       }
     }
