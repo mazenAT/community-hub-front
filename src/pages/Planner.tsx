@@ -91,10 +91,10 @@ interface FamilyMember {
 }
 
 const isOrderingWindowOpen = (mealDate: Date): boolean => {
-  // Rule: Orders must be placed before 11:59 AM of the day before the meal date.
-  // For a meal on Wednesday, users can order until Tuesday 11:59 AM.
+  // Rule: Orders must be placed before 11:59 PM (23:59) of the day before the meal date.
+  // For a meal on Wednesday, users can order until Tuesday 11:59 PM (midnight).
   const dayBeforeMeal = subDays(mealDate, 1);
-  const orderingDeadline = new Date(dayBeforeMeal.getFullYear(), dayBeforeMeal.getMonth(), dayBeforeMeal.getDate(), 11, 59, 0);
+  const orderingDeadline = new Date(dayBeforeMeal.getFullYear(), dayBeforeMeal.getMonth(), dayBeforeMeal.getDate(), 23, 59, 0);
   const now = new Date();
   
   // Check if the current time is before the deadline
@@ -872,7 +872,7 @@ const Planner = () => {
               <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
               <div className="text-sm text-red-500">
                 <p className="font-medium mb-1">Pre-Order Deadline</p>
-                <p>Orders are closed by 11:59 the day before.</p>
+                <p>Orders are closed by 11:59 PM the day before.</p>
                 <p className="text-sm text-gray-600 mt-1">
                   💡 Refunds available until 6:00 AM on the meal date
                 </p>
@@ -1230,7 +1230,7 @@ const Planner = () => {
                               )}
                               {isOrderingWindowOpen(date) && (
                                 <div className="text-green-200 text-xs mt-1">
-                                  Order until {format(subDays(date, 1), 'MMM dd')} 11:59 AM
+                                  Order until {format(subDays(date, 1), 'MMM dd')} 11:59 PM
                                   <br />
                                   <span className="text-xs text-gray-500">
                                     Refund until {format(date, 'MMM dd')} 6:00 AM
