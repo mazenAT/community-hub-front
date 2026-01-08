@@ -68,6 +68,8 @@ export class PaymentService {
     intention_id?: string;
     status?: string;
     amount?: string;
+    merchant_order_id?: string;
+    currency?: string;
   }) {
     try {
       const response = await checkoutApi.success(params);

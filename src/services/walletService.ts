@@ -137,6 +137,8 @@ export class WalletService {
     intention_id?: string;
     status?: string;
     amount?: string;
+    merchant_order_id?: string;
+    currency?: string;
   }) {
     try {
       const response = await PaymentService.handlePaymentSuccess(params);

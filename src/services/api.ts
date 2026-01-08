@@ -315,11 +315,11 @@ export const checkoutApi = {
   }) => api.post('/checkout/initiate', data),
   
   // Handle payment success callback
-  success: (params: { intention_id?: string; status?: string; amount?: string }) => 
+  success: (params: { intention_id?: string; status?: string; amount?: string; merchant_order_id?: string; currency?: string }) => 
     api.get('/checkout/success', { params }),
     
   // Handle payment failure callback
-  failure: (params: { intention_id?: string; status?: string; error?: string }) => 
+  failure: (params: { intention_id?: string; status?: string; error?: string; merchant_order_id?: string }) => 
     api.get('/checkout/failure', { params }),
 };
 
