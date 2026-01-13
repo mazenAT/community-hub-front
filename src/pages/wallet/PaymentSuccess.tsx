@@ -118,6 +118,39 @@ const PaymentSuccess: React.FC = () => {
   }, [checkWalletCredited, amountEGP, navigate]);
 
   /**
+   * Call backend to process the payment and credit wallet
+   */
+  const processPaymentWithBackend = useCallback(async (): Promise<{success: boolean, balance?: number, message?: string}> => {
+    try {
+      // Build query string from all URL params
+      const params = new URLSearchParams(window.location.search);
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://community-hub-backend-production.up.railway.app/api'}/checkout/success?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      console.log('Backend payment processing response:', data);
+      
+      if (data.success && data.data?.is_completed) {
+        return { 
+          success: true, 
+          balance: data.data.wallet_balance,
+          message: data.message 
+        };
+      }
+      
+      return { success: false, message: data.message };
+    } catch (error) {
+      console.error('Error calling backend:', error);
+      return { success: false };
+    }
+  }, []);
+
+  /**
    * Handle initial payment result
    */
   useEffect(() => {
@@ -128,11 +161,6 @@ const PaymentSuccess: React.FC = () => {
         amountCents,
         merchantOrderId
       });
-
-      // Get initial wallet balance
-      const initialBalance = await fetchWalletBalance();
-      initialBalanceRef.current = initialBalance;
-      setWalletBalance(initialBalance);
 
       if (!isSuccess) {
         // Payment failed
@@ -149,20 +177,27 @@ const PaymentSuccess: React.FC = () => {
 
       // Set amount for display
       setAmount(amountEGP);
+      setStatus('processing');
+      setMessage('Processing your payment...');
+
+      // Call backend to process the payment (this will credit the wallet)
+      const result = await processPaymentWithBackend();
       
-      // Check if already credited
-      const alreadyCredited = await checkWalletCredited();
-      
-      if (alreadyCredited) {
+      if (result.success) {
+        setWalletBalance(result.balance || null);
         setStatus('success');
-        setMessage(`Payment completed successfully! Your wallet has been recharged with ${amountEGP ? `${amountEGP} EGP` : 'the amount'}.`);
+        setMessage(result.message || `Payment completed successfully! Your wallet has been recharged with ${amountEGP ? `${amountEGP} EGP` : 'the amount'}.`);
         toast.success('Payment completed successfully!');
         
         setTimeout(() => {
           navigate('/wallet');
         }, 3000);
       } else {
-        // Payment successful but wallet not yet credited - start polling
+        // Backend processing didn't complete immediately - start polling
+        const initialBalance = await fetchWalletBalance();
+        initialBalanceRef.current = initialBalance;
+        setWalletBalance(initialBalance);
+        
         setStatus('processing');
         setMessage('Payment successful! Updating your wallet...');
         startPolling();
@@ -177,7 +212,7 @@ const PaymentSuccess: React.FC = () => {
         clearInterval(pollIntervalRef.current);
       }
     };
-  }, [searchParams, isSuccess, merchantOrderId, amountEGP, transactionId, amountCents, checkWalletCredited, fetchWalletBalance, navigate, startPolling]);
+  }, [searchParams, isSuccess, merchantOrderId, amountEGP, transactionId, amountCents, processPaymentWithBackend, fetchWalletBalance, navigate, startPolling]);
 
   const handleGoToWallet = () => {
     navigate('/wallet');
