@@ -31,8 +31,9 @@ workflows:
         script: |
           npm run build
       
-      - name: Sync Capacitor iOS
+      - name: Add and sync Capacitor iOS
         script: |
+          npx cap add ios
           npx cap sync ios
       
       - name: Set iOS bundle identifier and entitlements
