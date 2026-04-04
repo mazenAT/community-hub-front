@@ -12,7 +12,7 @@ workflows:
       vars:
         XCODE_WORKSPACE: "App.xcworkspace"
         XCODE_SCHEME: "App"
-        APP_STORE_APP_ID: 1234567890  # Replace with your App Store App ID after creating the app
+        APP_STORE_APP_ID: 6751442049
       node: 20
       xcode: latest
       cocoapods: default
