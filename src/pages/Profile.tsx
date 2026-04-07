@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, ChevronRight, AlertCircle, ShoppingBag, Trash2 } from "lucide-react";
+import { User, ChevronRight, AlertCircle, ShoppingBag, Trash2, HelpCircle, Shield, ExternalLink } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Input } from "@/components/ui/input";
 import { profileApi } from "@/services/api";
@@ -321,6 +321,37 @@ const Profile = () => {
             >
               {updatePasswordMutation.isPending ? "Updating..." : "Update Password"}
             </Button>
+          </div>
+        </Card>
+
+        {/* Support & Legal Section */}
+        <Card className="p-4 sm:p-6 rounded-2xl border-0 bg-white">
+          <h3 className="text-lg sm:text-xl font-semibold text-brand-black mb-4">Support & Legal</h3>
+          <div className="space-y-1">
+            <a
+              href="https://community-hub-backend-production.up.railway.app/support.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <HelpCircle className="w-5 h-5 text-brand-orange" />
+                <span className="text-sm sm:text-base text-brand-black">Help & Support</span>
+              </div>
+              <ExternalLink className="w-4 h-4 text-brand-black/40" />
+            </a>
+            <a
+              href="https://community-hub-backend-production.up.railway.app/privacy-policy.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Shield className="w-5 h-5 text-brand-orange" />
+                <span className="text-sm sm:text-base text-brand-black">Privacy Policy</span>
+              </div>
+              <ExternalLink className="w-4 h-4 text-brand-black/40" />
+            </a>
           </div>
         </Card>
 
