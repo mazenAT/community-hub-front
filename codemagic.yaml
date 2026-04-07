@@ -12,7 +12,7 @@ workflows:
       vars:
         XCODE_WORKSPACE: "App.xcworkspace"
         XCODE_SCHEME: "App"
-        APP_STORE_APP_ID: 6751442049
+        APP_STORE_APP_ID: 6757442049
       node: 20
       xcode: latest
       cocoapods: default
