@@ -50,31 +50,47 @@ workflows:
           # Ensure device display name matches App Store name
           /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Lite Bite" App/Info.plist 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string Lite Bite" App/Info.plist
 
-          # Set app icon from Logo.png (flatten alpha onto white background)
+          # Set app icon from Logo.png (flatten alpha, generate all required sizes)
           ICON_SET="App/Assets.xcassets/AppIcon.appiconset"
-          python3 -c "
+          python3 << 'PYEOF'
           from PIL import Image
+          import os
           icon = Image.open('../../public/Logo.png').convert('RGBA')
           bg = Image.new('RGBA', icon.size, (255, 255, 255, 255))
           bg.paste(icon, (0, 0), icon)
           bg = bg.convert('RGB')
-          bg = bg.resize((1024, 1024), Image.LANCZOS)
-          bg.save('$ICON_SET/AppIcon-1024.png')
-          "
+          sizes = [20, 29, 40, 58, 60, 76, 80, 87, 120, 152, 167, 180, 1024]
+          out = os.environ.get('ICON_SET', 'App/Assets.xcassets/AppIcon.appiconset')
+          for s in sizes:
+              bg.resize((s, s), Image.LANCZOS).save(f'{out}/AppIcon-{s}.png')
+          PYEOF
+
+          # Add CFBundleIconName to Info.plist
+          /usr/libexec/PlistBuddy -c "Add :CFBundleIconName string AppIcon" App/Info.plist 2>/dev/null || /usr/libexec/PlistBuddy -c "Set :CFBundleIconName AppIcon" App/Info.plist
+
           cat > "$ICON_SET/Contents.json" << 'ICONJSON'
           {
             "images": [
-              {
-                "filename": "AppIcon-1024.png",
-                "idiom": "universal",
-                "platform": "ios",
-                "size": "1024x1024"
-              }
+              { "filename": "AppIcon-40.png", "idiom": "iphone", "scale": "2x", "size": "20x20" },
+              { "filename": "AppIcon-60.png", "idiom": "iphone", "scale": "3x", "size": "20x20" },
+              { "filename": "AppIcon-58.png", "idiom": "iphone", "scale": "2x", "size": "29x29" },
+              { "filename": "AppIcon-87.png", "idiom": "iphone", "scale": "3x", "size": "29x29" },
+              { "filename": "AppIcon-80.png", "idiom": "iphone", "scale": "2x", "size": "40x40" },
+              { "filename": "AppIcon-120.png", "idiom": "iphone", "scale": "3x", "size": "40x40" },
+              { "filename": "AppIcon-120.png", "idiom": "iphone", "scale": "2x", "size": "60x60" },
+              { "filename": "AppIcon-180.png", "idiom": "iphone", "scale": "3x", "size": "60x60" },
+              { "filename": "AppIcon-20.png", "idiom": "ipad", "scale": "1x", "size": "20x20" },
+              { "filename": "AppIcon-40.png", "idiom": "ipad", "scale": "2x", "size": "20x20" },
+              { "filename": "AppIcon-29.png", "idiom": "ipad", "scale": "1x", "size": "29x29" },
+              { "filename": "AppIcon-58.png", "idiom": "ipad", "scale": "2x", "size": "29x29" },
+              { "filename": "AppIcon-40.png", "idiom": "ipad", "scale": "1x", "size": "40x40" },
+              { "filename": "AppIcon-80.png", "idiom": "ipad", "scale": "2x", "size": "40x40" },
+              { "filename": "AppIcon-76.png", "idiom": "ipad", "scale": "1x", "size": "76x76" },
+              { "filename": "AppIcon-152.png", "idiom": "ipad", "scale": "2x", "size": "76x76" },
+              { "filename": "AppIcon-167.png", "idiom": "ipad", "scale": "2x", "size": "83.5x83.5" },
+              { "filename": "AppIcon-1024.png", "idiom": "ios-marketing", "scale": "1x", "size": "1024x1024" }
             ],
-            "info": {
-              "author": "xcode",
-              "version": 1
-            }
+            "info": { "author": "xcode", "version": 1 }
           }
           ICONJSON
       
