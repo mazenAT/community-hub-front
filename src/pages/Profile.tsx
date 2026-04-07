@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, ChevronRight, AlertCircle, ShoppingBag } from "lucide-react";
+import { User, ChevronRight, AlertCircle, ShoppingBag, Trash2 } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Input } from "@/components/ui/input";
 import { profileApi } from "@/services/api";
@@ -44,6 +44,8 @@ const Profile = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: profileResponse, isLoading: isLoadingProfile, error: profileError, refetch: refetchProfile } = useQuery<{ data: UserProfile }>({
     queryKey: ["profile"],
@@ -92,6 +94,26 @@ const Profile = () => {
       toast.error(error.response?.data?.message || "Failed to update password");
     },
   });
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: profileApi.deleteAccount,
+    onSuccess: () => {
+      localStorage.removeItem("token");
+      toast.success("Account deleted successfully");
+      navigate("/login");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to delete account");
+    },
+  });
+
+  const handleDeleteAccount = () => {
+    if (!deletePassword) {
+      toast.error("Please enter your password to confirm");
+      return;
+    }
+    deleteAccountMutation.mutate({ password: deletePassword });
+  };
 
   const handleUpdateProfile = () => {
     if (!name.trim()) {
@@ -302,6 +324,59 @@ const Profile = () => {
           </div>
         </Card>
 
+        {/* Delete Account Section */}
+        <Card className="p-4 sm:p-6 rounded-2xl border-2 border-red-200 bg-red-50/50">
+          <div className="flex items-center gap-2 mb-3">
+            <Trash2 className="w-5 h-5 text-red-600" />
+            <h3 className="text-lg sm:text-xl font-semibold text-red-600">Delete Account</h3>
+          </div>
+          <p className="text-sm text-brand-black/70 mb-4">
+            Permanently delete your account and all associated data. This action cannot be undone.
+          </p>
+          {!showDeleteConfirm ? (
+            <Button
+              onClick={() => setShowDeleteConfirm(true)}
+              variant="outline"
+              className="w-full border-red-300 text-red-600 hover:bg-red-100"
+            >
+              Delete My Account
+            </Button>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-red-100 border border-red-300 rounded-lg p-3">
+                <p className="text-sm font-medium text-red-700">
+                  Are you sure? Enter your password to confirm account deletion.
+                </p>
+              </div>
+              <Input
+                type="password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Enter your password"
+                className="w-full border-red-300"
+              />
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setDeletePassword("");
+                  }}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDeleteAccount}
+                  disabled={deleteAccountMutation.isPending}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {deleteAccountMutation.isPending ? "Deleting..." : "Confirm Delete"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
 
       </div>
 

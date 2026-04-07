@@ -2,7 +2,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.smartcommunity.app',
-  appName: 'Smart Community',
+  appName: 'Lite Bite',
   webDir: 'build',
   server: {
     androidScheme: 'https',

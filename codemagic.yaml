@@ -46,6 +46,29 @@ workflows:
 
           # Set export compliance to avoid manual compliance prompt on each build
           /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" App/Info.plist 2>/dev/null || true
+
+          # Ensure device display name matches App Store name
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Lite Bite" App/Info.plist 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string Lite Bite" App/Info.plist
+
+          # Set app icon from Logo.png
+          ICON_SET="App/Assets.xcassets/AppIcon.appiconset"
+          sips -z 1024 1024 ../../public/Logo.png --out "$ICON_SET/AppIcon-1024.png"
+          cat > "$ICON_SET/Contents.json" << 'ICONJSON'
+          {
+            "images": [
+              {
+                "filename": "AppIcon-1024.png",
+                "idiom": "universal",
+                "platform": "ios",
+                "size": "1024x1024"
+              }
+            ],
+            "info": {
+              "author": "xcode",
+              "version": 1
+            }
+          }
+          ICONJSON
       
       - name: Install CocoaPods dependencies
         script: |

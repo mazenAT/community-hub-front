@@ -100,7 +100,7 @@
   },
   "capacitor": {
     "appId": "com.smartcommunity.app",
-    "appName": "Smart Community",
+    "appName": "Lite Bite",
     "webDir": "build",
     "bundledWebRuntime": false,
     "plugins": {

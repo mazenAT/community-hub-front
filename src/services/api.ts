@@ -121,6 +121,7 @@ export const profileApi = {
     password: string;
     password_confirmation: string;
   }) => api.put('/profile/password', data),
+  deleteAccount: (data: { password: string }) => api.post('/profile/delete-account', data),
 };
 
 export const plannerApi = {
