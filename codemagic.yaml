@@ -50,9 +50,17 @@ workflows:
           # Ensure device display name matches App Store name
           /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Lite Bite" App/Info.plist 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string Lite Bite" App/Info.plist
 
-          # Set app icon from Logo.png
+          # Set app icon from Logo.png (flatten alpha onto white background)
           ICON_SET="App/Assets.xcassets/AppIcon.appiconset"
-          sips -z 1024 1024 ../../public/Logo.png --out "$ICON_SET/AppIcon-1024.png"
+          python3 -c "
+          from PIL import Image
+          icon = Image.open('../../public/Logo.png').convert('RGBA')
+          bg = Image.new('RGBA', icon.size, (255, 255, 255, 255))
+          bg.paste(icon, (0, 0), icon)
+          bg = bg.convert('RGB')
+          bg = bg.resize((1024, 1024), Image.LANCZOS)
+          bg.save('$ICON_SET/AppIcon-1024.png')
+          "
           cat > "$ICON_SET/Contents.json" << 'ICONJSON'
           {
             "images": [
